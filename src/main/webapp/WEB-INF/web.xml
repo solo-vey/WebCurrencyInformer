@@ -1,0 +1,49 @@
+<web-app id="WebApp_ID" version="2.4"
+	xmlns="http://java.sun.com/xml/ns/j2ee" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://java.sun.com/xml/ns/j2ee 
+	http://java.sun.com/xml/ns/j2ee/web-app_2_4.xsd">
+	<display-name>WebEp Search Modules</display-name>
+ 
+   <listener>
+ 
+ 	<servlet>
+		<servlet-name>jersey-serlvet</servlet-name>
+		<servlet-class>
+        	com.sun.jersey.spi.container.servlet.ServletContainer
+        </servlet-class>
+		<init-param>
+		     <param-name>com.sun.jersey.config.property.packages</param-name>
+		     <param-value>ua.lz.ep.service</param-value>
+		</init-param>
+		<init-param>
+        	<param-name>com.sun.jersey.spi.container.ContainerRequestFilters</param-name>
+        	<param-value>ua.lz.ep.filter.AuthorizationRequestFilter</param-value>
+    	</init-param>
+		<init-param>
+			<param-name>com.sun.jersey.api.json.POJOMappingFeature</param-name>
+			<param-value>true</param-value>
+		</init-param>		
+		<load-on-startup>1</load-on-startup>
+	</servlet>
+ 
+	<servlet-mapping>
+		<servlet-name>jersey-serlvet</servlet-name>
+		<url-pattern>/service/*</url-pattern>
+	</servlet-mapping>
+ 
+    <filter>
+		<filter-name>EncodingFilter</filter-name>
+		<filter-class>ua.lz.ep.filter.EncodingFilter</filter-class>
+		<init-param>
+			<param-name>encoding</param-name>
+			<param-value>UTF-8</param-value>
+		</init-param>
+	</filter>
+
+	<filter-mapping>
+    	<filter-name>EncodingFilter</filter-name>
+    	<url-pattern>/*</url-pattern>
+  	</filter-mapping>
+  	
+</web-app>
