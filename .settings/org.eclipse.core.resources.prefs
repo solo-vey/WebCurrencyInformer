@@ -1,5 +1,7 @@
-#Wed Aug 16 16:30:24 EEST 2017
+#Tue Nov 21 17:26:28 EET 2017
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
 encoding//src/test/java=UTF-8
-encoding//src/test/resources/WebEPContentUniversalDAO.properties=UTF-8
+encoding//src/test/resources/KunaStockExchange.properties=UTF-8
+encoding//src/test/resources/MockStockExchange.properties=UTF-8
+encoding//src/test/resources/WebCurrencyInformer.properties=UTF-8

@@ -3,8 +3,9 @@ package solo.utils;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.lang.reflect.Type;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -15,7 +16,9 @@ import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpUriRequest;
 import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.DefaultHttpClient;
@@ -24,10 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import solo.CurrencyInformer;
+import ua.lz.ep.utils.JsonUtils;
 import ua.lz.ep.utils.ResourceUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.reflect.TypeToken;
 
 /** Класс для работы с РЕЕЗ запросами к сторонним сервисам */
 @SuppressWarnings("deprecation")
@@ -42,10 +43,102 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
+	public static String sendGet(final String strURL, final Boolean bIsUseProxy) throws Exception
+	{
+		return sendGet(strURL, new HashMap<String, String>(), bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде строки 
+	 * @throws Exception */
+	public static String sendGet(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	{
+		final HttpGet oGet = makeGetQuery(strURL, aParameters);
+		return sendRequestAndReturnText(oGet, bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде строки 
+	 * @throws Exception */
+	public static Map<String, Object> sendGetAndReturnMap(final String strURL, final Boolean bIsUseProxy) throws Exception
+	{
+		return sendGetAndReturnMap(strURL, new HashMap<String, String>(), bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде json 
+	 * @throws Exception */
+	public static Map<String, Object> sendGetAndReturnMap(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	{
+		final HttpGet oGet = makeGetQuery(strURL, aParameters);
+		return sendRequestAndReturnMap(oGet, bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде строки 
+	 * @throws Exception */
+	public static List<Object> sendGetAndReturnList(final String strURL, final Boolean bIsUseProxy) throws Exception
+	{
+		return sendGetAndReturnList(strURL, new HashMap<String, String>(), bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде json 
+	 * @throws Exception */
+	public static List<Object> sendGetAndReturnList(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	{
+		final HttpGet oGet = makeGetQuery(strURL, aParameters);
+		return sendRequestAndReturnList(oGet, bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде строки 
+	 * @throws Exception */
+	public static <T extends Object> T sendGetAndReturnObject(final String strURL, final Boolean bIsUseProxy, final Class<T> oClass) throws Exception
+	{
+		return sendGetAndReturnObject(strURL, new HashMap<String, String>(), bIsUseProxy, oClass);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде json 
+	 * @throws Exception */
+	public static <T extends Object> T sendGetAndReturnObject(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final Class<T> oClass) throws Exception
+	{
+		final HttpGet oGet = makeGetQuery(strURL, aParameters);
+		return sendRequestAndReturnObject(oGet, bIsUseProxy, oClass);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде строки 
+	 * @throws Exception */
 	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, aParameters);
-		return sendPostRequestAndReturnText(oPost, bIsUseProxy);
+		return sendRequestAndReturnText(oPost, bIsUseProxy);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -58,7 +151,7 @@ public class RequestUtils
 	public static String sendPost(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, strJsonParameters, aHeaders);
-		return sendPostRequestAndReturnText(oPost, bIsUseProxy);
+		return sendRequestAndReturnText(oPost, bIsUseProxy);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -67,10 +160,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, String> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, aParameters);
-		return sendPostRequestAndReturnJson(oPost, bIsUseProxy);
+		return sendRequestAndReturnMap(oPost, bIsUseProxy);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -80,10 +173,21 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, String> sendPostAndReturnJson(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendPostAndReturnJson(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, strJsonParameters, aHeaders);
-		return sendPostRequestAndReturnJson(oPost, bIsUseProxy);
+		return sendRequestAndReturnMap(oPost, bIsUseProxy);
+	}
+
+	/** Формирование запроса на основании указанных параметров 
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @return HTTP запрос
+	 * @throws UnsupportedEncodingException  */
+	static HttpGet makeGetQuery(final String strURL, final Map<String, String> aParameters) throws UnsupportedEncodingException
+	{
+		final HttpGet oGet = new HttpGet(strURL);
+		return oGet;
 	}
 
 	/** Формирование запроса на основании указанных параметров 
@@ -121,18 +225,52 @@ public class RequestUtils
 	 * @param oPost Запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, String> sendPostRequestAndReturnJson(final HttpPost oPost, final Boolean bIsUseProxy) throws Exception
+	protected static Map<String, Object> sendRequestAndReturnMap(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
 	{
 		try
 		{	
-			final String strJson = sendPostRequestAndReturnText(oPost, bIsUseProxy);
-			final Gson oGson = new Gson();
-			final Type oMapType = new TypeToken<Map<String, String>>(){}.getType();
-			return oGson.fromJson(strJson, oMapType);
+			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy);
+			return JsonUtils.json2Map(strJson);
 		}
 		catch (final Exception e)
 		{
-            s_oLogger.error("Error executing post query [" + oPost + "]", e);
+            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
+            throw e; 
+		}
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param oPost Запроса
+	 * @return Ответ сервера в виде json 
+	 * @throws Exception */
+	protected static List<Object> sendRequestAndReturnList(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
+	{
+		try
+		{	
+			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy);
+			return JsonUtils.json2List(strJson);
+		}
+		catch (final Exception e)
+		{
+            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
+            throw e; 
+		}
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param oPost Запроса
+	 * @return Ответ сервера в виде json 
+	 * @throws Exception */
+	protected static <T extends Object> T sendRequestAndReturnObject(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final Class<T> oClass) throws Exception
+	{
+		try
+		{	
+			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy);
+			return JsonUtils.fromJson(strJson, oClass);
+		}
+		catch (final Exception e)
+		{
+            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -141,13 +279,13 @@ public class RequestUtils
 	 * @param oPost Запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static String sendPostRequestAndReturnText(final HttpPost oPost, final Boolean bIsUseProxy) throws Exception
+	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
 	{
 		try
 		{	
 			final HttpClient oClient = new DefaultHttpClient();
 			setProxy(oClient, bIsUseProxy);
-			final HttpResponse oResponse = oClient.execute(oPost);
+			final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
 			if (null == oResponse)
 			    return null;
 
@@ -161,7 +299,7 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-            s_oLogger.error("Error executing post query [" + oPost + "]", e);
+            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
