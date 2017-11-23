@@ -1,0 +1,42 @@
+package solo.model.stocks;
+
+import java.util.LinkedList;
+import java.util.List;
+
+public class StockRateStatesLocalHistory extends BaseObject
+{
+	final protected int m_nMaxHistorySize; 
+	final protected int m_nMaxFutureSize; 
+	final protected IRateOracle m_oRateOracle;
+	
+	final protected List<StateAnalysisResult> m_oHistory = new LinkedList<StateAnalysisResult>();
+	final protected List<RatesForecast> m_oFuture = new LinkedList<RatesForecast>();
+	
+	public StockRateStatesLocalHistory(final int nMaxHistorySize, final int nMaxFutureSize, final IRateOracle oRateOracle)
+	{
+		m_nMaxHistorySize = nMaxHistorySize;
+		m_nMaxFutureSize = nMaxFutureSize;
+		m_oRateOracle = oRateOracle;
+	}
+	
+	public void addToHistory(final StateAnalysisResult oStateAnalysisResult)
+	{
+		m_oHistory.add(oStateAnalysisResult);
+		while (m_oHistory.size() > m_nMaxHistorySize)
+			m_oHistory.remove(0);
+
+		makeFuture(oStateAnalysisResult);
+	}
+
+	private void makeFuture(final StateAnalysisResult oStateAnalysisResult)
+	{
+		m_oFuture.clear();
+		final List<RatesForecast> oRatesForecast = m_oRateOracle.makeForecast(m_oHistory, m_nMaxFutureSize);
+		m_oFuture.addAll(oRatesForecast);
+	}
+	
+	public List<RatesForecast> getFuture()
+	{
+		return m_oFuture;
+	}
+}
