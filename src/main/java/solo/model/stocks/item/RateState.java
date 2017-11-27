@@ -1,7 +1,9 @@
-package solo.model.stocks;
+package solo.model.stocks.item;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import solo.model.stocks.BaseObject;
 
 public class RateState extends BaseObject
 {

@@ -1,6 +1,8 @@
 package solo.transport;
 
-public interface Itransport
+public interface ITransport
 {
-	void sendMessage(final String strText) throws Exception;
+	Object sendMessage(final String strText) throws Exception;
+	ITransportMessages getMessages() throws Exception;
+	String getName();
 }

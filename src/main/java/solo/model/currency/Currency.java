@@ -26,7 +26,7 @@ public enum Currency
 	}
 	
 	/** Локаль для вывода валюты */
-	final Locale getLocale()
+	public final Locale getLocale()
 	{
 		return m_oLocale;
 	}

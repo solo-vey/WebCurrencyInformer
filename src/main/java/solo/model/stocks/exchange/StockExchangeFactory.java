@@ -1,4 +1,4 @@
-package solo.model.stocks;
+package solo.model.stocks.exchange;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,4 +1,7 @@
-package solo.model.stocks;
+package solo.model.stocks.analyse;
+
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.StockRateStates;
 
 public class SimpleStateAnalysis implements IStateAnalysis 
 {

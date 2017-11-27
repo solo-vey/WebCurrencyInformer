@@ -1,6 +1,10 @@
-package solo.model.stocks;
+package solo.model.stocks.exchange;
 
 import solo.model.currency.Currency;
+import solo.model.stocks.history.StocksHistory;
+import solo.model.stocks.item.StockCurrencyVolume;
+import solo.model.stocks.item.StockRateStates;
+import solo.model.stocks.source.KunaStockSource;
 
 public class KunaStockExchange extends BaseStockExchange
 {

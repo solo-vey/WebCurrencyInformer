@@ -1,8 +1,10 @@
-package solo.model.stocks;
+package solo.model.stocks.oracle;
 
 import java.math.BigDecimal;
 
 import solo.CurrencyInformer;
+import solo.model.stocks.BaseObject;
+import solo.model.stocks.item.RateInfo;
 import solo.utils.MathUtils;
 
 public class RateForecast extends BaseObject
@@ -19,5 +21,10 @@ public class RateForecast extends BaseObject
 	public RateInfo getRateInfo()
 	{
 		return m_oRateInfo;
+	}
+	
+	public BigDecimal getPrice()
+	{
+		return m_oPrice;
 	}
 }

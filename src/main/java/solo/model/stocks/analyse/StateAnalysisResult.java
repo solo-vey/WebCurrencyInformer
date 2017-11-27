@@ -1,8 +1,13 @@
-package solo.model.stocks;
+package solo.model.stocks.analyse;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
+
+import solo.model.stocks.BaseObject;
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.StockRateStates;
 
 public class StateAnalysisResult extends BaseObject
 {

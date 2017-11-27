@@ -1,6 +1,8 @@
-package solo.model.stocks;
+package solo.model.stocks.oracle;
 
 import java.util.List;
+
+import solo.model.stocks.analyse.StateAnalysisResult;
 
 public interface IRateOracle
 {

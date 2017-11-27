@@ -1,9 +1,11 @@
-package solo.model.stocks;
+package solo.model.stocks.analyse;
 
 import java.math.BigDecimal;
 import java.util.List;
 
 import solo.CurrencyInformer;
+import solo.model.stocks.BaseObject;
+import solo.model.stocks.item.Order;
 import solo.utils.MathUtils;
 public class OrderAnalysisResult extends BaseObject
 {

@@ -5,6 +5,20 @@ import java.util.Date;
 
 import org.junit.Test;
 
+import solo.model.stocks.analyse.IStateAnalysis;
+import solo.model.stocks.analyse.SimpleStateAnalysis;
+import solo.model.stocks.analyse.StateAnalysisResult;
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.exchange.KunaStockExchange;
+import solo.model.stocks.exchange.MockStockExchange;
+import solo.model.stocks.exchange.StockExchangeFactory;
+import solo.model.stocks.history.StockRateStatesLocalHistory;
+import solo.model.stocks.item.StockRateStates;
+import solo.model.stocks.oracle.IRateOracle;
+import solo.model.stocks.oracle.SimpleRateOracle;
+import solo.model.stocks.source.IStockSource;
+import solo.model.stocks.source.MockStockSource;
+
 public class StateAnalysisResultTest
 {
     @Test
@@ -32,13 +46,13 @@ public class StateAnalysisResultTest
     	final MockStockSource oMockStockSource = (MockStockSource) oMockStockExchange.getStockSource();
     	final IStateAnalysis oStateAnalysis = new SimpleStateAnalysis();
     	final IRateOracle oRateOracle = new SimpleRateOracle();
-    	final StockRateStatesLocalHistory oStockRateStatesLocalHistory = new StockRateStatesLocalHistory(100, 10, oRateOracle);
+    	final StockRateStatesLocalHistory oStockRateStatesLocalHistory = new StockRateStatesLocalHistory(20, 1, oRateOracle);
     	final Calendar oDateStart = Calendar.getInstance();
-    	oDateStart.set(2017, 10, 22, 19, 24, 00);
+    	oDateStart.set(2017, 10, 24, 10, 00, 00);
     	oMockStockSource.setDateStart(oDateStart.getTime(), new Date());
     	
     	//	Act
-    	for(int i = 0; i < 200; i++)
+    	for(int i = 0; i < 30; i++)
     	{
     		System.err.printf("Step [" + i + "]\r\n");
         	final StockRateStates oStockRateStates = oMockStockSource.getStockRates();

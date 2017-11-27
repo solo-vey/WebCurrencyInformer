@@ -1,4 +1,4 @@
-package solo.model.stocks;
+package solo.model.stocks.item;
 
 import solo.model.currency.Currency;
 

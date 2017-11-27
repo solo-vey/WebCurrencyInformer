@@ -1,7 +1,12 @@
-package solo.model.stocks;
+package solo.model.stocks.history;
 
 import java.util.LinkedList;
 import java.util.List;
+
+import solo.model.stocks.BaseObject;
+import solo.model.stocks.analyse.StateAnalysisResult;
+import solo.model.stocks.oracle.IRateOracle;
+import solo.model.stocks.oracle.RatesForecast;
 
 public class StockRateStatesLocalHistory extends BaseObject
 {

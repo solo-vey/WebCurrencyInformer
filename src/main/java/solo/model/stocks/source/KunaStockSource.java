@@ -1,10 +1,14 @@
-package solo.model.stocks;
+package solo.model.stocks.source;
 
 import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map;
 
 import solo.model.currency.Currency;
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.Order;
+import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateState;
 import solo.utils.RequestUtils;
 import ua.lz.ep.utils.ResourceUtils;
 

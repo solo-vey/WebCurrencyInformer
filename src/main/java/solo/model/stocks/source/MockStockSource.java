@@ -1,4 +1,4 @@
-package solo.model.stocks;
+package solo.model.stocks.source;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -10,6 +10,9 @@ import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
 
 import solo.model.currency.Currency;
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.StockRateStates;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class MockStockSource extends BaseStockSource
@@ -26,7 +29,7 @@ public class MockStockSource extends BaseStockSource
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
 	}
 	
-	void setDateStart(final Date oStartDate, final Date oMaxDate)
+	public void setDateStart(final Date oStartDate, final Date oMaxDate)
 	{
 		m_oLastDate = oStartDate;
 		m_oMaxDate = oMaxDate;
@@ -39,6 +42,8 @@ public class MockStockSource extends BaseStockSource
 			final String strDatePath = (new SimpleDateFormat("yyyy\\MM\\dd\\HH\\mm\\yyyy-MM-dd-HH-mm-ss")).format(m_oLastDate);
 			final String strFullFileName = m_strDataRoot + "\\" + strDatePath + ".json";
 			final File oData = new File(strFullFileName);
+			m_oLastDate = DateUtils.addSeconds(m_oLastDate, 1);
+			
 			if (oData.exists())
 			{
 				final String strJson = new String(Files.readAllBytes((new File(strFullFileName)).toPath()));
@@ -49,8 +54,6 @@ public class MockStockSource extends BaseStockSource
 				
 //				return JsonUtils.fromJson(strJson, StockRateStates.class);
 			}
-			
-			m_oLastDate = DateUtils.addSeconds(m_oLastDate, 1);
 		}
 		
 		throw new Exception("Is no more rates");

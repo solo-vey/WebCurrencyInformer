@@ -1,9 +1,11 @@
-package solo.model.stocks;
+package solo.model.stocks.exchange;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import solo.model.currency.Currency;
+import solo.model.stocks.item.StockCurrencyVolume;
+import solo.model.stocks.source.IStockSource;
 
 public class BaseStockExchange implements IStockExchange
 {

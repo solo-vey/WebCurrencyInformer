@@ -1,7 +1,9 @@
-package solo.model.stocks;
+package solo.model.stocks.item;
 
 import java.util.HashMap;
 import java.util.Map;
+
+import solo.model.stocks.BaseObject;
 
 public class StockRateStates extends BaseObject
 {

@@ -1,6 +1,12 @@
-package solo.model.stocks;
+package solo.model.stocks.analyse;
 
 import java.util.List;
+
+import solo.model.stocks.BaseObject;
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.Order;
+import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.StockRateStates;
 
 public class RateAnalysisResult extends BaseObject
 {
