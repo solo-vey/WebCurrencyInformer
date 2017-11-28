@@ -41,4 +41,9 @@ public class RateInfo
 	{
 		return m_oCurrencyFrom + "->" + m_oCurrencyTo;
 	}
+	
+	@Override public int hashCode()
+	{
+		return toString().hashCode();
+	}
 }

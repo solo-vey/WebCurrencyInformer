@@ -1,10 +1,12 @@
 package solo.model.stocks;
 
+import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
 
 import junit.framework.Assert;
 
+import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
 
 import solo.model.currency.Currency;
@@ -17,6 +19,9 @@ import solo.model.stocks.exchange.KunaStockExchange;
 import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.history.StockRateStatesLocalHistory;
 import solo.model.stocks.history.StocksHistory;
+import solo.model.stocks.item.Event;
+import solo.model.stocks.item.EventType;
+import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
 import solo.model.stocks.oracle.IRateOracle;
@@ -59,11 +64,12 @@ public class KunaStockSourceTest
 		    	final ITransportMessages oMessages = oTelegram.getMessages();
 		    	if (null != oMessages)
 	    		{
-		    		if (oMessages.getMessages().get(0).getText().startsWith("/info:"))
+		    		final String strMessageText = oMessages.getMessages().get(0).getText().replace("_", " ").trim();
+		    		if (strMessageText.startsWith("/info "))
 		    		{
-		    			System.err.printf("Telegram receive command [" + oMessages.getMessages().get(0).getText() + "]\r\n");
+		    			System.err.printf("Telegram receive command [" + strMessageText + "]\r\n");
 
-		    			final String strRate = oMessages.getMessages().get(0).getText().substring(6) + "->UAH";
+		    			final String strRate = strMessageText.substring(6).toUpperCase() + "->UAH";
 		    			if (null != oStockRateStates.getRateStates().get(strRate))
 		    			{
 		    				final RateState oRateState = oStockRateStates.getRateStates().get(strRate);
@@ -87,9 +93,58 @@ public class KunaStockSourceTest
 		    			else
 		    				oTelegram.sendMessage("Unknown currency");
 		    		}
+		    		else if (strMessageText.startsWith("/setEvent "))
+		    		{
+		    			final String[] aParts = strMessageText.split(" "); 
+		    			final Currency oCurrency = Currency.valueOf(aParts[1].toUpperCase());
+		    			final RateInfo oRateInfo = new RateInfo(oCurrency, Currency.UAH);
+		    			final EventType oEventType = EventType.valueOf(aParts[2].toUpperCase());
+		    			final BigDecimal nPrice = MathUtils.fromString(aParts[3]);
+		    			
+	    				final Event oEvent = new Event(oEventType, oRateInfo, nPrice);
+	    				oKunaStockExchange.getEvents().addEvent(oEvent);
+
+	    				System.err.printf("Add event : " + oEvent + "\r\n");
+		    		}
+		    		else if (strMessageText.startsWith("/deleteEvent "))
+		    		{
+		    			final String[] aParts = strMessageText.split(" "); 
+		    			final Currency oCurrency = Currency.valueOf(aParts[1].toUpperCase());
+		    			final EventType oEventType = EventType.valueOf(aParts[2].toUpperCase());
+		    			final BigDecimal nPrice = MathUtils.fromString(aParts[3]);
+
+			    		for(final Event oEvent : oKunaStockExchange.getEvents().getList())
+			    		{
+			    			if (oEvent.getType().equals(oEventType) && oEvent.getRateInfo().getCurrencyFrom().equals(oCurrency) && 
+			    					oEvent.getPrice().compareTo(nPrice) == 0)
+			    			{
+			    				oKunaStockExchange.getEvents().removeEvent(oEvent);
+			    				System.err.printf("Remove event : " + oEvent + "\r\n");
+			    				break;
+			    			}
+			    		}
+		    		}
+		    		else if (strMessageText.startsWith("/getEvents"))
+		    		{
+		    			String strMessage = StringUtils.EMPTY;
+			    		for(final Event oEvent : oKunaStockExchange.getEvents().getList())
+			    			strMessage += oEvent.getInfo();
+
+		    			oTelegram.sendMessage((StringUtils.isBlank(strMessage) ? "No events" : strMessage));
+		    		}
 		    		else
 	    				oTelegram.sendMessage("Unknown command");
 	    		}
+	    		
+	    		for(final Event oEvent : oKunaStockExchange.getEvents().getList())
+	    		{
+	    			if (oEvent.check(oStateAnalysisResult))
+	    			{
+	    				System.err.printf(oEvent.getMessage());
+	    				oTelegram.sendMessage(oEvent.getMessage());
+	    			}
+	    		}
+	    		oKunaStockExchange.getEvents().removeAllOccurred();
 		    	
 		    	System.err.printf("Count [" + nCount + "]. Date " + (new Date()) + "\r\n");
     		}

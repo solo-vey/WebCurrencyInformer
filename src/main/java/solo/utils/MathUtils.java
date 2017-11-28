@@ -14,6 +14,11 @@ public class MathUtils
 		return oOriginalValue.setScale(nScale, RoundingMode.CEILING);
 	}
 	
+	public static BigDecimal fromString(final String strValue)
+	{
+		return BigDecimal.valueOf(Double.valueOf(strValue));
+	}
+	
 	public static String toCurrencyString(final BigDecimal oValue, final Currency oCurrency)
 	{
 		return DecimalFormat.getCurrencyInstance(oCurrency.getLocale()).format(oValue);

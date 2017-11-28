@@ -9,6 +9,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
+import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
@@ -59,15 +60,15 @@ public class KunaStockSource extends BaseStockSource
 		oOrder.setId(oMapOrder.get("id").toString());
 
 		if (oMapOrder.containsKey("price"))
-			oOrder.setPrice(BigDecimal.valueOf(Double.valueOf(oMapOrder.get("price").toString())));
+			oOrder.setPrice(MathUtils.fromString(oMapOrder.get("price").toString()));
 		
 		if (oMapOrder.containsKey("state"))
 			oOrder.setState(oMapOrder.get("state").toString());
 		
 		if (oMapOrder.containsKey("remaining_volume"))
-			oOrder.setVolume(BigDecimal.valueOf(Double.valueOf(oMapOrder.get("remaining_volume").toString())));
+			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("remaining_volume").toString()));
 		else
-			oOrder.setVolume(BigDecimal.valueOf(Double.valueOf(oMapOrder.get("volume").toString())));
+			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("volume").toString()));
 		
 		if (oMapOrder.containsKey("created_at"))
 			oOrder.setCreated(oMapOrder.get("created_at").toString().replace("T", " ").replace("Z", ""), "yyyy-MM-hh HH:mm:ss");
