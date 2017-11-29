@@ -2,7 +2,8 @@ package solo.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
-import java.text.DecimalFormat;
+import java.text.NumberFormat;
+import java.util.Locale;
 
 import solo.model.currency.Currency;
 
@@ -19,8 +20,8 @@ public class MathUtils
 		return BigDecimal.valueOf(Double.valueOf(strValue));
 	}
 	
-	public static String toCurrencyString(final BigDecimal oValue, final Currency oCurrency)
+	public static String toCurrencyString(final BigDecimal oValue)
 	{
-		return DecimalFormat.getCurrencyInstance(oCurrency.getLocale()).format(oValue);
+		return NumberFormat.getNumberInstance(Locale.US).format(oValue);
 	}
 }

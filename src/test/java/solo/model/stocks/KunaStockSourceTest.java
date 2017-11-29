@@ -3,8 +3,7 @@ package solo.model.stocks;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-
-import junit.framework.Assert;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 import org.junit.Test;
@@ -21,6 +20,7 @@ import solo.model.stocks.history.StockRateStatesLocalHistory;
 import solo.model.stocks.history.StocksHistory;
 import solo.model.stocks.item.Event;
 import solo.model.stocks.item.EventType;
+import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
@@ -74,19 +74,19 @@ public class KunaStockSourceTest
 		    			{
 		    				final RateState oRateState = oStockRateStates.getRateStates().get(strRate);
 		    				final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateState.getRateInfo());
-		    				String strMessage = "Sell : " + MathUtils.toCurrencyString(oAnalysisResult.getAsksAnalysisResult().getBestPrice(), Currency.UAH) + 
-		    									" / " + MathUtils.toCurrencyString(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice(), Currency.UAH) + "\r\n";   
-		    				strMessage += "Buy : " + MathUtils.toCurrencyString(oAnalysisResult.getBidsAnalysisResult().getBestPrice(), Currency.UAH) + 
-		    									" / " + MathUtils.toCurrencyString(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice(), Currency.UAH) + "\r\n";   
-		    				strMessage += "Trades : " + MathUtils.toCurrencyString(oAnalysisResult.getTradesAnalysisResult().getBestPrice(), Currency.UAH) + 
-		    									" / " + MathUtils.toCurrencyString(oAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice(), Currency.UAH) + "\r\n";   
+		    				String strMessage = "Sell : " + MathUtils.toCurrencyString(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
+		    									" / " + MathUtils.toCurrencyString(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
+		    				strMessage += "Buy : " + MathUtils.toCurrencyString(oAnalysisResult.getBidsAnalysisResult().getBestPrice()) + 
+		    									" / " + MathUtils.toCurrencyString(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
+		    				strMessage += "Trades : " + MathUtils.toCurrencyString(oAnalysisResult.getTradesAnalysisResult().getBestPrice()) + 
+		    									" / " + MathUtils.toCurrencyString(oAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
 		    				
 		    				final List<RatesForecast> oForecasts = oStockRateStatesLocalHistory.getFuture();
 		    				if (null != oForecasts && oForecasts.size() > 0)
 		    				{
 		    					final RatesForecast oForecast = oForecasts.get(0);
 		    					final RateForecast oRateForecast = oForecast.getForecust(oRateState.getRateInfo());
-		    					strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice(), Currency.UAH);
+		    					strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice());
 		    				}
 		    				oTelegram.sendMessage(strMessage);
 		    			}
@@ -102,33 +102,22 @@ public class KunaStockSourceTest
 		    			final BigDecimal nPrice = MathUtils.fromString(aParts[3]);
 		    			
 	    				final Event oEvent = new Event(oEventType, oRateInfo, nPrice);
-	    				oKunaStockExchange.getEvents().addEvent(oEvent);
+	    				oKunaStockExchange.getRules().addEvent(oEvent);
 
 	    				System.err.printf("Add event : " + oEvent + "\r\n");
 		    		}
 		    		else if (strMessageText.startsWith("/deleteEvent "))
 		    		{
 		    			final String[] aParts = strMessageText.split(" "); 
-		    			final Currency oCurrency = Currency.valueOf(aParts[1].toUpperCase());
-		    			final EventType oEventType = EventType.valueOf(aParts[2].toUpperCase());
-		    			final BigDecimal nPrice = MathUtils.fromString(aParts[3]);
-
-			    		for(final Event oEvent : oKunaStockExchange.getEvents().getList())
-			    		{
-			    			if (oEvent.getType().equals(oEventType) && oEvent.getRateInfo().getCurrencyFrom().equals(oCurrency) && 
-			    					oEvent.getPrice().compareTo(nPrice) == 0)
-			    			{
-			    				oKunaStockExchange.getEvents().removeEvent(oEvent);
-			    				System.err.printf("Remove event : " + oEvent + "\r\n");
-			    				break;
-			    			}
-			    		}
+		    			final Integer nRuleID = Integer.valueOf(aParts[1].toUpperCase());
+		    			oKunaStockExchange.getRules().removeEvent(nRuleID);
+	    				System.err.printf("Remove event : " + nRuleID + "\r\n");
 		    		}
 		    		else if (strMessageText.startsWith("/getEvents"))
 		    		{
 		    			String strMessage = StringUtils.EMPTY;
-			    		for(final Event oEvent : oKunaStockExchange.getEvents().getList())
-			    			strMessage += oEvent.getInfo();
+			    		for(final Entry<Integer, IRule> oRule : oKunaStockExchange.getRules().getRules().entrySet())
+			    			strMessage += oRule.getValue().getInfo(oRule.getKey());
 
 		    			oTelegram.sendMessage((StringUtils.isBlank(strMessage) ? "No events" : strMessage));
 		    		}
@@ -136,15 +125,15 @@ public class KunaStockSourceTest
 	    				oTelegram.sendMessage("Unknown command");
 	    		}
 	    		
-	    		for(final Event oEvent : oKunaStockExchange.getEvents().getList())
+	    		for(final IRule oRule : oKunaStockExchange.getRules().getRules().values())
 	    		{
-	    			if (oEvent.check(oStateAnalysisResult))
+	    			if (oRule.check(oStateAnalysisResult))
 	    			{
-	    				System.err.printf(oEvent.getMessage());
-	    				oTelegram.sendMessage(oEvent.getMessage());
+	    				System.err.printf(oRule.getMessage());
+	    				oTelegram.sendMessage(oRule.getMessage());
 	    			}
 	    		}
-	    		oKunaStockExchange.getEvents().removeAllOccurred();
+	    		oKunaStockExchange.getRules().removeAllOccurred();
 		    	
 		    	System.err.printf("Count [" + nCount + "]. Date " + (new Date()) + "\r\n");
     		}

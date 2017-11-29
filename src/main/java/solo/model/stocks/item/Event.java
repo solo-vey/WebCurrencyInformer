@@ -6,7 +6,7 @@ import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.utils.MathUtils;
 
-public class Event extends BaseObject
+public class Event extends BaseObject implements IRule
 {
 	final protected EventType m_oType;
 	final protected RateInfo m_oRateInfo;
@@ -36,7 +36,7 @@ public class Event extends BaseObject
 		return m_nPrice;
 	}
 	
-	public Boolean getIsOccurred()
+	public boolean getIsOccurred()
 	{
 		return m_bIsOccurred;
 	}
@@ -46,28 +46,39 @@ public class Event extends BaseObject
 		return m_strMessage;
 	}
 	
-	public String getInfo()
+	public String getInfo(final Integer nRuleID)
 	{
-		return "Event " + getType() + " " + getRateInfo().getCurrencyFrom() + ", price " + MathUtils.toCurrencyString(getPrice(), getRateInfo().getCurrencyTo()) + " " + 
-		"/deleteEvent_" + getRateInfo().getCurrencyFrom() + "_" +  getType() + "_" + getPrice() + "\r\n";   
+		return getType() + "/" + getRateInfo().getCurrencyFrom() + "/" + MathUtils.toCurrencyString(getPrice()) + " /deleteEvent_" + nRuleID + "\r\n";   
 	}
 	
-	public boolean check(final StateAnalysisResult oStateAnalysisResult )
+	public boolean check(final StateAnalysisResult oStateAnalysisResult)
 	{
 		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
-		final BigDecimal oCurrentPrice = oRateAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice();
-		if (m_oType.equals(EventType.SELL) && oCurrentPrice.compareTo(m_nPrice) > 0)
+		final BigDecimal oBidPrice = oRateAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice();
+		final BigDecimal oAskPrice = oRateAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice();
+		if (m_oType.equals(EventType.SELL) && oBidPrice.compareTo(m_nPrice) >= 0)
 		{
 			m_bIsOccurred = true;
-			m_strMessage = "Event SELL " + getRateInfo().getCurrencyFrom() + ", price " + MathUtils.toCurrencyString(getPrice(), getRateInfo().getCurrencyTo()) + " is occurred\r\n" + 
-				"Current price " + MathUtils.toCurrencyString(oCurrentPrice, getRateInfo().getCurrencyTo()) ;   
+			m_strMessage = "Event SELL/" + getRateInfo().getCurrencyFrom() + "/" + MathUtils.toCurrencyString(getPrice()) + " is occurred\r\n" + 
+				"Current price " + MathUtils.toCurrencyString(oBidPrice) ;   
 			return true;
 		}
 
-		if (m_oType.equals(EventType.BUY) && oRateAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice().compareTo(m_nPrice) < 0)
+		if (m_oType.equals(EventType.BUY) && oAskPrice.compareTo(m_nPrice) <= 0)
 		{
-			m_strMessage = "Event BUY " + getRateInfo().getCurrencyFrom() + ", price " + MathUtils.toCurrencyString(getPrice(), getRateInfo().getCurrencyTo()) + " is occurred\r\n" + 
-				"Current price " + MathUtils.toCurrencyString(oCurrentPrice, getRateInfo().getCurrencyTo()) ;   
+			m_strMessage = "Event BUY/" + getRateInfo().getCurrencyFrom() + "/" + MathUtils.toCurrencyString(getPrice()) + " is occurred\r\n" + 
+				"Current price " + MathUtils.toCurrencyString(oAskPrice) ;   
+			m_bIsOccurred = true;
+			return true;
+		}
+
+		final BigDecimal oTradePrice = oRateAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice();
+		final BigDecimal oTradeMinPrice = new BigDecimal(getPrice().doubleValue() * 0.9975); 
+		final BigDecimal oTradeMaxPrice = new BigDecimal(getPrice().doubleValue() * 1.0025); 
+		if (m_oType.equals(EventType.TRADE) && oTradePrice.compareTo(oTradeMinPrice) >= 0 && oTradePrice.compareTo(oTradeMaxPrice) <= 0)
+		{
+			m_strMessage = "Event TRADE/" + getRateInfo().getCurrencyFrom() + "/" + MathUtils.toCurrencyString(getPrice()) + " is occurred\r\n" + 
+				MathUtils.toCurrencyString(oTradeMinPrice) + "/Current " + MathUtils.toCurrencyString(oTradePrice) + "/" + MathUtils.toCurrencyString(oTradeMaxPrice) + "\r\n" ;   
 			m_bIsOccurred = true;
 			return true;
 		}

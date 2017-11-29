@@ -5,8 +5,11 @@ import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.io.FileUtils;
 
@@ -19,50 +22,54 @@ import solo.model.stocks.exchange.IStockExchange;
 import ua.lz.ep.utils.JsonUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
-public class Events
+public class Rules
 {
 	final protected IStockExchange m_oStockExchange;
-	final protected List<Event> m_oEventList = new LinkedList<Event>();
+	final protected Map<Integer, IRule> m_oRules = new HashMap<Integer, IRule>();
+
+	protected Integer m_nLastRuleID = 0;
 	
-	public Events(final IStockExchange oStockExchange)
+	public Rules(final IStockExchange oStockExchange)
 	{
 		m_oStockExchange = oStockExchange;
 	}
 	
 	public void addEvent(final Event oEvent)
 	{
-		m_oEventList.add(oEvent);
+		m_oRules.put(m_nLastRuleID, oEvent);
+		m_nLastRuleID++;
 		save();
 	}
 	
-	public void removeEvent(final Event oEvent)
+	public void removeEvent(final Integer nRuleID)
 	{
-		m_oEventList.remove(oEvent);
+		m_oRules.remove(nRuleID);
 		save();
 	}
 	
 	public void removeAllOccurred()
 	{
-		final List<Event> aOccurred = new LinkedList<Event>();
-		for(final Event oEvent : getList())
+		final List<Integer> aOccurred = new LinkedList<Integer>();
+		for(final Entry<Integer, IRule> oRule : getRules().entrySet())
 		{
-			if (oEvent.getIsOccurred())
-				aOccurred.add(oEvent);
+			if (oRule.getValue().getIsOccurred())
+				aOccurred.add(oRule.getKey());
 		}
-		m_oEventList.removeAll(aOccurred);
+		for(final Integer nRuleID : aOccurred)
+			m_oRules.remove(nRuleID);
 		save();
 	}
 	
-	public Collection<Event> getList()
+	public Map<Integer, IRule> getRules()
 	{
-		return m_oEventList;
+		return m_oRules;
 	}
 	
 	private void save()
 	{
 		try
 		{
-			final String strJson = JsonUtils.toJson(m_oEventList);
+			final String strJson = JsonUtils.toJson(m_oRules);
 			final String strStockEventsFileName = getFileName();
 			FileUtils.writeStringToFile(new File(strStockEventsFileName), strJson);
 		}
@@ -78,10 +85,10 @@ public class Events
 			final GsonBuilder oGsonBuilder = new GsonBuilder();
 	
 			final Gson oGson = oGsonBuilder.create();
-			final Type oType = new TypeToken<List<Event>>(){}.getType();
-			final List<Event> oEventList = oGson.fromJson(strJson, oType);
-			m_oEventList.clear();
-			m_oEventList.addAll(oEventList);
+			final Type oType = new TypeToken<HashMap<Integer, IRule>>(){}.getType();
+			final HashMap<Integer, IRule> oRules = oGson.fromJson(strJson, oType);
+			m_oRules.clear();
+			m_oRules.putAll(oRules);
 		}
 		catch (IOException e) { 		}
 	}
@@ -91,7 +98,7 @@ public class Events
 	 */
 	String getFileName()
 	{
-		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\events.json";
+		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rules.json";
 		return strStockEventsFileName;
 	}
 }

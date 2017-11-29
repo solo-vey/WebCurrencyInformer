@@ -6,7 +6,9 @@ public enum EventType
 	/** Продажа */
 	SELL("Продажа"),
 	/** Покупка */
-	BUY("Покупка");
+	BUY("Покупка"),
+	/** Сделки */
+	TRADE("Сделки");
 	
 	/** Тип */
 	final String m_strName;
