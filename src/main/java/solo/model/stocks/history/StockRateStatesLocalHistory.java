@@ -40,6 +40,16 @@ public class StockRateStatesLocalHistory extends BaseObject
 		m_oFuture.addAll(oRatesForecast);
 	}
 	
+	public List<StateAnalysisResult> getList()
+	{
+		return m_oHistory;
+	}
+	
+	public StateAnalysisResult getLastAnalysisResult()
+	{
+		return (m_oHistory.size() > 0 ? m_oHistory.get(m_oHistory.size() - 1) : null);
+	}
+	
 	public List<RatesForecast> getFuture()
 	{
 		return m_oFuture;

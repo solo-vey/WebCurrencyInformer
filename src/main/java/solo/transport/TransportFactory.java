@@ -16,11 +16,11 @@ public class TransportFactory
 	
 	static void registerTransport(final ITransport oTransport)
 	{
-		s_oTransports.put(oTransport.getName(), oTransport);
+		s_oTransports.put(oTransport.getName().toLowerCase(), oTransport);
 	}
 
 	public static ITransport getTransport(final String strName)
 	{
-		return s_oTransports.get(strName);
+		return s_oTransports.get(strName.toLowerCase());
 	}
 }

@@ -29,5 +29,4 @@ public class TelegramMessage implements ITransportMessage
 	{
 		return m_strID;
 	}
-
 }

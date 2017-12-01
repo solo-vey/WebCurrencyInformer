@@ -4,8 +4,6 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 
 public interface IRule
 {
-	boolean check(final StateAnalysisResult oStateAnalysisResult);
-	boolean getIsOccurred();
 	String getInfo(final Integer nRuleID);
-	String getMessage();
+	void check(final StateAnalysisResult oStateAnalysisResult, final Integer nRuleID);
 }

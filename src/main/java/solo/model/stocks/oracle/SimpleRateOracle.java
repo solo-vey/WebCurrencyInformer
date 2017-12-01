@@ -27,15 +27,13 @@ public class SimpleRateOracle implements IRateOracle
 			for(int nHistoryPosition = 0; nHistoryPosition < oStateAnalysisHistory.size(); nHistoryPosition++)
 			{
 				final StateAnalysisResult oStateAnalysisResult = oStateAnalysisHistory.get(nHistoryPosition);
-				aPrices[nHistoryPosition] = oStateAnalysisResult.getRateAnalysisResult(oRateInfo).getAsksAnalysisResult().getAverageAllSumPrice().doubleValue();
-				System.out.print(oRateInfo + " Price[" + nHistoryPosition + "] = " + aPrices[nHistoryPosition] + "\r\n");
+				aPrices[nHistoryPosition] = oStateAnalysisResult.getRateAnalysisResult(oRateInfo).getTradesAnalysisResult().getAverageAllSumPrice().doubleValue();
 			}
 			
 			int nStart = oStateAnalysisHistory.size();
 			for(int nForecastPosition = 0; nForecastPosition < nMaxFutureSize; nForecastPosition++)
 			{
 				final double nForecastPrice = getForecast(aPrices, oStateAnalysisHistory.size() + nForecastPosition, nForecastPosition);
-				System.out.print(oRateInfo + " ForecastPrice[" + nForecastPosition + "] = " + nForecastPrice + "\r\n");
 				aPrices[nStart + nForecastPosition] = nForecastPrice;
 
 				final RateForecast oRateForecast = new RateForecast(oRateInfo, nForecastPrice);

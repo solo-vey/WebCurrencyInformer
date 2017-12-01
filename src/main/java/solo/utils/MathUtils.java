@@ -5,7 +5,7 @@ import java.math.RoundingMode;
 import java.text.NumberFormat;
 import java.util.Locale;
 
-import solo.model.currency.Currency;
+import org.apache.commons.lang.StringUtils;
 
 public class MathUtils
 {
@@ -22,6 +22,6 @@ public class MathUtils
 	
 	public static String toCurrencyString(final BigDecimal oValue)
 	{
-		return NumberFormat.getNumberInstance(Locale.US).format(oValue);
+		return NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
 	}
 }

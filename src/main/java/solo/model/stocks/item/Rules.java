@@ -4,13 +4,8 @@ import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.nio.file.Files;
-import java.util.Collection;
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-
 import org.apache.commons.io.FileUtils;
 
 import com.google.gson.Gson;
@@ -34,29 +29,20 @@ public class Rules
 		m_oStockExchange = oStockExchange;
 	}
 	
-	public void addEvent(final Event oEvent)
+	public void addRule(final IRule oRule)
 	{
-		m_oRules.put(m_nLastRuleID, oEvent);
+		if (null == oRule)
+			return;
+		
+		m_oRules.put(m_nLastRuleID, oRule);
+		System.err.printf("Add rule : " + oRule + "\r\n");
 		m_nLastRuleID++;
 		save();
 	}
 	
-	public void removeEvent(final Integer nRuleID)
+	public void removeRule(final Integer nRuleID)
 	{
 		m_oRules.remove(nRuleID);
-		save();
-	}
-	
-	public void removeAllOccurred()
-	{
-		final List<Integer> aOccurred = new LinkedList<Integer>();
-		for(final Entry<Integer, IRule> oRule : getRules().entrySet())
-		{
-			if (oRule.getValue().getIsOccurred())
-				aOccurred.add(oRule.getKey());
-		}
-		for(final Integer nRuleID : aOccurred)
-			m_oRules.remove(nRuleID);
 		save();
 	}
 	

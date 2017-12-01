@@ -13,9 +13,9 @@ import ua.lz.ep.utils.ResourceUtils;
 
 public class BaseStockSource implements IStockSource
 {
-	private List<RateInfo> m_aRates = new LinkedList<RateInfo>();
-	protected BigDecimal m_nSumIgnore;
-	protected IStockExchange m_oStockExchange;
+	final private List<RateInfo> m_aRates = new LinkedList<RateInfo>();
+	final protected BigDecimal m_nSumIgnore;
+	final protected IStockExchange m_oStockExchange;
 	
 	public BaseStockSource(final IStockExchange oStockExchange)
 	{

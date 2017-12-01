@@ -1,14 +1,20 @@
-package solo.model.stocks.item;
+package solo.model.stocks.item.rules.notify;
 
 /** Тип события */
 public enum EventType
 {
 	/** Продажа */
 	SELL("Продажа"),
+	/** Отслеживание продаж */
+	SELLTRACE("Отслеживание продаж"),
 	/** Покупка */
 	BUY("Покупка"),
+	/** Отслеживание покупок */
+	BUYTRACE("Отслеживание покупок"),
 	/** Сделки */
-	TRADE("Сделки");
+	TRADE("Сделки"),
+	/** Отслеживание сделок */
+	TRADETRACE("Отслеживание сделок");
 	
 	/** Тип */
 	final String m_strName;
