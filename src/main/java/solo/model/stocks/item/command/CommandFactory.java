@@ -15,8 +15,10 @@ public class CommandFactory
 	
 	static
 	{
-		registerCommandClass(HelpCommand.NAME, HelpCommand.class);
-		registerCommandClass(HistoryCommand.NAME, HistoryCommand.class);
+		registerCommandClass(HelpCommand.NAME, 				HelpCommand.class);
+		registerCommandClass(HistoryCommand.NAME, 			HistoryCommand.class);
+		registerCommandClass(SetDefaultStockCommand.NAME,	SetDefaultStockCommand.class);
+		registerCommandClass(GetStocksCommand.NAME, 		GetStocksCommand.class);
 		
 		registerCommandClass(GetRateInfoCommand.NAME, GetRateInfoCommand.class);
 		registerCommandClass(LoadRateInfoCommand.NAME, LoadRateInfoCommand.class);
