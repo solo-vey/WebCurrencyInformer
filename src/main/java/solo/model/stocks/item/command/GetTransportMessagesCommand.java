@@ -1,11 +1,7 @@
 package solo.model.stocks.item.command;
 
-import solo.model.stocks.worker.WorkerFactory;
-import solo.model.stocks.worker.WorkerType;
-import solo.transport.ITransport;
 import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
-import solo.transport.TransportFactory;
 
 /** Формат комманды 
  */
@@ -13,23 +9,20 @@ public class GetTransportMessagesCommand extends BaseCommand
 {
 	final static public String NAME = "getMessages";
 
-	final protected ITransport m_oTransport;
-	
-	public GetTransportMessagesCommand(final String oTransportName)
+	public GetTransportMessagesCommand()
 	{
-		this(TransportFactory.getTransport(oTransportName));
+		super();
 	}
 
-	public GetTransportMessagesCommand(final ITransport oTransport)
+	public GetTransportMessagesCommand(final String strCommandLine)
 	{
-		super(oTransport.getName());
-		m_oTransport = oTransport;
+		super(strCommandLine);
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
-		final ITransportMessages oMessages = m_oTransport.getMessages();
+		final ITransportMessages oMessages = getTransport().getMessages();
 		if (null == oMessages)
 			return;
 		
@@ -37,7 +30,7 @@ public class GetTransportMessagesCommand extends BaseCommand
 		{
 			final String strCommandLine = oMessage.getText();
 			final ICommand oCommand = CommandFactory.getCommand(strCommandLine);
-			WorkerFactory.getWorker(WorkerType.MAIN).addCommand(oCommand);
+			getMainWorker().addCommand(oCommand);
 		}
 	}
 }

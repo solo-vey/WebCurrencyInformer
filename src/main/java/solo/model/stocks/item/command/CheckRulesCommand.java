@@ -2,11 +2,8 @@ package solo.model.stocks.item.command;
 
 import java.util.Map.Entry;
 
-import org.apache.commons.lang.StringUtils;
-
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
-import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.item.IRule;
 
 /** Формат комманды 
@@ -15,24 +12,23 @@ public class CheckRulesCommand extends BaseCommand
 {
 	final static public String NAME = "checkRules";
 
-	final protected IStockExchange m_oStockExchange;
-	
-	public CheckRulesCommand(final String strStockName)
+	public CheckRulesCommand()
 	{
-		this(StringUtils.isBlank(strStockName) ? StockExchangeFactory.getDefault() : StockExchangeFactory.getStockExchange(strStockName));
+		super();
 	}
-	
-	public CheckRulesCommand(final IStockExchange oStockExchange)
+
+	public CheckRulesCommand(final String strCommandLine)
 	{
-		super(oStockExchange.getStockName());
-		m_oStockExchange = oStockExchange;
+		super(strCommandLine);
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
-		final StateAnalysisResult oStateAnalysisResult = m_oStockExchange.getHistory().getLastAnalysisResult();
-		for(final Entry<Integer, IRule> oRuleInfo : m_oStockExchange.getRules().getRules().entrySet())
+		
+		final IStockExchange oStockExchange = getStockExchange();
+		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
+		for(final Entry<Integer, IRule> oRuleInfo : oStockExchange.getRules().getRules().entrySet())
 			oRuleInfo.getValue().check(oStateAnalysisResult, oRuleInfo.getKey());
 	}
 }

@@ -3,42 +3,28 @@ package solo.model.stocks.worker;
 import java.util.HashMap;
 import java.util.Map;
 
-import solo.model.stocks.exchange.KunaStockExchange;
-import solo.model.stocks.exchange.StockExchangeFactory;
-import solo.transport.TransportFactory;
-import solo.transport.telegram.TelegramTransport;
+import solo.model.stocks.exchange.Stocks;
 
 public class WorkerFactory
 {
-	protected static Map<WorkerType, IWorker> s_oWorkers = new HashMap<WorkerType, IWorker>();
+	protected static IWorker s_oRootWorker = new BaseWorker();
+	protected static Map<Long, MainWorker> s_oThreadToWorkers = new HashMap<Long, MainWorker>();
 	
-	static
+	static public MainWorker getMainWorker()
 	{
-		registerWorker(WorkerType.MAIN, new MainWorker());
-		registerWorker(WorkerType.STOCK, new StockWorker(StockExchangeFactory.getStockExchange(KunaStockExchange.NAME)));
-		registerWorker(WorkerType.TRANSPORT, new TransportWorker(TransportFactory.getTransport(TelegramTransport.NAME)));
+		return s_oThreadToWorkers.get(Thread.currentThread().getId());
 	}
 	
-	static protected void registerWorker(final WorkerType oWorkerType, final IWorker oWorker)
+	static public void registerMainWorkerThread(final Long nThreadID, final MainWorker oWorker)
 	{
-		s_oWorkers.put(oWorkerType, oWorker);
-	}
-	
-	static public IWorker getWorker(final WorkerType oWorkerType)
-	{
-		return s_oWorkers.get(oWorkerType);
+		s_oThreadToWorkers.put(nThreadID, oWorker);
 	}
 	
 	static public void start()
 	{
-		final IWorker oMainWorker = getWorker(WorkerType.MAIN);
+		(new MainWorker(Stocks.Kuna)).startWorker();
+		(new MainWorker(Stocks.BtcTrade)).startWorker();
 		
-		for(final IWorker oWorker : s_oWorkers.values())
-		{
-			if (!oWorker.equals(oMainWorker))
-				oWorker.startWorker();
-		}
-		
-		oMainWorker.run();
+		s_oRootWorker.run();
 	}
 }

@@ -7,18 +7,31 @@ import ua.lz.ep.utils.ResourceUtils;
 
 public class StockWorker extends BaseWorker
 {
-	final IStockExchange m_oStockExchange;
+	final protected IStockExchange m_oStockExchange;
+	final MainWorker m_oMainWorker; 
 	
-	public StockWorker(final IStockExchange oStockExchange)
+	public StockWorker(final IStockExchange oStockExchange, final MainWorker oMainWorker)
 	{
-		super(ResourceUtils.getIntFromResource("check.stock.timeout", oStockExchange.getStockProperties(), 4000));
+		super(ResourceUtils.getIntFromResource("check.stock.timeout", oStockExchange.getStockProperties(), 4000), oMainWorker.getStock());
 		m_oStockExchange = oStockExchange;
+		m_oMainWorker = oMainWorker;
+	}
+
+	public void startWorker()
+	{
+		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
+		super.startWorker();
 	}
 	
 	@Override protected void doWork() throws Exception
 	{
 		super.doWork();
-		final ICommand oLoadRateInfoCommand = new LoadRateInfoCommand(m_oStockExchange); 
-		WorkerFactory.getWorker(WorkerType.STOCK).addCommand(oLoadRateInfoCommand);
+		final ICommand oLoadRateInfoCommand = new LoadRateInfoCommand(); 
+		m_oMainWorker.addCommand(oLoadRateInfoCommand);
+	}
+	
+	public IStockExchange getStockExchange()
+	{
+		return m_oStockExchange;
 	}
 }

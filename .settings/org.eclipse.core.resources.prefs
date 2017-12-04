@@ -1,6 +1,7 @@
-#Mon Nov 27 18:35:18 EET 2017
+#Mon Dec 04 17:53:35 EET 2017
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
+encoding//src/main/resources/BtcTradeStockExchange.properties=UTF-8
 encoding//src/main/resources/KunaStockExchange.properties=UTF-8
 encoding//src/main/resources/MockStockExchange.properties=UTF-8
 encoding//src/main/resources/TelegramTransport.properties=UTF-8

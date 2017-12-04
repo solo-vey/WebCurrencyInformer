@@ -6,14 +6,9 @@ import solo.model.currency.Currency;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
-import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.oracle.RateForecast;
 import solo.model.stocks.oracle.RatesForecast;
-import solo.model.stocks.worker.WorkerFactory;
-import solo.model.stocks.worker.WorkerType;
-import solo.transport.TransportFactory;
-import solo.transport.telegram.TelegramTransport;
 import solo.utils.MathUtils;
 
 /** Формат комманды 
@@ -35,7 +30,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		final IStockExchange oStockExchange = StockExchangeFactory.getDefault(); 
+		final IStockExchange oStockExchange = getStockExchange(); 
     	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
 		final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
 		String strMessage = "Sell : " + MathUtils.toCurrencyString(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
@@ -53,7 +48,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 			strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice());
 		}
 		
-		final ICommand oCommand = new SendMessageCommand(TransportFactory.getTransport(TelegramTransport.NAME), strMessage);
-		WorkerFactory.getWorker(WorkerType.MAIN).addCommand(oCommand);
+		final ICommand oCommand = new SendMessageCommand(strMessage);
+		getMainWorker().addCommand(oCommand);
 	}
 }

@@ -15,9 +15,6 @@ import solo.model.stocks.item.command.ICommand;
 import solo.model.stocks.item.command.RemoveRuleCommand;
 import solo.model.stocks.item.command.SendMessageCommand;
 import solo.model.stocks.worker.WorkerFactory;
-import solo.model.stocks.worker.WorkerType;
-import solo.transport.TransportFactory;
-import solo.transport.telegram.TelegramTransport;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
@@ -52,13 +49,13 @@ public class EventBase extends BaseObject implements IRule
 		final String strMessage = getInfo(null) + " is occurred. Price " + MathUtils.toCurrencyString(nPrice) + 
 			" " + BaseCommand.getCommand(GetRateInfoCommand.TEMPLATE, m_oRateInfo.getCurrencyFrom()) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
-		final ICommand oSendMessageCommand = new SendMessageCommand(TransportFactory.getTransport(TelegramTransport.NAME), strMessage);
-		WorkerFactory.getWorker(WorkerType.MAIN).addCommand(oSendMessageCommand);
+		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
+		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);
 		
 		if (null != nRuleID)
 		{
 			final ICommand oDeleteCommand = new RemoveRuleCommand(nRuleID.toString(), true);
-			WorkerFactory.getWorker(WorkerType.MAIN).addCommand(oDeleteCommand);
+			WorkerFactory.getMainWorker().addCommand(oDeleteCommand);
 		}
 	}
 }

@@ -2,11 +2,6 @@ package solo.model.stocks.item.command;
 
 import org.apache.commons.lang.StringUtils;
 
-import solo.model.stocks.worker.WorkerFactory;
-import solo.model.stocks.worker.WorkerType;
-import solo.transport.TransportFactory;
-import solo.transport.telegram.TelegramTransport;
-
 /** Формат комманды 
  */
 public class HistoryCommand extends BaseCommand implements IHistoryCommand
@@ -26,7 +21,7 @@ public class HistoryCommand extends BaseCommand implements IHistoryCommand
 			strMessage += "/"  + strCommand + "\r\n";
 		strMessage = (StringUtils.isNotBlank(strMessage) ? strMessage : "History is empty");
 
-		final ICommand oCommand = new SendMessageCommand(TransportFactory.getTransport(TelegramTransport.NAME), strMessage);
-		WorkerFactory.getWorker(WorkerType.MAIN).addCommand(oCommand);
+		final ICommand oCommand = new SendMessageCommand(strMessage);
+		getMainWorker().addCommand(oCommand);
 	}
 }

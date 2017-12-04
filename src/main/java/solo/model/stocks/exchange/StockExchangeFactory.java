@@ -5,39 +5,22 @@ import java.util.Map;
 
 public class StockExchangeFactory
 {
-	final static Map<String, IStockExchange> s_oStockExchanges = new HashMap<String, IStockExchange>();
-	static IStockExchange s_oDefaultStockExchange;
+	final static Map<Stocks, IStockExchange> s_oStockExchanges = new HashMap<Stocks, IStockExchange>();
 	
 	static
 	{
-		registerStockExchange(new KunaStockExchange());
-		registerStockExchange(new MockStockExchange());
-		registerStockExchange(new BtcTradeStockExchange());
-		setDefault(getStockExchange(KunaStockExchange.NAME));
+		registerStockExchange(Stocks.Kuna, new KunaStockExchange());
+		registerStockExchange(Stocks.Mock, new MockStockExchange());
+		registerStockExchange(Stocks.BtcTrade, new BtcTradeStockExchange());
 	}
 	
-	static void registerStockExchange(final IStockExchange oStockExchange)
+	static void registerStockExchange(final Stocks oStock, final IStockExchange oStockExchange)
 	{
-		s_oStockExchanges.put(oStockExchange.getStockName().toLowerCase(), oStockExchange);
+		s_oStockExchanges.put(oStock, oStockExchange);
 	}
 
-	public static Map<String, IStockExchange> getAll()
+	public static IStockExchange getStockExchange(final Stocks oStock)
 	{
-		return s_oStockExchanges;
-	}
-
-	public static IStockExchange getStockExchange(final String strName)
-	{
-		return s_oStockExchanges.get(strName.toLowerCase());
-	}
-	
-	public static IStockExchange getDefault()
-	{
-		return s_oDefaultStockExchange;
-	}
-	
-	public static void setDefault(final IStockExchange oDefaultStockExchange)
-	{
-		s_oDefaultStockExchange = oDefaultStockExchange;
+		return s_oStockExchanges.get(oStock);
 	}
 }

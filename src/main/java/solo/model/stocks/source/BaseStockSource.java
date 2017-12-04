@@ -66,7 +66,7 @@ public class BaseStockSource implements IStockSource
 		return oOrders;
 	}
 
-	private boolean isIgnoreOrder(Order oOrder)
+	protected boolean isIgnoreOrder(final Order oOrder)
 	{
 		return (oOrder.getSum().compareTo(m_nSumIgnore) == -1);
 	}

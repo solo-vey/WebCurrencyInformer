@@ -6,6 +6,11 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.worker.MainWorker;
+import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.ITransport;
+
 abstract public class BaseCommand implements ICommand
 {
 	final protected String m_strCommandInfo;
@@ -19,6 +24,21 @@ abstract public class BaseCommand implements ICommand
 	public BaseCommand(final String strCommandInfo)
 	{
 		m_strCommandInfo = strCommandInfo;
+	}
+	
+	public static MainWorker getMainWorker()
+	{
+		return WorkerFactory.getMainWorker();
+	}
+	
+	public static ITransport getTransport()
+	{
+		return WorkerFactory.getMainWorker().getTransport();
+	}
+	
+	public static IStockExchange getStockExchange()
+	{
+		return WorkerFactory.getMainWorker().getStockExchange();
 	}
 	
 	public static List<String> getHistory()

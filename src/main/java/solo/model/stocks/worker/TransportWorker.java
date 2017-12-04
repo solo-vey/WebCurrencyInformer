@@ -8,17 +8,30 @@ import ua.lz.ep.utils.ResourceUtils;
 public class TransportWorker extends BaseWorker
 {
 	final ITransport m_oTransport;
+	final MainWorker m_oMainWorker; 
 	
-	public TransportWorker(final ITransport oTransport)
+	public TransportWorker(final ITransport oTransport, final MainWorker oMainWorker)
 	{
-		super(ResourceUtils.getIntFromResource("check.transport.timeout", oTransport.getProperties(), 4000));
+		super(ResourceUtils.getIntFromResource("check.transport.timeout", oTransport.getProperties(), 4000), oMainWorker.getStock());
 		m_oTransport = oTransport;
+		m_oMainWorker = oMainWorker;
+	}
+
+	public void startWorker()
+	{
+		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
+		super.startWorker();
 	}
 	
 	@Override protected void doWork() throws Exception
 	{
 		super.doWork();
-		final ICommand oGetTransportMessagesCommand = new GetTransportMessagesCommand(m_oTransport); 
-		WorkerFactory.getWorker(WorkerType.TRANSPORT).addCommand(oGetTransportMessagesCommand);
+		final ICommand oGetTransportMessagesCommand = new GetTransportMessagesCommand(); 
+		addCommand(oGetTransportMessagesCommand);
+	}
+	
+	public ITransport getTransport()
+	{
+		return m_oTransport;
 	}
 }

@@ -6,50 +6,83 @@ import java.util.Map;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessages;
 import solo.utils.RequestUtils;
+import ua.lz.ep.utils.ResourceUtils;
 
 public class TelegramTransport implements ITransport
 {
-	public static final String NAME = "Telegram";
+	protected final static String API_URL = "https://api.telegram.org/bot#ACCESS_TOKEN#/METHOD_NAME";
 	
-	protected final static String API_URL = "https://api.telegram.org/bot492426738:AAFCCVUkQX20WwVx6m8efsd0tbpE-WEH99U/METHOD_NAME";
-	protected final static String SEND_MESSAGE_URL = API_URL.replace("METHOD_NAME", "sendMessage");
-	protected final static String GET_UPDATES_URL = API_URL.replace("METHOD_NAME", "getUpdates");
-	protected final static String CHAT_ID = "492426738";
-	protected final static String USER_ID = "395270842";
+	final protected String m_strBotName;
+	final protected String m_strBotAccessToken;
+	final protected String m_strProperies;
+	final protected String m_strUserID;
+	final protected Integer m_nGetUpdatesTimeout;
+	protected Integer m_nNextMessageID = null; 
 	
-	protected Integer m_nLastReceiveMessageID = 940309572;
-	final protected String m_strProperies = "TelegramTransport.properties";
+	public TelegramTransport(final String strBotName)
+	{
+		m_strBotName = strBotName;
+		m_strProperies = strBotName + "TelegramTransport.properties";
+		m_strBotAccessToken = ResourceUtils.getResource("accessToken", getProperties());
+		m_strUserID = ResourceUtils.getResource("user_id", getProperties());
+		m_nGetUpdatesTimeout = ResourceUtils.getIntFromResource("getUpdates.timeout", getProperties(), 4);
+		m_nNextMessageID = ResourceUtils.getIntFromResource("start_message_id", getProperties(), -1);
+	}
 	
 	@Override public String getName()
 	{
-		return NAME;
+		return m_strBotName + "Telegram";
+	}
+	
+	protected String getApiUrl()
+	{
+		return API_URL.replace("#ACCESS_TOKEN#", m_strBotAccessToken);
+	}
+	
+	protected String getSendMessageUrl()
+	{
+		return getApiUrl().replace("METHOD_NAME", "sendMessage");
+	}
+	
+	protected String getUpdatesUrl()
+	{
+		return getApiUrl().replace("METHOD_NAME", "getUpdates");
 	}
 	
 	@Override public Object sendMessage(final String strText) throws Exception
 	{
 		final Map<String, String> aParameters = new HashMap<String, String>();
-		aParameters.put("chat_id", USER_ID);
+		aParameters.put("chat_id", m_strUserID);
 		aParameters.put("text", strText);
-		return RequestUtils.sendPostAndReturnJson(SEND_MESSAGE_URL, aParameters, true);
+		return RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true);
 	}
 
 	@Override
 	public ITransportMessages getMessages() throws Exception
 	{
 		final Map<String, String> aParameters = new HashMap<String, String>();
-		aParameters.put("timeout", "0");
-		aParameters.put("offset", "-1");
-		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(GET_UPDATES_URL, aParameters, true);
+		aParameters.put("timeout", m_nGetUpdatesTimeout.toString());
+		aParameters.put("offset", m_nNextMessageID.toString());
+		aParameters.put("limit", "1");
+		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getUpdatesUrl(), aParameters, true);
 		final TelegramMessages oMessages = new TelegramMessages(oResult);
 		
 		if (oMessages.getMessages().size() == 0)
 			return null;
 		
 		final String strLastMessageID = oMessages.getMessages().get(oMessages.getMessages().size() - 1).getID();
-		final Integer nNextMessageID = Integer.parseInt(strLastMessageID) + 1;
-		aParameters.put("offset", nNextMessageID.toString());
-		RequestUtils.sendPostAndReturnJson(GET_UPDATES_URL, aParameters, true);
+		m_nNextMessageID = Integer.parseInt(strLastMessageID) + 1;
 		return oMessages;
+	}
+	
+	public Integer getTimeOut()
+	{
+		return (null == m_nNextMessageID ? 0 : m_nGetUpdatesTimeout); 
+	}
+	
+	public Integer getOffset()
+	{
+		return (null == m_nNextMessageID ? -1 : m_nNextMessageID); 
 	}
 	
 	public String getProperties()

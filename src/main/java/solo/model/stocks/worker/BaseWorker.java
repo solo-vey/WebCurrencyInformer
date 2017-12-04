@@ -2,6 +2,7 @@ package solo.model.stocks.worker;
 
 import java.util.Date;
 
+import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.CommandFactory;
 import solo.model.stocks.item.command.CommandQueue;
 import solo.model.stocks.item.command.ICommand;
@@ -12,15 +13,22 @@ public class BaseWorker extends Thread implements IWorker
 	
 	protected boolean m_bIsManualStopped = false;
 	final protected int m_nTimeOut;
+	final protected Stocks m_oStock;
 	
 	public BaseWorker()
 	{
-		this(1000);
+		this(1000, Stocks.Uknown);
 	}
 	
-	public BaseWorker(final int nTimeOut)
+	public BaseWorker(final int nTimeOut, final Stocks oStock)
 	{
 		m_nTimeOut = nTimeOut;
+		m_oStock = oStock;
+	}
+	
+	public Stocks getStock()
+	{
+		return m_oStock;
 	}
 	
 	public void addCommand(final ICommand oCommand)
@@ -53,7 +61,7 @@ public class BaseWorker extends Thread implements IWorker
 				return;
 			
 			oCommand.execute();
-			System.err.printf(Thread.currentThread().getName() +  " Execute command [" + CommandFactory.getCommandName(oCommand.getClass()) + "] complete. " + (new Date()) + " Info [" + oCommand.getInfo() + "]. Queue size [" + m_oCommandQueue.size() + "]\r\n");
+			System.err.printf(Thread.currentThread().getName() +  "[" + getStock() + "] Execute command [" + CommandFactory.getCommandName(oCommand.getClass()) + "] complete. " + (new Date()) + " Info [" + oCommand.getInfo() + "]. Queue size [" + m_oCommandQueue.size() + "]\r\n");
 		}
 	}
 	

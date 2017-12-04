@@ -9,7 +9,7 @@ import solo.utils.CommonUtils;
 
 public class RulesFactory
 {
-	protected static Map<String, Class<?>> m_oRulesClassByType = new HashMap<String, Class<?>>();
+	protected static Map<String, Class<?>> s_oRulesClassByType = new HashMap<String, Class<?>>();
 	
 	static
 	{
@@ -18,13 +18,13 @@ public class RulesFactory
 	
 	static protected void registerRuleClass(final String strRule, final Class<?> oClass)
 	{
-		m_oRulesClassByType.put(strRule, oClass);
+		s_oRulesClassByType.put(strRule, oClass);
 	}
 
 	public static IRule getRule(final String strCommandLine)
 	{
 		final String strRule = CommonUtils.splitFirst(strCommandLine).toLowerCase();
-		final Class<?> oClass = (Class<?>) m_oRulesClassByType.get(strRule);
+		final Class<?> oClass = (Class<?>) s_oRulesClassByType.get(strRule);
 		if (null == oClass)
 			return null;
 		

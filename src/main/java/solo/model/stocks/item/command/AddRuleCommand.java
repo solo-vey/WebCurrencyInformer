@@ -1,12 +1,7 @@
 package solo.model.stocks.item.command;
 
-import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RulesFactory;
-import solo.model.stocks.worker.WorkerFactory;
-import solo.model.stocks.worker.WorkerType;
-import solo.transport.TransportFactory;
-import solo.transport.telegram.TelegramTransport;
 
 /** Формат комманды 
  */
@@ -26,10 +21,10 @@ public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		final IRule oRule = RulesFactory.getRule(m_strRuleInfo);
-		StockExchangeFactory.getDefault().getRules().addRule(oRule);
+		getStockExchange().getRules().addRule(oRule);
 		
 		final String strMessage = "Rule " + getInfo() + " add. " + BaseCommand.getCommand(GetRulesCommand.NAME);
-		final ICommand oCommand = new SendMessageCommand(TransportFactory.getTransport(TelegramTransport.NAME), strMessage);
-		WorkerFactory.getWorker(WorkerType.MAIN).addCommand(oCommand);
+		final ICommand oCommand = new SendMessageCommand(strMessage);
+		getMainWorker().addCommand(oCommand);
 	}
 }
