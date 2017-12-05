@@ -2,6 +2,7 @@ package solo.utils;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.text.DecimalFormat;
 import java.text.NumberFormat;
 import java.util.Locale;
 
@@ -23,5 +24,14 @@ public class MathUtils
 	public static String toCurrencyString(final BigDecimal oValue)
 	{
 		return NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
+	}
+	
+	public static String toCurrencyStringEx(final BigDecimal oValue)
+	{
+		if (oValue.doubleValue() > 1)
+			return toCurrencyString(oValue);
+		
+		final DecimalFormat oDecimalFormat = new DecimalFormat("#.00000000");
+		return "0" + oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
 	}
 }

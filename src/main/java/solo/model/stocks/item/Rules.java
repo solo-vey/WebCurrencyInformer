@@ -1,20 +1,14 @@
 package solo.model.stocks.item;
 
-import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Type;
-import java.nio.file.Files;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
-import org.apache.commons.io.FileUtils;
-
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
-
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
-import ua.lz.ep.utils.JsonUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class Rules
@@ -27,6 +21,9 @@ public class Rules
 	public Rules(final IStockExchange oStockExchange)
 	{
 		m_oStockExchange = oStockExchange;
+		load();
+		for(final Integer nRuleID : m_oRules.keySet())
+			m_nLastRuleID = (m_nLastRuleID <= nRuleID ? nRuleID + 1 : m_nLastRuleID);
 	}
 	
 	public void addRule(final IRule oRule)
@@ -51,40 +48,47 @@ public class Rules
 		return m_oRules;
 	}
 	
-	private void save()
+	public void save()
 	{
-		try
+		final String strStockEventsFileName = getFileName();
+
+		try 
 		{
-			final String strJson = JsonUtils.toJson(m_oRules);
-			final String strStockEventsFileName = getFileName();
-			FileUtils.writeStringToFile(new File(strStockEventsFileName), strJson);
-		}
-		catch (IOException e){	}
+	         final FileOutputStream oFileStream = new FileOutputStream(strStockEventsFileName);
+	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
+	         oStream.writeObject(m_oRules);
+	         oStream.close();
+	         oFileStream.close();
+		} 
+		catch (IOException e) 
+		{
+			System.err.printf("Save rules exception : " + e.getMessage());
+		}			
 	}
 
-	protected void load()
+	@SuppressWarnings("unchecked")
+	public void load()
 	{
-		try
+		final String strStockEventsFileName = getFileName(); 
+		try 
 		{
-			final String strStockEventsFileName = getFileName(); 
-			String strJson = new String(Files.readAllBytes((new File(strStockEventsFileName)).toPath()));
-			final GsonBuilder oGsonBuilder = new GsonBuilder();
-	
-			final Gson oGson = oGsonBuilder.create();
-			final Type oType = new TypeToken<HashMap<Integer, IRule>>(){}.getType();
-			final HashMap<Integer, IRule> oRules = oGson.fromJson(strJson, oType);
-			m_oRules.clear();
-			m_oRules.putAll(oRules);
-		}
-		catch (IOException e) { 		}
+	         final FileInputStream oFileStream = new FileInputStream(strStockEventsFileName);
+	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
+	         final Map<Integer, IRule> oRules = (Map<Integer, IRule>) oStream.readObject();
+	         m_oRules.clear();
+	         m_oRules.putAll(oRules);
+	         oStream.close();
+	         oFileStream.close();
+		} 
+		catch (final Exception e) 
+		{
+			System.err.printf("Load rules exception : " + e.getMessage() + "\r\n");
+	    }			
 	}
 
-	/**
-	 * @return
-	 */
 	String getFileName()
 	{
-		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rules.json";
+		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rules.ser";
 		return strStockEventsFileName;
 	}
 }

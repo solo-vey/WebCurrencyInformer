@@ -1,6 +1,7 @@
 package solo.model.currency;
 
-import java.text.DecimalFormat;
+import java.math.BigDecimal;
+import solo.utils.MathUtils;
 
 /** Информация о курсе валют  */
 public class CurrencyRate
@@ -43,6 +44,6 @@ public class CurrencyRate
 	/** Строковое представление документа */
 	@Override public String toString()
 	{
-		return m_oCurrencyFrom + " = " + DecimalFormat.getCurrencyInstance(m_oCurrencyTo.getLocale()).format(m_nValue);
+		return m_oCurrencyFrom + " = " + MathUtils.toCurrencyString(new BigDecimal(m_nValue));
 	}
 }

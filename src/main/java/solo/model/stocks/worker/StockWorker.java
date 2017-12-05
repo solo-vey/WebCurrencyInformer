@@ -27,7 +27,7 @@ public class StockWorker extends BaseWorker
 	{
 		super.doWork();
 		final ICommand oLoadRateInfoCommand = new LoadRateInfoCommand(); 
-		m_oMainWorker.addCommand(oLoadRateInfoCommand);
+		addCommand(oLoadRateInfoCommand);
 	}
 	
 	public IStockExchange getStockExchange()

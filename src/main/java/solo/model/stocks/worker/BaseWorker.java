@@ -47,9 +47,14 @@ public class BaseWorker extends Thread implements IWorker
 			}
 			catch (Exception e) 
 			{
-				System.err.printf("Thread exception : " + e + "\r\n");
+				onException(e);
 			}
 		}
+	}
+	
+	protected void onException(final Exception e)
+	{
+		System.err.printf("Thread exception : " + e + "\r\n");
 	}
 	
 	protected void doWork() throws Exception

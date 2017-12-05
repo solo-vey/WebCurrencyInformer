@@ -20,13 +20,16 @@ import solo.utils.MathUtils;
 
 public class EventBase extends BaseObject implements IRule
 {
+	private static final long serialVersionUID = -6534375856366736470L;
+	
 	final protected RateInfo m_oRateInfo;
 	protected BigDecimal m_nPrice;
 	
 	public EventBase(final RateInfo oRateInfo, final String strPriceInfo)
 	{
 		m_oRateInfo = oRateInfo;
-		m_nPrice = MathUtils.fromString(CommonUtils.splitFirst(strPriceInfo).toUpperCase());
+		final String strPrice = CommonUtils.splitFirst(strPriceInfo).toUpperCase();
+		m_nPrice = (StringUtils.isNotBlank(strPrice) ? MathUtils.fromString(strPrice) : BigDecimal.ZERO);
 	}
 	
 	public String getType()

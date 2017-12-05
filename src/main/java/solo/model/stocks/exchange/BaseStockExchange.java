@@ -20,7 +20,7 @@ public class BaseStockExchange implements IStockExchange
 	final protected String m_strStockProperies;
 	protected IStockSource m_oStockSource;
 	final protected Map<Currency, StockCurrencyVolume> m_oStockCurrencyVolumes = new HashMap<Currency, StockCurrencyVolume>(); 
-	final protected Rules m_oRules = new Rules(this);
+	final protected Rules m_oRules;
 	final StockRateStatesLocalHistory m_oStockRateStatesLocalHistory;
 	final IStateAnalysis m_oStateAnalysis = new SimpleStateAnalysis();
 
@@ -33,6 +33,7 @@ public class BaseStockExchange implements IStockExchange
 		final int nHistoryLength = ResourceUtils.getIntFromResource("history.length", getStockProperties(), 100);
 		final int nForecastLength = ResourceUtils.getIntFromResource("forecast.length", getStockProperties(), 1);
 		m_oStockRateStatesLocalHistory = new StockRateStatesLocalHistory(nHistoryLength, nForecastLength, oRateOracle);
+		m_oRules = new Rules(this);
 	}
 	
 	public String getStockName()

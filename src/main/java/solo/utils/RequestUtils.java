@@ -289,7 +289,7 @@ public class RequestUtils
 			if (null == oResponse)
 			    return null;
 
-			if (oResponse.getStatusLine().getStatusCode() != 200)
+			if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
 			    throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]");
 			
 			final InputStream oSource = (InputStream) oResponse.getEntity().getContent();

@@ -29,6 +29,10 @@ public class CommandFactory
 		registerCommandClass(GetRulesCommand.NAME,		GetRulesCommand.class);
 		registerCommandClass(CheckRulesCommand.NAME,	CheckRulesCommand.class);
 		registerCommandClass(RemoveAllRulesCommand.NAME,RemoveAllRulesCommand.class);
+
+		registerCommandClass(GetStockInfoCommand.NAME, 	GetStockInfoCommand.class);
+		registerCommandClass(RemoveOrderCommand.NAME, 	RemoveOrderCommand.class);
+		registerCommandClass(AddOrderCommand.NAME, 		AddOrderCommand.class);
 	}
 	
 	static protected void registerCommandClass(final String strCommand, final Class<?> oClass)

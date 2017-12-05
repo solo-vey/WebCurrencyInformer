@@ -1,5 +1,9 @@
 package solo.utils;
 
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 
 public class CommonUtils
@@ -24,5 +28,14 @@ public class CommonUtils
 	{
 		final String[] aParts = strText.split(" |_", nPos);
 		return (aParts.length > (nPos - 1) ? aParts[nPos - 1] : StringUtils.EMPTY);
+	}
+	
+	public static String encodeSha256HMAC(final String strSecretKey, final String strData) throws Exception 
+	{
+		  final Mac oSha256_HMAC = Mac.getInstance("HmacSHA256");
+		  SecretKeySpec secret_key = new SecretKeySpec(strSecretKey.getBytes("UTF-8"), "HmacSHA256");
+		  oSha256_HMAC.init(secret_key);
+
+		  return Hex.encodeHexString(oSha256_HMAC.doFinal(strData.getBytes("UTF-8")));
 	}
 }

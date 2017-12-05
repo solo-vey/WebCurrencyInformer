@@ -10,6 +10,8 @@ import solo.utils.MathUtils;
 
 public class EventSellTrace extends EventSell
 {
+	private static final long serialVersionUID = -5138333232638394248L;
+	
 	String m_strMoveType = StringUtils.EMPTY;
 	protected BigDecimal m_nDelta;
 		

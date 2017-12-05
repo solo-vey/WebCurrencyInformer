@@ -36,4 +36,18 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	{
 		return m_oStockWorker.getStockExchange();
 	}
+	
+	protected void onException(final Exception e)
+	{
+		super.onException(e);
+		
+		try
+		{
+			m_oTransportWorker.getTransport().sendMessage("Exception : " + e.getMessage());
+		}
+		catch (Exception eSend)
+		{
+			System.err.printf("Send message exception : " + eSend + "\r\n");
+		}
+	}
 }

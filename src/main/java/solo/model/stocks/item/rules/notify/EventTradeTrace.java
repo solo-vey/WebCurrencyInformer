@@ -5,9 +5,12 @@ import java.math.BigDecimal;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.worker.WorkerFactory;
 
 public class EventTradeTrace extends EventTrade
 {
+	private static final long serialVersionUID = -1423107368298871795L;
+	
 	String m_strMoveType = StringUtils.EMPTY;
 		
 	public EventTradeTrace(final RateInfo oRateInfo, final String strPriceInfo)
@@ -30,6 +33,8 @@ public class EventTradeTrace extends EventTrade
 		m_strMoveType = (nPrice.compareTo(m_nPrice) > 0 ? "[^]" : "[v]");
 		super.onOccurred(nPrice, null);
 		m_nPrice = nPrice;
+		
+		WorkerFactory.getMainWorker().getStockExchange().getRules().save();
 	}
 }
 

@@ -7,6 +7,8 @@ import solo.model.stocks.item.RateInfo;
 
 public class EventSell extends EventBase
 {
+	private static final long serialVersionUID = -178132223657975169L;
+
 	public EventSell(final RateInfo oRateInfo, final String strPriceInfo)
 	{
 		super(oRateInfo, strPriceInfo);

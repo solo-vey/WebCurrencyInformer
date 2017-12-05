@@ -11,6 +11,8 @@ import solo.utils.MathUtils;
 
 public class EventTrade extends EventBase
 {
+	private static final long serialVersionUID = -3592815874419984775L;
+	
 	protected BigDecimal m_nDelta;
 	
 	public EventTrade(final RateInfo oRateInfo, final String strPriceInfo)

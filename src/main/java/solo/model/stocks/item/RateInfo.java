@@ -1,9 +1,13 @@
 package solo.model.stocks.item;
 
+import java.io.Serializable;
+
 import solo.model.currency.Currency;
 
-public class RateInfo
+public class RateInfo implements Serializable
 {
+	private static final long serialVersionUID = -7207375688298563812L;
+
 	final protected Currency m_oCurrencyFrom; 
 	
 	final protected Currency m_oCurrencyTo;

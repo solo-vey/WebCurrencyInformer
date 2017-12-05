@@ -4,11 +4,15 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
+import solo.model.stocks.analyse.RateAnalysisResult;
+import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
+import solo.model.stocks.item.StockUserInfo;
+import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class BaseStockSource implements IStockSource
@@ -42,6 +46,31 @@ public class BaseStockSource implements IStockSource
 	protected RateState getRateState(RateInfo oRateInfo) throws Exception
 	{
 		return new RateState(oRateInfo);
+	}
+	
+	@Override public StockUserInfo getUserInfo() throws Exception
+	{
+		return new StockUserInfo();
+	}
+
+	@Override public Order addOrder(final String strSite, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice) throws Exception
+	{
+		final StateAnalysisResult oAnalysisResult = m_oStockExchange.getHistory().getLastAnalysisResult();
+		final RateAnalysisResult oRateAnalysisResult = oAnalysisResult.getRateAnalysisResult(oRateInfo);
+		final BigDecimal nMinPrice = oRateAnalysisResult.getBidsAnalysisResult().getBestPrice();
+		final BigDecimal nMaxPrice = oRateAnalysisResult.getAsksAnalysisResult().getBestPrice();
+		if (strSite.equalsIgnoreCase("sell") && nPrice.compareTo(nMinPrice) < 0)
+			throw new Exception("Cannot create order. Price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]");
+
+		if (strSite.equalsIgnoreCase("buy") && nPrice.compareTo(nMaxPrice) > 0)
+			throw new Exception("Cannot create order. Price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "]");
+		
+		return null;
+	}
+
+	@Override public Order removeOrder(String strOrderId) throws Exception
+	{
+		return null;
 	}
 
 	public void registerRate(final RateInfo oRateInfo)

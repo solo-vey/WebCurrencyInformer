@@ -13,6 +13,8 @@ import solo.utils.CommonUtils;
 
 public class EventFactory extends BaseObject implements IRule
 {
+	private static final long serialVersionUID = 908092157964890096L;
+
 	protected static Map<EventType, Class<?>> s_oEventClassByType = new HashMap<EventType, Class<?>>();
 
 	final protected EventBase m_oEventBase;
@@ -26,6 +28,8 @@ public class EventFactory extends BaseObject implements IRule
 		registerEventClass(EventType.SELLTRACE,  EventSellTrace.class);
 		registerEventClass(EventType.BUYTRACE, 	 EventBuyTrace.class);
 		registerEventClass(EventType.TRADETRACE, EventTradeTrace.class);
+
+		registerEventClass(EventType.TRENDTRACE, EventTrendTrace.class);
 	}
 	
 	static protected void registerEventClass(final EventType oEventType, final Class<?> oClass)

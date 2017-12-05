@@ -3,6 +3,8 @@ package solo.transport.telegram;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.transport.ITransport;
 import solo.transport.ITransportMessages;
 import solo.utils.RequestUtils;
@@ -51,6 +53,9 @@ public class TelegramTransport implements ITransport
 	
 	@Override public Object sendMessage(final String strText) throws Exception
 	{
+		if (StringUtils.isBlank(strText))
+			return null;
+		
 		final Map<String, String> aParameters = new HashMap<String, String>();
 		aParameters.put("chat_id", m_strUserID);
 		aParameters.put("text", strText);
