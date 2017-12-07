@@ -11,11 +11,12 @@ import org.apache.commons.lang.time.DateUtils;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.analyse.JapanCandle;
-import solo.model.stocks.item.command.BaseCommand;
-import solo.model.stocks.item.command.GetRateInfoCommand;
-import solo.model.stocks.item.command.GetRulesCommand;
-import solo.model.stocks.item.command.ICommand;
-import solo.model.stocks.item.command.SendMessageCommand;
+import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.system.GetRateInfoCommand;
+import solo.model.stocks.item.command.rule.GetRulesCommand;
+import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.item.command.system.SendMessageCommand;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 
@@ -87,7 +88,7 @@ public class EventTrendTrace extends EventBase
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
 		final String strMessage = getInfo(null) + " is occurred. " + 
-			" " + BaseCommand.getCommand(GetRateInfoCommand.TEMPLATE, m_oRateInfo.getCurrencyFrom()) + 
+			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom()) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);

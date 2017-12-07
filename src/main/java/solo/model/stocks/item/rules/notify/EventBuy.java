@@ -9,9 +9,14 @@ public class EventBuy extends EventBase
 {
 	private static final long serialVersionUID = 7603747872515498029L;
 
-	public EventBuy(final RateInfo oRateInfo, final String strPriceInfo)
+	public EventBuy(final RateInfo oRateInfo, final String strСommandLine)
 	{
-		super(oRateInfo, strPriceInfo);
+		super(oRateInfo, strСommandLine);
+	}
+
+	public EventBuy(final RateInfo oRateInfo, final String strСommandLine, final String strTemplate)
+	{
+		super(oRateInfo, strСommandLine, strTemplate);
 	}
 
 	@Override public String getType()

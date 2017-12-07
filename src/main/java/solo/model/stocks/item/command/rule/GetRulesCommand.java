@@ -1,10 +1,12 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.rule;
 
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.IRule;
+import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.system.IHistoryCommand;
 
 /** Формат комманды 
  */
@@ -14,7 +16,7 @@ public class GetRulesCommand extends BaseCommand implements IHistoryCommand
 	
 	public GetRulesCommand(final String strCommandLine)
 	{
-		super(strCommandLine);
+		super(strCommandLine, StringUtils.EMPTY);
 	}
 	
 	public void execute() throws Exception
@@ -29,7 +31,6 @@ public class GetRulesCommand extends BaseCommand implements IHistoryCommand
 		else 
 			strMessage += "No rules";
 			
-		final ICommand oCommand = new SendMessageCommand(strMessage);
-		getMainWorker().addCommand(oCommand);
+		sendMessage(strMessage);
 	}
 }

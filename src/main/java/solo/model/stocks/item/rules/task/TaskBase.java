@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.notify;
+package solo.model.stocks.item.rules.task;
 
 import java.math.BigDecimal;
 
@@ -16,33 +16,29 @@ import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.SendMessageCommand;
 import solo.model.stocks.worker.WorkerFactory;
-import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
-public class EventBase extends HasParameters implements IRule
+public class TaskBase extends HasParameters implements IRule
 {
-	private static final long serialVersionUID = -6534375856366736470L;
-
-	final static public String PRICE_PARAMETER = "#price#";
+	private static final long serialVersionUID = -6534375856366736570L;
 	
 	final protected RateInfo m_oRateInfo;
-	protected BigDecimal m_nPrice;
 	
-	public EventBase(final RateInfo oRateInfo, final String strCommandLine)
+	public TaskBase(final RateInfo oRateInfo, final String strCommandLine)
 	{
-		this(oRateInfo, strCommandLine, PRICE_PARAMETER);
-	}
-	
-	public EventBase(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate)
-	{
-		super(strCommandLine, CommonUtils.mergeParameters(PRICE_PARAMETER, strTemplate));
+		super(strCommandLine, StringUtils.EMPTY);
 		m_oRateInfo = oRateInfo;
-		m_nPrice = getParameterAsBigDecimal(PRICE_PARAMETER);
 	}
 	
-	public String getHelp(final String strCommandStart)
+	public TaskBase(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate)
 	{
-		return strCommandStart + (StringUtils.isNotBlank(getTemplate()) ? "_" + getTemplate() : StringUtils.EMPTY);
+		super(strCommandLine, strTemplate);
+		m_oRateInfo = oRateInfo;
+	}
+	
+	public String getHelp(final String strCommandLine)
+	{
+		return strCommandLine + (StringUtils.isNotBlank(getTemplate()) ? "_" + getTemplate() : StringUtils.EMPTY);
 	}
 	
 	public String getType()
@@ -52,7 +48,7 @@ public class EventBase extends HasParameters implements IRule
 	
 	public String getInfo(final Integer nRuleID)
 	{
-		return getType() + "/" + m_oRateInfo.getCurrencyFrom() + "/" + MathUtils.toCurrencyString(m_nPrice) + 
+		return getType() + "/" + getCommandLine() + 
 			(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
 	}
 	
@@ -63,16 +59,10 @@ public class EventBase extends HasParameters implements IRule
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
 		final String strMessage = "Occurred " + getInfo(null) + "/" + MathUtils.toCurrencyString(nPrice) + 
- 			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom()) + 
+			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom()) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);
-		
-		if (null != nRuleID)
-		{
-			final ICommand oDeleteCommand = new RemoveRuleCommand(nRuleID.toString(), true);
-			WorkerFactory.getMainWorker().addCommand(oDeleteCommand);
-		}
 	}
 }
 

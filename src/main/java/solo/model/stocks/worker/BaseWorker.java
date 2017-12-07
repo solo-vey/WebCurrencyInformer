@@ -3,9 +3,9 @@ package solo.model.stocks.worker;
 import java.util.Date;
 
 import solo.model.stocks.exchange.Stocks;
-import solo.model.stocks.item.command.CommandFactory;
-import solo.model.stocks.item.command.CommandQueue;
-import solo.model.stocks.item.command.ICommand;
+import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.base.CommandQueue;
+import solo.model.stocks.item.command.base.ICommand;
 
 public class BaseWorker extends Thread implements IWorker
 {

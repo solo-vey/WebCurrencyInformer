@@ -20,11 +20,28 @@ public class BaseStockSource implements IStockSource
 	final private List<RateInfo> m_aRates = new LinkedList<RateInfo>();
 	final protected BigDecimal m_nSumIgnore;
 	final protected IStockExchange m_oStockExchange;
+
+	final protected String m_strMoneyUrl;
+	final protected String m_strMyOrdersUrl;
+	final protected String m_strRemoveOrderUrl;
+	final protected String m_strAddOrderUrl;
+	final protected String m_strTimeUrl;
+	final protected String m_strPublicKey;
+	final protected String m_strSecretKey;
 	
 	public BaseStockSource(final IStockExchange oStockExchange)
 	{
 		m_oStockExchange = oStockExchange;
 		m_nSumIgnore = new BigDecimal(ResourceUtils.getIntFromResource("sum.ignore", getStockExchange().getStockProperties(), 1));
+		
+		m_strMoneyUrl = ResourceUtils.getResource("money.url", getStockExchange().getStockProperties());
+		m_strTimeUrl = ResourceUtils.getResource("time.url", getStockExchange().getStockProperties());
+		m_strMyOrdersUrl = ResourceUtils.getResource("my_orders.url", getStockExchange().getStockProperties());
+		m_strRemoveOrderUrl = ResourceUtils.getResource("remove_order.url", getStockExchange().getStockProperties());
+		m_strAddOrderUrl = ResourceUtils.getResource("add_order.url", getStockExchange().getStockProperties());
+		
+		m_strPublicKey = ResourceUtils.getResource("trade.public.key", getStockExchange().getStockProperties());
+		m_strSecretKey = ResourceUtils.getResource("trade.secret.key", getStockExchange().getStockProperties());
 	}
 	
 	public IStockExchange getStockExchange()
@@ -48,9 +65,13 @@ public class BaseStockSource implements IStockSource
 		return new RateState(oRateInfo);
 	}
 	
-	@Override public StockUserInfo getUserInfo() throws Exception
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		return new StockUserInfo();
+	}
+	
+	@Override public void restart() throws Exception
+	{
 	}
 
 	@Override public Order addOrder(final String strSite, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice) throws Exception

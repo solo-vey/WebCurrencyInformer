@@ -1,6 +1,10 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.system;
 
-public class SendMessageCommand extends BaseCommand
+import org.apache.commons.lang.StringUtils;
+
+import solo.model.stocks.item.command.base.BaseCommand;
+
+public class SendMessageCommand extends BaseCommand implements ISystemCommand
 {
 	final static public String NAME = "sendMessage";
 
@@ -8,7 +12,7 @@ public class SendMessageCommand extends BaseCommand
 	
 	public SendMessageCommand(final String strMessage)
 	{
-		super(strMessage);
+		super(strMessage, StringUtils.EMPTY);
 		m_strMessage = strMessage;
 	}
 	

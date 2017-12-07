@@ -1,24 +1,33 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.system;
 
 import org.apache.commons.lang.StringUtils;
+
+import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.ICommand;
 
 /** Формат комманды 
  */
 public class HistoryCommand extends BaseCommand implements IHistoryCommand
 {
 	final static public String NAME = "history";
+	
+	final protected String m_strFind;
 
 	public HistoryCommand(final String strCommandLine)
 	{
-		super(strCommandLine);
+		super(strCommandLine, TAIL_PARAMETER);
+		m_strFind = getParameter(TAIL_PARAMETER).toLowerCase();
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
 		String strMessage = StringUtils.EMPTY;
-		for(final String strCommand : BaseCommand.getHistory())
-			strMessage += "/"  + strCommand + "\r\n";
+		for(final String strCommand : getMainWorker().getHistory().getCommands())
+		{
+			if (StringUtils.isBlank(m_strFind) || strCommand.toLowerCase().contains(m_strFind))
+				strMessage += "/"  + strCommand + "\r\n";
+		}
 		strMessage = (StringUtils.isNotBlank(strMessage) ? strMessage : "History is empty");
 
 		final ICommand oCommand = new SendMessageCommand(strMessage);

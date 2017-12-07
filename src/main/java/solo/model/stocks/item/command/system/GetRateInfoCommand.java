@@ -1,12 +1,13 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.system;
 
 import java.util.List;
 
-import solo.model.currency.Currency;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.oracle.RateForecast;
 import solo.model.stocks.oracle.RatesForecast;
 import solo.utils.MathUtils;
@@ -16,15 +17,14 @@ import solo.utils.MathUtils;
 public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 {
 	final static public String NAME = "getRateInfo";
-	final static public String TEMPLATE = NAME + "_%s";
+	final static public String RATE_PARAMETER = "#rate#";
 
 	final protected RateInfo m_oRateInfo;
 	
 	public GetRateInfoCommand(final String strRateInfo)
 	{
-		super(strRateInfo);
-		final String strCurrencyFrom = strRateInfo.toUpperCase();
-		m_oRateInfo = new RateInfo(Currency.valueOf(strCurrencyFrom), Currency.UAH); 
+		super(strRateInfo, RATE_PARAMETER);
+		m_oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
 	}
 	
 	public void execute() throws Exception
@@ -48,7 +48,6 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 			strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice());
 		}
 		
-		final ICommand oCommand = new SendMessageCommand(strMessage);
-		getMainWorker().addCommand(oCommand);
+		sendMessage(strMessage);
 	}
 }

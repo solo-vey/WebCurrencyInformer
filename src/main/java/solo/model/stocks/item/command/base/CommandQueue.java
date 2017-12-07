@@ -1,4 +1,4 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.base;
 
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;

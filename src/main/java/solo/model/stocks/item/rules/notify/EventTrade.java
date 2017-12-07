@@ -6,20 +6,20 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.RateInfo;
-import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
 public class EventTrade extends EventBase
 {
 	private static final long serialVersionUID = -3592815874419984775L;
-	
+
+	final static public String DELTA_PARAMETER = "#delta#";
+
 	protected BigDecimal m_nDelta;
 	
 	public EventTrade(final RateInfo oRateInfo, final String strPriceInfo)
 	{
-		super(oRateInfo, strPriceInfo);
-		final String strDelta = CommonUtils.splitToPos(strPriceInfo, 1);
-		m_nDelta = (StringUtils.isNotBlank(strDelta) ? MathUtils.fromString(strDelta).divide(new BigDecimal(100)) : new BigDecimal(0.0025));
+		super(oRateInfo, strPriceInfo, DELTA_PARAMETER);
+		m_nDelta = getParameterAsBigDecimal(DELTA_PARAMETER, new BigDecimal(0.0025));
 	}
 
 	@Override public String getType()
@@ -29,8 +29,8 @@ public class EventTrade extends EventBase
 	
 	public String getInfo(final Integer nRuleID)
 	{
-		return getType() + "/" + m_oRateInfo.getCurrencyFrom() + "/" + 
-			MathUtils.toCurrencyString(getMinTradePrice()) + "-" + MathUtils.toCurrencyString(getMaxTradePrice()) + 
+		return getType() + "/" + m_oRateInfo.getCurrencyFrom() +  
+			(null != nRuleID ? "/" + MathUtils.toCurrencyString(getMinTradePrice()) + "-" + MathUtils.toCurrencyString(getMaxTradePrice()) : StringUtils.EMPTY) + 
 			(null != nRuleID ? " /removeRule_" + nRuleID : StringUtils.EMPTY);   
 	}
 	

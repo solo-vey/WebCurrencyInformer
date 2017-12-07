@@ -22,14 +22,6 @@ public class KunaStockSource extends BaseStockSource
 {
 	final protected String m_strOrdersUrl;
 	final protected String m_strTradesUrl;
-
-	final protected String m_strMoneyUrl;
-	final protected String m_strMyOrdersUrl;
-	final protected String m_strRemoveOrderUrl;
-	final protected String m_strAddOrderUrl;
-	final protected String m_strTimeUrl;
-	final protected String m_strPublicKey;
-	final protected String m_strSecretKey;
 	
 	protected Long m_nTimeDelta;
 	
@@ -38,16 +30,9 @@ public class KunaStockSource extends BaseStockSource
 		super(oStockExchange);
 		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
 		m_strTradesUrl = ResourceUtils.getResource("trades.url", getStockExchange().getStockProperties());
-		m_strMoneyUrl = ResourceUtils.getResource("money.url", getStockExchange().getStockProperties());
-		m_strTimeUrl = ResourceUtils.getResource("time.url", getStockExchange().getStockProperties());
-		m_strMyOrdersUrl = ResourceUtils.getResource("my_orders.url", getStockExchange().getStockProperties());
-		m_strRemoveOrderUrl = ResourceUtils.getResource("remove_order.url", getStockExchange().getStockProperties());
-		m_strAddOrderUrl = ResourceUtils.getResource("add_order.url", getStockExchange().getStockProperties());
 		
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
-		m_strPublicKey = ResourceUtils.getResource("trade.public.key", getStockExchange().getStockProperties());
-		m_strSecretKey = ResourceUtils.getResource("trade.secret.key", getStockExchange().getStockProperties());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -102,11 +87,16 @@ public class KunaStockSource extends BaseStockSource
 		return oOrder;
 	}
 	
-	@Override public StockUserInfo getUserInfo() throws Exception
+	@Override public void restart() throws Exception
 	{
-		final StockUserInfo oUserInfo = super.getUserInfo();
+		m_nTimeDelta = null;
+	}
+	
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
+	{
+		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
 		setUserMoney(oUserInfo);
-		setUserOrders(oUserInfo);
+		setUserOrders(oUserInfo, oRateInfo);
 		return oUserInfo;
 	}
 	
@@ -129,10 +119,13 @@ public class KunaStockSource extends BaseStockSource
 		}
 	}
 	
-	public void setUserOrders(final StockUserInfo oUserInfo) throws Exception
+	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo) throws Exception
 	{
 		for(final RateInfo oRateInfo : getRates())
 		{
+			if (null != oRequestRateInfo && !oRequestRateInfo.equals(oRateInfo))
+				continue;
+			
 			final String strMarket = getRateIdentifier(oRateInfo);
 			final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(m_strMyOrdersUrl.replace("#market#", strMarket), "GET"), true);
 			
@@ -191,5 +184,4 @@ public class KunaStockSource extends BaseStockSource
 			return oTimeNow.toString();
 		}
 	}
-	
 }

@@ -14,6 +14,11 @@ public class EventSell extends EventBase
 		super(oRateInfo, strPriceInfo);
 	}
 
+	public EventSell(final RateInfo oRateInfo, final String strСommandLine, final String strTemplate)
+	{
+		super(oRateInfo, strСommandLine, strTemplate);
+	}
+
 	@Override public String getType()
 	{
 		return "SELL";   

@@ -1,8 +1,8 @@
 package solo.model.stocks.worker;
 
 import solo.model.stocks.exchange.IStockExchange;
-import solo.model.stocks.item.command.ICommand;
-import solo.model.stocks.item.command.LoadRateInfoCommand;
+import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.item.command.system.LoadRateInfoCommand;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class StockWorker extends BaseWorker

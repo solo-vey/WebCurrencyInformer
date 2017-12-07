@@ -1,22 +1,27 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.system;
 
+import org.apache.commons.lang.StringUtils;
+
+import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.ICommand;
 import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
 
 /** Формат комманды 
  */
-public class GetTransportMessagesCommand extends BaseCommand
+public class GetTransportMessagesCommand extends BaseCommand implements ISystemCommand
 {
 	final static public String NAME = "getMessages";
 
 	public GetTransportMessagesCommand()
 	{
-		super();
+		super(StringUtils.EMPTY, StringUtils.EMPTY);
 	}
 
 	public GetTransportMessagesCommand(final String strCommandLine)
 	{
-		super(strCommandLine);
+		super(strCommandLine, StringUtils.EMPTY);
 	}
 	
 	public void execute() throws Exception

@@ -18,12 +18,14 @@ public class BtcTradeStockSource extends BaseStockSource
 	final protected String m_strSellUrl;
 	final protected String m_strDealsUrl;
 	
+	
 	public BtcTradeStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
 		m_strBuyUrl = ResourceUtils.getResource("buy.url", getStockExchange().getStockProperties());
 		m_strSellUrl = ResourceUtils.getResource("sell.url", getStockExchange().getStockProperties());
 		m_strDealsUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
+		
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
 	}
@@ -35,13 +37,13 @@ public class BtcTradeStockSource extends BaseStockSource
 		
 		final String strOrderBuyUrl = m_strBuyUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final Map<String, Object> oBuyOrders = RequestUtils.sendGetAndReturnMap(strOrderBuyUrl, true);
-		final List<Order> oAsksOrders = convert2Orders((List<Object>) oBuyOrders.get("list"));
-		oRateState.setAsksOrders(oAsksOrders);
+		final List<Order> oBidsOrders = convert2Orders((List<Object>) oBuyOrders.get("list"));
+		oRateState.setAsksOrders(oBidsOrders);
 		
 		final String strOrderSellUrl = m_strSellUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final Map<String, Object> oSellOrders = RequestUtils.sendGetAndReturnMap(strOrderSellUrl, true);
-		final List<Order> oBidsOrders = convert2Orders((List<Object>) oSellOrders.get("list"));
-		oRateState.setBidsOrders(oBidsOrders);
+		final List<Order> oAsksOrders = convert2Orders((List<Object>) oSellOrders.get("list"));
+		oRateState.setBidsOrders(oAsksOrders);
 		
 		final String strDealsUrl = m_strDealsUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strDealsUrl, true);

@@ -1,20 +1,28 @@
-package solo.model.stocks.item.command;
+package solo.model.stocks.item.command.rule;
 
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RulesFactory;
+import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.system.IHistoryCommand;
 
 /** Формат комманды 
  */
 public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 {
 	final static public String NAME = "addRule";
+	final static public String RULE_TYPE = "#type#";
 	
 	final protected String m_strRuleInfo;
 	
 	public AddRuleCommand(final String strRuleInfo)
 	{
-		super(strRuleInfo);
+		super(strRuleInfo, RULE_TYPE);
 		m_strRuleInfo = strRuleInfo;
+	}
+	
+	public String getHelp()
+	{
+		return RulesFactory.getHelp(super.getHelp(), getParameter(RULE_TYPE));
 	}
 	
 	public void execute() throws Exception
@@ -23,8 +31,6 @@ public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 		final IRule oRule = RulesFactory.getRule(m_strRuleInfo);
 		getStockExchange().getRules().addRule(oRule);
 		
-		final String strMessage = "Rule " + getInfo() + " add. " + BaseCommand.getCommand(GetRulesCommand.NAME);
-		final ICommand oCommand = new SendMessageCommand(strMessage);
-		getMainWorker().addCommand(oCommand);
+		sendMessage("Rule " + getInfo() + " add. " + BaseCommand.getCommand(GetRulesCommand.NAME));
 	}
 }

@@ -1,6 +1,6 @@
 package solo.model.stocks.worker;
 
-import solo.model.stocks.item.command.ICommand;
+import solo.model.stocks.item.command.base.ICommand;
 
 public interface IWorker extends Runnable
 {

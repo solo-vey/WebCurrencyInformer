@@ -5,21 +5,20 @@ import java.math.BigDecimal;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.RateInfo;
-import solo.utils.CommonUtils;
-import solo.utils.MathUtils;
 
 public class EventSellTrace extends EventSell
 {
 	private static final long serialVersionUID = -5138333232638394248L;
+
+	final static public String DELTA_PARAMETER = "#delta#";
 	
 	String m_strMoveType = StringUtils.EMPTY;
 	protected BigDecimal m_nDelta;
 		
 	public EventSellTrace(final RateInfo oRateInfo, final String strPriceInfo)
 	{
-		super(oRateInfo, strPriceInfo);
-		final String strDelta = CommonUtils.splitToPos(strPriceInfo, 1);
-		m_nDelta = (StringUtils.isNotBlank(strDelta) ? MathUtils.fromString(strDelta).divide(new BigDecimal(100)) : new BigDecimal(0.0025));
+		super(oRateInfo, strPriceInfo, DELTA_PARAMETER);
+		m_nDelta = getParameterAsBigDecimal(DELTA_PARAMETER, new BigDecimal(0.0025));
 	}
 
 	@Override public String getType()

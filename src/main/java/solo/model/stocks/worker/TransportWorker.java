@@ -1,7 +1,7 @@
 package solo.model.stocks.worker;
 
-import solo.model.stocks.item.command.GetTransportMessagesCommand;
-import solo.model.stocks.item.command.ICommand;
+import solo.model.stocks.item.command.system.GetTransportMessagesCommand;
+import solo.model.stocks.item.command.base.ICommand;
 import solo.transport.ITransport;
 import ua.lz.ep.utils.ResourceUtils;
 

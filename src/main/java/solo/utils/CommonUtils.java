@@ -1,10 +1,15 @@
 package solo.utils;
 
+import java.util.HashMap;
+import java.util.Map;
+
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
+
+import solo.model.stocks.item.command.base.HasParameters;
 
 public class CommonUtils
 {
@@ -28,6 +33,27 @@ public class CommonUtils
 	{
 		final String[] aParts = strText.split(" |_", nPos);
 		return (aParts.length > (nPos - 1) ? aParts[nPos - 1] : StringUtils.EMPTY);
+	}
+	
+	static public Map<String, String> splitParameters(final String strText, final String strTemplate)
+	{
+		final Map<String, String> oParameters = new HashMap<String, String>();
+		final String[] aTemplateParts = strTemplate.split(" |_");
+		final String strLastTemplateName = aTemplateParts[aTemplateParts.length - 1]; 
+		final String[] aParts = (HasParameters.TAIL_PARAMETER.equalsIgnoreCase(strLastTemplateName) ? strText.split(" |_", aTemplateParts.length) : strText.split(" |_"));
+		
+		for(int nPos = 0; nPos < aTemplateParts.length && nPos < aParts.length; nPos++)
+		{
+			if (StringUtils.isNotBlank(aParts[nPos].trim()))
+				oParameters.put(aTemplateParts[nPos].replace("#", StringUtils.EMPTY).toLowerCase().trim(), aParts[nPos].trim());
+		}
+		
+		return oParameters; 
+	}
+	
+	static public String mergeParameters(final Object ... aParameters)
+	{
+		return StringUtils.join(aParameters, "_");
 	}
 	
 	public static String encodeSha256HMAC(final String strSecretKey, final String strData) throws Exception 

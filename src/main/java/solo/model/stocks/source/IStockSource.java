@@ -14,7 +14,8 @@ public interface IStockSource
 	StockRateStates getStockRates() throws Exception;
 	IStockExchange getStockExchange();
 	List<RateInfo> getRates();
-	StockUserInfo getUserInfo() throws Exception;
 	Order removeOrder(String strOrderId) throws Exception;
 	Order addOrder(String strSite, RateInfo oRateInfo, BigDecimal nVolume, BigDecimal nPrice) throws Exception;
+	StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception;
+	void restart() throws Exception;
 }
