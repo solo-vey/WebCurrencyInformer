@@ -137,7 +137,19 @@ public class RequestUtils
 	 * @throws Exception */
 	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
 	{
-		final HttpPost oPost = makePostQuery(strURL, aParameters);
+		final HttpPost oPost = makePostQuery(strURL, aParameters, null);
+		return sendRequestAndReturnText(oPost, bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде строки 
+	 * @throws Exception */
+	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	{
+		final HttpPost oPost = makePostQuery(strURL, aParameters, aHeaders);
 		return sendRequestAndReturnText(oPost, bIsUseProxy);
 	}
 	
@@ -160,9 +172,21 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
+	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	{
+		final HttpPost oPost = makePostQuery(strURL, aParameters, aHeaders);
+		return sendRequestAndReturnMap(oPost, bIsUseProxy);
+	}
+	
+	/** Отправдяеи post запрос по указанному адресу
+	 * @param strURL URL запроса
+	 * @param aParameters список параметров запроса 
+	 * @param bIsUseProxy Использовать прокси при выполнении запроса
+	 * @return Ответ сервера в виде json 
+	 * @throws Exception */
 	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
 	{
-		final HttpPost oPost = makePostQuery(strURL, aParameters);
+		final HttpPost oPost = makePostQuery(strURL, aParameters, null);
 		return sendRequestAndReturnMap(oPost, bIsUseProxy);
 	}
 	
@@ -195,13 +219,20 @@ public class RequestUtils
 	 * @param aParameters список параметров запроса 
 	 * @return HTTP запрос
 	 * @throws UnsupportedEncodingException  */
-	static HttpPost makePostQuery(final String strURL, final Map<String, String> aParameters) throws UnsupportedEncodingException
+	static HttpPost makePostQuery(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders) throws UnsupportedEncodingException
 	{
 		final HttpPost oPost = new HttpPost(strURL);
 		final ArrayList<NameValuePair> aPostParameters = new ArrayList<NameValuePair>();
 		for(final Entry<String, String> oParameter : aParameters.entrySet())
 			aPostParameters.add(new BasicNameValuePair(oParameter.getKey(), oParameter.getValue()));
 		oPost.setEntity(new UrlEncodedFormEntity(aPostParameters));
+
+		if (null != aHeaders)
+		{
+			for(final Entry<String, String> oHeader : aHeaders.entrySet())
+				oPost.addHeader(oHeader.getKey(), oHeader.getValue());
+		}
+		
 		return oPost;
 	}
 

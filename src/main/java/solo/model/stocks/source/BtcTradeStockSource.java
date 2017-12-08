@@ -1,13 +1,25 @@
 package solo.model.stocks.source;
 
+import java.io.InputStream;
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
+
+import org.apache.http.NameValuePair;
+import org.apache.http.client.entity.UrlEncodedFormEntity;
+import org.apache.http.message.BasicNameValuePair;
 
 import solo.model.currency.Currency;
+import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
+import solo.model.stocks.item.StockUserInfo;
+import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
 import ua.lz.ep.utils.ResourceUtils;
@@ -17,7 +29,11 @@ public class BtcTradeStockSource extends BaseStockSource
 	final protected String m_strBuyUrl;
 	final protected String m_strSellUrl;
 	final protected String m_strDealsUrl;
+	final protected String m_strAuthUrl;
 	
+	protected Integer m_nNonce;
+	protected Integer m_nOutOrderId;
+	protected boolean m_bIsAuthorized;
 	
 	public BtcTradeStockSource(final IStockExchange oStockExchange)
 	{
@@ -25,9 +41,13 @@ public class BtcTradeStockSource extends BaseStockSource
 		m_strBuyUrl = ResourceUtils.getResource("buy.url", getStockExchange().getStockProperties());
 		m_strSellUrl = ResourceUtils.getResource("sell.url", getStockExchange().getStockProperties());
 		m_strDealsUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
+
+		m_strAuthUrl = ResourceUtils.getResource("auth.url", getStockExchange().getStockProperties());
 		
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
+		
+		restart();
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -48,7 +68,11 @@ public class BtcTradeStockSource extends BaseStockSource
 		final String strDealsUrl = m_strDealsUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strDealsUrl, true);
 		final List<Order> oTrades = convert2Orders(oInputTrades);
-		oRateState.setTrades(oTrades);
+		for(final Order oTradeOrder : oTrades)
+		{
+			if (oTradeOrder.getState().equalsIgnoreCase("buy"))
+				oRateState.getTrades().add(oTradeOrder);
+		}
 		
 		return oRateState;
 	}
@@ -56,11 +80,6 @@ public class BtcTradeStockSource extends BaseStockSource
 	protected String getRateIdentifier(final RateInfo oRateInfo)
 	{
 		return oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase();  
-	}
-	
-	@Override protected boolean isIgnoreOrder(final Order oOrder)
-	{
-		return (super.isIgnoreOrder(oOrder) || "ignore".equalsIgnoreCase(oOrder.getState()));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -81,8 +100,99 @@ public class BtcTradeStockSource extends BaseStockSource
 			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("amnt_trade").toString()));
 
 		if (oMapOrder.containsKey("type"))
-			oOrder.setState(oMapOrder.get("type").toString().equalsIgnoreCase("sell") ? "ignore" : "buy");
+			oOrder.setState(oMapOrder.get("type").toString());
 		
 		return oOrder;
+	}
+	
+	@Override public void restart()
+	{
+		m_bIsAuthorized = false;
+		m_nNonce = 1;
+		m_nOutOrderId = (int)(Math.random() * 1000000);
+	}
+	
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
+	{
+		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
+		authUser();
+		setUserMoney(oUserInfo);
+		setUserOrders(oUserInfo, oRateInfo);
+		return oUserInfo;
+	}
+	
+	public void authUser() throws Exception
+	{
+		if (m_bIsAuthorized)
+			return;
+		
+		final Map<String, Object> oResult = sendPost(m_strAuthUrl, null);
+		m_bIsAuthorized = (null != oResult.get("status") && oResult.get("status").toString().equalsIgnoreCase("true"));
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void setUserMoney(final StockUserInfo oUserInfo) throws Exception
+	{
+		final Map<String, Object> oMoneyInfo = sendPost(m_strMoneyUrl, null);
+		
+		final List<Map<String, Object>> oAccounts = (List<Map<String, Object>>) oMoneyInfo.get("accounts");
+		for(final Map<String, Object> oAccount : oAccounts)
+		{
+			final BigDecimal nBalance = MathUtils.fromString(oAccount.get("balance").toString());
+			if (nBalance.compareTo(BigDecimal.ZERO) == 0)
+				continue;
+			
+			final String strCurrency = oAccount.get("currency").toString();
+			final Currency oCurrency = Currency.valueOf(strCurrency.toUpperCase());
+			oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, BigDecimal.ZERO)); 
+		}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo) throws Exception
+	{
+		for(final RateInfo oRateInfo : getRates())
+		{
+			if (null != oRequestRateInfo && !oRequestRateInfo.equals(oRateInfo))
+				continue;
+			
+			final String strMarket = getRateIdentifier(oRateInfo);
+			final Map<String, Object> oOrdersInfo = sendPost(m_strMyOrdersUrl.replace("#market#", strMarket), null);
+			final List<Object> oOrders = (List<Object>) oOrdersInfo.get("your_open_orders");
+			
+			for(final Object oOrderInfo : oOrders)
+			{
+				final Order oOrder = convert2Order(oOrderInfo); 
+				oUserInfo.addOrder(oRateInfo, oOrder); 
+			}
+		}
+	}
+	
+	public Map<String, Object> sendPost(final String strUrl, Map<String, String> aParameters) throws Exception
+	{
+		aParameters = (null == aParameters ? new HashMap<String, String>() : aParameters);
+		
+		aParameters.put("out_order_id", m_nOutOrderId.toString());
+		aParameters.put("nonce", m_nNonce.toString());
+		
+		final Map<String, String> aHeaders = new HashMap<String, String>();
+		aHeaders.put("public-key", m_strPublicKey);
+		aHeaders.put("api-sign", signatureUrl(aParameters));
+		return RequestUtils.sendPostAndReturnJson(strUrl, aParameters, aHeaders, true);
+	}
+
+	public String signatureUrl(final Map<String, String> aParameters) throws Exception
+	{
+		m_nNonce++;
+		
+		final ArrayList<NameValuePair> aPostParameters = new ArrayList<NameValuePair>();
+		for(final Entry<String, String> oParameter : aParameters.entrySet())
+			aPostParameters.add(new BasicNameValuePair(oParameter.getKey(), oParameter.getValue()));
+		final UrlEncodedFormEntity oEncodedFormEntity = new UrlEncodedFormEntity(aPostParameters);
+		final InputStream oStream = oEncodedFormEntity.getContent();
+		final byte[] aBuffer = new byte[(int) oEncodedFormEntity.getContentLength()];
+		oStream.read(aBuffer, 0, aBuffer.length);
+		final String strData = new String(aBuffer) + m_strSecretKey;
+		return CommonUtils.encodeSha256(strData);
 	}
 }

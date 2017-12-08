@@ -1,5 +1,6 @@
 package solo.model.stocks.item.command.trade;
 
+import java.math.BigDecimal;
 import java.util.List;
 import java.util.Map.Entry;
 
@@ -40,7 +41,8 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 		{
 			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx(oCurrencyInfo.getValue().getBalance()) + 
-							"/" + MathUtils.toCurrencyStringEx(oCurrencyInfo.getValue().getLocked()) + "\r\n";
+							(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
+							+ "\r\n";
 		}
 
 		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())

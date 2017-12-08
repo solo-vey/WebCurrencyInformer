@@ -70,7 +70,7 @@ public class BaseStockSource implements IStockSource
 		return new StockUserInfo();
 	}
 	
-	@Override public void restart() throws Exception
+	@Override public void restart()
 	{
 	}
 
@@ -110,15 +110,9 @@ public class BaseStockSource implements IStockSource
 		for(final Object oInputOrder : oInputOrders)
 		{
 			final Order oOrder = convert2Order(oInputOrder);
-			if (!isIgnoreOrder(oOrder))
-				oOrders.add(oOrder);
+			oOrders.add(oOrder);
 		}
 		return oOrders;
-	}
-
-	protected boolean isIgnoreOrder(final Order oOrder)
-	{
-		return (oOrder.getSum().compareTo(m_nSumIgnore) == -1);
 	}
 
 	protected Order convert2Order(final Object oInputOrder)

@@ -17,5 +17,5 @@ public interface IStockSource
 	Order removeOrder(String strOrderId) throws Exception;
 	Order addOrder(String strSite, RateInfo oRateInfo, BigDecimal nVolume, BigDecimal nPrice) throws Exception;
 	StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception;
-	void restart() throws Exception;
+	void restart();
 }

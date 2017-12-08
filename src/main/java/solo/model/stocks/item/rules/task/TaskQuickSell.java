@@ -60,17 +60,20 @@ public class TaskQuickSell extends TaskBase
 	private BigDecimal getOrderPrice(String strOrderID) throws Exception
 	{
 		if (StringUtils.isBlank(strOrderID))
-			return null;
+			return BigDecimal.ZERO;
 		
 		final StockUserInfo oUserInfo = WorkerFactory.getMainWorker().getStockExchange().getStockSource().getUserInfo(m_oRateInfo);
 		final List<Order> aOrders = oUserInfo.getOrders().get(m_oRateInfo);
+		if (null == aOrders)
+			return BigDecimal.ZERO;
+			
 		for(final Order oOrder : aOrders)
 		{
 			if (oOrder.getId().equalsIgnoreCase(strOrderID))
 				return oOrder.getPrice();
 		}
 		
-		return null;
+		return BigDecimal.ZERO;
 	}
 
 	private void setNewOrderPrice(final BigDecimal oAskPrice, final String strOrderID)

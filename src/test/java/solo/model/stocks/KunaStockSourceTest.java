@@ -2,13 +2,10 @@ package solo.model.stocks;
 
 import org.junit.Test;
 
-import solo.model.currency.Currency;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.exchange.Stocks;
-import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.Rules;
-import solo.model.stocks.item.rules.notify.EventBase;
+import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.worker.WorkerFactory;
 
 public class KunaStockSourceTest
@@ -20,16 +17,10 @@ public class KunaStockSourceTest
 
     @Test public void testKunaStockSource2() throws Exception
     {
-    	IStockExchange oStockExchange = StockExchangeFactory.getStockExchange(Stocks.Mock);
-    	final Rules oRules = new Rules(oStockExchange);
-    	
-    	oRules.addRule(new EventBase(new RateInfo(Currency.BTC, Currency.UAH), "1300"));
-    	
-    	oRules.save();
-    	
-    	oRules.load();
+    	IStockExchange oStockExchange = StockExchangeFactory.getStockExchange(Stocks.BtcTrade);
+    	StockUserInfo oUserInfo = oStockExchange.getStockSource().getUserInfo(null);
 
-    	System.err.printf(oRules + "\r\n");
+    	System.err.printf(oUserInfo + "\r\n");
     }
     
     

@@ -87,7 +87,7 @@ public class KunaStockSource extends BaseStockSource
 		return oOrder;
 	}
 	
-	@Override public void restart() throws Exception
+	@Override public void restart()
 	{
 		m_nTimeDelta = null;
 	}

@@ -1,5 +1,7 @@
 package solo.utils;
 
+import java.nio.charset.StandardCharsets;
+import java.security.MessageDigest;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -64,4 +66,12 @@ public class CommonUtils
 
 		  return Hex.encodeHexString(oSha256_HMAC.doFinal(strData.getBytes("UTF-8")));
 	}
+	
+	public static String encodeSha256(final String strData) throws Exception 
+	{
+		final MessageDigest oDigest = MessageDigest.getInstance("SHA-256");
+		final byte[] aHash = oDigest.digest(strData.getBytes(StandardCharsets.UTF_8));
+		return Hex.encodeHexString(aHash);
+	}
+
 }
