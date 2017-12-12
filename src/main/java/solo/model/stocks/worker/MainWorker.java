@@ -7,6 +7,7 @@ import solo.model.stocks.item.command.base.CommandHistory;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.transport.ITransport;
 import solo.transport.TransportFactory;
+import solo.utils.CommonUtils;
 
 public class MainWorker extends BaseWorker implements IMainWorker
 {
@@ -58,7 +59,8 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		
 		try
 		{
-			m_oTransportWorker.getTransport().sendMessage("Exception : " + e.getMessage());
+			final String strMessage = CommonUtils.getExceptionMessage(e.getCause());			
+			m_oTransportWorker.getTransport().sendMessage("Exception : " + strMessage);
 		}
 		catch (Exception eSend)
 		{

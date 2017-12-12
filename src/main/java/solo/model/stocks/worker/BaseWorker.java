@@ -6,6 +6,7 @@ import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.CommandQueue;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.utils.CommonUtils;
 
 public class BaseWorker extends Thread implements IWorker
 {
@@ -54,7 +55,7 @@ public class BaseWorker extends Thread implements IWorker
 	
 	protected void onException(final Exception e)
 	{
-		System.err.printf("Thread exception : " + e + "\r\n");
+		System.err.printf("Thread exception : " + CommonUtils.getExceptionMessage(e.getCause()) + "\r\n");
 	}
 	
 	protected void doWork() throws Exception

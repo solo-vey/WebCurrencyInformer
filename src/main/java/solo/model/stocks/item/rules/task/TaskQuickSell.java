@@ -10,10 +10,7 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.CommandFactory;
-import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
-import solo.model.stocks.item.command.system.SendMessageCommand;
-import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
@@ -24,7 +21,7 @@ public class TaskQuickSell extends TaskBase
 	final static public String ORDER_ID_PARAMETER = "#orderId#";
 	final static public String MIN_PRICE_PARAMETER = "#minPrice#";
 
-	final private String m_strOrderID;
+	private String m_strOrderID;
 	private BigDecimal m_nOrderPrice;
 	final private BigDecimal m_nMinPrice;
 
@@ -51,38 +48,49 @@ public class TaskQuickSell extends TaskBase
 	{
 		final BigDecimal oAskPrice = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo).getAsksAnalysisResult().getBestPrice();
 		if (oAskPrice.compareTo(m_nOrderPrice) < 0 && oAskPrice.compareTo(m_nMinPrice) > 0)
-		{
-			onOccurred(oAskPrice, nRuleID);
 			setNewOrderPrice(oAskPrice, m_strOrderID);
-		}
 	}
 
 	private BigDecimal getOrderPrice(String strOrderID) throws Exception
 	{
 		if (StringUtils.isBlank(strOrderID))
-			return BigDecimal.ZERO;
+			throw new Exception("Order id is empty");
 		
-		final StockUserInfo oUserInfo = WorkerFactory.getMainWorker().getStockExchange().getStockSource().getUserInfo(m_oRateInfo);
+		final StockUserInfo oUserInfo = getStockSource().getUserInfo(m_oRateInfo);
 		final List<Order> aOrders = oUserInfo.getOrders().get(m_oRateInfo);
-		if (null == aOrders)
-			return BigDecimal.ZERO;
-			
-		for(final Order oOrder : aOrders)
+		if (null != aOrders)
 		{
-			if (oOrder.getId().equalsIgnoreCase(strOrderID))
-				return oOrder.getPrice();
+			for(final Order oOrder : aOrders)
+			{
+				if (oOrder.getId().equalsIgnoreCase(strOrderID))
+					return oOrder.getPrice();
+			}
 		}
 		
-		return BigDecimal.ZERO;
+		throw new Exception("Order id [" + strOrderID + "] is absent");
 	}
 
-	private void setNewOrderPrice(final BigDecimal oAskPrice, final String strOrderID)
+	private void setNewOrderPrice(final BigDecimal oNewPrice, final String strOrderID)
 	{
-		m_nOrderPrice = oAskPrice;
+		try
+		{
+			final Order oRemoveOrder = getStockSource().removeOrder(m_strOrderID);
+			if (StringUtils.isBlank(oRemoveOrder.getId()) || "cancel".equalsIgnoreCase(oRemoveOrder.getState()) || "done".equalsIgnoreCase(oRemoveOrder.getState()))
+			{
+				getStockExchange().getRules().removeRule(this);
+				sendMessage(getInfo(null) + " removed because order [" + m_strOrderID + "] was " + oRemoveOrder.getState());
+				return;
+			}
 
-		final String strMessage = getType() + "/" + MathUtils.toCurrencyString(m_nOrderPrice);
-		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
-		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);
+			final Order oAddOrder = getStockSource().addOrder("sell", m_oRateInfo, oRemoveOrder.getVolume(), oNewPrice);
+			m_nOrderPrice = oNewPrice;
+			m_strOrderID = oAddOrder.getId();
+			getStockExchange().getRules().save();
+			sendMessage(getType() + "/Set new order price " + MathUtils.toCurrencyString(m_nOrderPrice) + "/" + 
+						MathUtils.toCurrencyString(m_nMinPrice) + " [" + m_strOrderID + "] " + 
+						CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, getStockExchange().getRules().getRuleID(this)));
+		}
+		catch(final Exception e) {}
 	}
 }
 

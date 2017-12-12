@@ -74,4 +74,17 @@ public class CommonUtils
 		return Hex.encodeHexString(aHash);
 	}
 
+	public static String getExceptionMessage(final Throwable e)
+	{
+		if (null == e)
+			return "Unknown. Cause == null";
+		
+		if (null != e.getMessage())
+			return e.getMessage();
+		
+		if (null != e.getCause())
+			return getExceptionMessage(e.getCause());
+		
+		return e.getMessage();
+	}
 }

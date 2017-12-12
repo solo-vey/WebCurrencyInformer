@@ -20,7 +20,7 @@ public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 		m_strRuleInfo = strRuleInfo;
 	}
 	
-	public String getHelp()
+	public String getHelp() throws Exception
 	{
 		return RulesFactory.getHelp(super.getHelp(), getParameter(RULE_TYPE));
 	}

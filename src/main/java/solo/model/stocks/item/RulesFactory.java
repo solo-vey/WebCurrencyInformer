@@ -33,28 +33,19 @@ public class RulesFactory
 		return s_oRulesClassByType;
 	}
 
-	public static IRule getRule(final String strCommandLine)
+	public static IRule getRule(final String strCommandLine) throws Exception
 	{
 		final String strRule = CommonUtils.splitFirst(strCommandLine).toLowerCase();
 		final Class<?> oClass = (Class<?>) s_oRulesClassByType.get(strRule);
 		if (null == oClass)
 			return null;
 		
-		try
-		{
-			final String strRuleArguments = CommonUtils.splitTail(strCommandLine).toLowerCase();
-			final Constructor<?> oConstructor = oClass.getConstructor(String.class);
-			return (IRule) oConstructor.newInstance(new Object[] { strRuleArguments });
-		}
-		catch(final Exception e) 
-		{
-			System.err.print(e);
-		}
-
-		return null;
+		final String strRuleArguments = CommonUtils.splitTail(strCommandLine).toLowerCase();
+		final Constructor<?> oConstructor = oClass.getConstructor(String.class);
+		return (IRule) oConstructor.newInstance(new Object[] { strRuleArguments });
 	}
 	
-	public static String getHelp(final String strCommandStart, final String strType)
+	public static String getHelp(final String strCommandStart, final String strType) throws Exception
 	{
 		String strHelp = StringUtils.EMPTY;
 		if (StringUtils.isNotBlank(strType))

@@ -64,5 +64,13 @@ public class TaskBase extends HasParameters implements IRule
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);
 	}
+	
+	@Override public boolean equals(Object obj)
+	{
+		if (obj instanceof TaskFactory && ((TaskFactory)obj).m_oTaskBase.equals(obj))
+			return true;
+		
+		return super.equals(obj);
+	}
 }
 

@@ -42,24 +42,17 @@ public class EventFactory extends HasParameters implements IRule
 		s_oEventClassByType.put(oEventType, oClass);
 	}
 	
-	static public EventBase getEvent(final EventType oEventType, final RateInfo oRateInfo, final String strPriceInfo)
+	static public EventBase getEvent(final EventType oEventType, final RateInfo oRateInfo, final String strPriceInfo) throws Exception
 	{
 		final Class<?> oClass = (Class<?>) s_oEventClassByType.get(oEventType);
 		if (null == oClass)
 			return null;
 		
-		try
-		{
-			final Constructor<?> oConstructor = oClass.getConstructor(RateInfo.class, String.class);
-			return (EventBase) oConstructor.newInstance(new Object[] { oRateInfo, strPriceInfo });
-		}
-		catch(final Exception e) 
-		{
-			return null;
-		}
+		final Constructor<?> oConstructor = oClass.getConstructor(RateInfo.class, String.class);
+		return (EventBase) oConstructor.newInstance(new Object[] { oRateInfo, strPriceInfo });
 	}
 	
-	public EventFactory(final String strCommandLine)
+	public EventFactory(final String strCommandLine) throws Exception
 	{
 		super(strCommandLine, CommonUtils.mergeParameters(RATE_PARAMETER, EVENT_TYPE_PARAMETER, TAIL_PARAMETER));
 		final RateInfo oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
@@ -68,7 +61,7 @@ public class EventFactory extends HasParameters implements IRule
 		m_oEventBase = getEvent(oType, oRateInfo, strPriceInfo);
 	}
 	
-	public String getHelp(final String strCommandStart)
+	public String getHelp(final String strCommandStart) throws Exception
 	{
 		String strHelp = StringUtils.EMPTY;
 		for(final Entry<EventType, Class<?>> oEventInfo : s_oEventClassByType.entrySet())

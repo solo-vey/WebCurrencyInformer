@@ -7,6 +7,8 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Map.Entry;
+
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import ua.lz.ep.utils.ResourceUtils;
@@ -41,6 +43,24 @@ public class Rules
 	{
 		m_oRules.remove(nRuleID);
 		save();
+	}
+	
+	public void removeRule(final IRule oRule)
+	{
+		final Integer nRuleID = getRuleID(oRule);
+		if (null != nRuleID)
+			removeRule(nRuleID);
+	}
+	
+	public Integer getRuleID(final IRule oRule)
+	{
+		for(final Entry<Integer, IRule> oRuleInfo : m_oRules.entrySet())
+		{
+			if (oRuleInfo.getValue().equals(oRule))
+				return oRuleInfo.getKey();
+		}
+		
+		return null;
 	}
 	
 	public Map<Integer, IRule> getRules()

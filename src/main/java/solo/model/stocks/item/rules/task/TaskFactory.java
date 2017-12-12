@@ -34,24 +34,17 @@ public class TaskFactory extends HasParameters implements IRule
 		s_oTaskClassByType.put(oTaskType, oClass);
 	}
 	
-	static public TaskBase getTask(final TaskType oTaskType, final RateInfo oRateInfo, final String strPriceInfo)
+	static public TaskBase getTask(final TaskType oTaskType, final RateInfo oRateInfo, final String strPriceInfo) throws Exception
 	{
 		final Class<?> oClass = (Class<?>) s_oTaskClassByType.get(oTaskType);
 		if (null == oClass)
 			return null;
 		
-		try
-		{
-			final Constructor<?> oConstructor = oClass.getConstructor(RateInfo.class, String.class);
-			return (TaskBase) oConstructor.newInstance(new Object[] { oRateInfo, strPriceInfo });
-		}
-		catch(final Exception e) 
-		{
-			return null;
-		}
+		final Constructor<?> oConstructor = oClass.getConstructor(RateInfo.class, String.class);
+		return (TaskBase) oConstructor.newInstance(new Object[] { oRateInfo, strPriceInfo });
 	}
 	
-	public TaskFactory(final String strCommandLine)
+	public TaskFactory(final String strCommandLine) throws Exception
 	{
 		super(strCommandLine, CommonUtils.mergeParameters(RATE_PARAMETER, TASK_TYPE_PARAMETER, TAIL_PARAMETER));
 		final RateInfo oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
@@ -60,7 +53,7 @@ public class TaskFactory extends HasParameters implements IRule
 		m_oTaskBase = getTask(oType, oRateInfo, strPriceInfo);
 	}
 	
-	public String getHelp(final String strCommandStart)
+	public String getHelp(final String strCommandStart) throws Exception
 	{
 		String strHelp = StringUtils.EMPTY;
 		for(final Entry<TaskType, Class<?>> oTaskInfo : s_oTaskClassByType.entrySet())
@@ -81,6 +74,14 @@ public class TaskFactory extends HasParameters implements IRule
 	{
 		if (null != m_oTaskBase)
 			m_oTaskBase.check(oStateAnalysisResult, nRuleID);
+	}
+	
+	@Override public boolean equals(Object obj)
+	{
+		if (m_oTaskBase.equals(obj))
+			return true;
+		
+		return super.equals(obj);
 	}
 }
 

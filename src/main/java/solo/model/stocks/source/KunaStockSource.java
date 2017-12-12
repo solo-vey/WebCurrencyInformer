@@ -33,6 +33,7 @@ public class KunaStockSource extends BaseStockSource
 		
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
+		registerRate(new RateInfo(Currency.WAVES, Currency.UAH));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -68,7 +69,8 @@ public class KunaStockSource extends BaseStockSource
 		
 		final Map<String, Object> oMapOrder = (Map<String, Object>)oInputOrder;  
 		final Order oOrder = new Order();
-		oOrder.setId(oMapOrder.get("id").toString());
+		if (oMapOrder.containsKey("id"))
+			oOrder.setId(oMapOrder.get("id").toString());
 
 		if (oMapOrder.containsKey("price"))
 			oOrder.setPrice(MathUtils.fromString(oMapOrder.get("price").toString()));
