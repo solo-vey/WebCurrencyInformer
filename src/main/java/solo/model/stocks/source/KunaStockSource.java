@@ -77,6 +77,9 @@ public class KunaStockSource extends BaseStockSource
 		
 		if (oMapOrder.containsKey("state"))
 			oOrder.setState(oMapOrder.get("state").toString());
+
+		if (oMapOrder.containsKey("side"))
+			oOrder.setState(oMapOrder.get("side").toString());
 		
 		if (oMapOrder.containsKey("remaining_volume"))
 			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("remaining_volume").toString()));

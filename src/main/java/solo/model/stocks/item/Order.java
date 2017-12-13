@@ -12,6 +12,7 @@ public class Order extends BaseObject
 	protected String m_strID;
 	protected BigDecimal m_nPrice;
 	protected String m_strState;
+	protected String m_strSide;
 	protected BigDecimal m_nVolume;
 	protected Date m_oCreated;
 	
@@ -33,6 +34,16 @@ public class Order extends BaseObject
 	public void setPrice(final BigDecimal nPrice)
 	{
 		m_nPrice = nPrice;
+	}
+	
+	public String getSide()
+	{
+		return m_strSide;
+	}
+	
+	public void setSide(final String strSide)
+	{
+		m_strSide = strSide;
 	}
 	
 	public String getState()
