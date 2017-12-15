@@ -6,6 +6,7 @@ import java.util.Set;
 
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.TrendType;
 
 public class SimpleRateOracle implements IRateOracle
 {
@@ -33,15 +34,43 @@ public class SimpleRateOracle implements IRateOracle
 			int nStart = oStateAnalysisHistory.size();
 			for(int nForecastPosition = 0; nForecastPosition < nMaxFutureSize; nForecastPosition++)
 			{
-				final double nForecastPrice = getForecast(aPrices, oStateAnalysisHistory.size() + nForecastPosition, nForecastPosition);
+				final int nLastPos = oStateAnalysisHistory.size() + nForecastPosition;
+				final double nForecastPrice = getForecast(aPrices, nLastPos, nForecastPosition);
 				aPrices[nStart + nForecastPosition] = nForecastPrice;
 
-				final RateForecast oRateForecast = new RateForecast(oRateInfo, nForecastPrice);
+				final RateForecast oRateForecast = new RateForecast(oRateInfo, nForecastPrice, getTrendType(aPrices, nLastPos, nForecastPrice));
 				oResult.get(nForecastPosition).addForecust(oRateForecast);
 			}
 		}
 		
 		return oResult;
+	}
+
+	protected TrendType getTrendType(final double[] aPrices, final int nCount, final double nForecastPrice)
+	{
+		final int nLookbackCount = 10;
+		if (nCount < nLookbackCount)
+			return TrendType.CALM;
+		
+		double nLookbackPrice = aPrices[nCount - nLookbackCount - 1];
+		double nLastPrice = aPrices[nCount  - 1];
+		double nDelta = nForecastPrice - nLookbackPrice;
+		double nOnePercent = nLastPrice * 0.01;
+		double nQuarterPercent = nOnePercent / 4;
+
+		if (nDelta > nQuarterPercent && nDelta <= nOnePercent) 
+			return TrendType.GROWTH;
+
+		if (nDelta > nOnePercent) 
+			return TrendType.FAST_GROWTH;
+
+		if (nDelta < -nQuarterPercent && nDelta >= -nOnePercent) 
+			return TrendType.FALL;
+
+		if (nDelta < -nOnePercent) 
+			return TrendType.FAST_FALL;
+
+		return TrendType.CALM;
 	}
 
 	static double getForecast(double[] aPrices, int nCount, int nForecastPosition)

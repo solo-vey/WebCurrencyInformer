@@ -1,5 +1,7 @@
 package solo.model.stocks.analyse;
 
+import java.math.BigDecimal;
+import java.util.LinkedList;
 import java.util.List;
 
 import solo.model.stocks.BaseObject;
@@ -14,19 +16,39 @@ public class RateAnalysisResult extends BaseObject
 	final protected OrderAnalysisResult m_oAsksAnalysisResult;
 	final protected OrderAnalysisResult m_oBidsAnalysisResult;
 	final protected OrderAnalysisResult m_oTradesAnalysisResult;
+
+	final protected List<Order> m_oAsksOrders;
+	final protected List<Order> m_oBidsOrders;
+	final protected List<Order> m_oTrades;
 	
 	public RateAnalysisResult(final StockRateStates oStockRateStates, final RateInfo oRateInfo, final IStockExchange oStockExchange) throws Exception
 	{
 		m_oRateInfo = oRateInfo;
-    	final List<Order> oAsksOrders = oStockRateStates.getRate(oRateInfo).getAsksOrders();
-    	final List<Order> oBidsOrders = oStockRateStates.getRate(oRateInfo).getBidsOrders();
-    	final List<Order> oTrades = oStockRateStates.getRate(oRateInfo).getTrades();
+		m_oAsksOrders = oStockRateStates.getRate(oRateInfo).getAsksOrders();
+		m_oBidsOrders = oStockRateStates.getRate(oRateInfo).getBidsOrders();
+		m_oTrades = oStockRateStates.getRate(oRateInfo).getTrades();
+    	
+    	filterOrders(m_oBidsOrders, m_oAsksOrders.get(0).getPrice().divide(new BigDecimal(2)), m_oAsksOrders.get(0).getPrice());
+    	filterOrders(m_oAsksOrders, m_oBidsOrders.get(0).getPrice(), m_oBidsOrders.get(0).getPrice().multiply(new BigDecimal(2)));
     	
     	final double nCurrencyVolume = oStockExchange.getStockCurrencyVolume(oRateInfo.getCurrencyTo()).getVolume().doubleValue();
     	
-    	m_oAsksAnalysisResult = new OrderAnalysisResult(oAsksOrders, nCurrencyVolume, nCurrencyVolume);
-    	m_oBidsAnalysisResult = new OrderAnalysisResult(oBidsOrders, nCurrencyVolume, nCurrencyVolume);
-    	m_oTradesAnalysisResult = new OrderAnalysisResult(oTrades, nCurrencyVolume, nCurrencyVolume);
+    	m_oAsksAnalysisResult = new OrderAnalysisResult(m_oAsksOrders, nCurrencyVolume, nCurrencyVolume);
+    	m_oBidsAnalysisResult = new OrderAnalysisResult(m_oBidsOrders, nCurrencyVolume, nCurrencyVolume);
+    	m_oTradesAnalysisResult = new OrderAnalysisResult(m_oTrades, nCurrencyVolume, nCurrencyVolume);
+	}
+
+	private void filterOrders(final List<Order> oOrders, BigDecimal nMinPrice, BigDecimal nMaxPrice)
+	{
+		final List<Order> oRemoveOrders = new LinkedList<Order>();
+		for(final Order oOrder : oOrders)
+		{
+			if (oOrder.getPrice().compareTo(nMinPrice) < 0 || oOrder.getPrice().compareTo(nMaxPrice) > 0)
+				oRemoveOrders.add(oOrder);
+		}
+		
+		for(final Order oOrder : oRemoveOrders)
+			oOrders.remove(oOrder);
 	}
 
 	public RateInfo getRateInfo()
@@ -47,5 +69,21 @@ public class RateAnalysisResult extends BaseObject
 	public OrderAnalysisResult getTradesAnalysisResult()
 	{
 		return m_oTradesAnalysisResult;
+	}
+
+
+	public List<Order> getAsksOrders()
+	{
+		return m_oAsksOrders;
+	}
+
+	public List<Order> getBidsOrders()
+	{
+		return m_oBidsOrders;
+	}
+
+	public List<Order> getTrades()
+	{
+		return m_oTrades;
 	}
 }

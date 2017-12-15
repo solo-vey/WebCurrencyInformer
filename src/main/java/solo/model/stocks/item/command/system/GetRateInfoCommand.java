@@ -45,7 +45,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		{
 			final RatesForecast oForecast = oForecasts.get(0);
 			final RateForecast oRateForecast = oForecast.getForecust(m_oRateInfo);
-			strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice());
+			strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice()) + "/" + oRateForecast.getTrendType();
 		}
 		
 		sendMessage(strMessage);

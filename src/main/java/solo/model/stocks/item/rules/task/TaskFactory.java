@@ -27,6 +27,9 @@ public class TaskFactory extends HasParameters implements IRule
 	static
 	{
 		registerTaskClass(TaskType.QUICKSELL,  TaskQuickSell.class);
+		registerTaskClass(TaskType.QUICKBUY,  TaskQuickBuy.class);
+		registerTaskClass(TaskType.QUICKTRADE,  TaskQuickTrade.class);
+		registerTaskClass(TaskType.PROTECTORDERS,  TaskProtectOrders.class);
 	}
 	
 	static protected void registerTaskClass(final TaskType oTaskType, final Class<?> oClass)

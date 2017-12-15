@@ -12,7 +12,6 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.utils.MathUtils;
 
@@ -48,11 +47,7 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 		{
 			for(final Order oOrder : oOrdersInfo.getValue())
-			{
-				strMessage += oOrder.getState() + "/" + oOrdersInfo.getKey().getCurrencyFrom() + "/" + MathUtils.toCurrencyString(oOrder.getPrice()) + 
-							"/" + MathUtils.toCurrencyStringEx(oOrder.getVolume()) + "/" + MathUtils.toCurrencyString(oOrder.getSum()) +
-							" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, oOrder.getId()) + "\r\n";
-			}
+				strMessage += oOrdersInfo.getKey().getCurrencyFrom() + "/" + oOrder.getInfo() + "\r\n";
 		}
 
 		sendMessage(strMessage);

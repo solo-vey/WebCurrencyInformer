@@ -23,11 +23,20 @@ public class MathUtils
 	
 	public static String toCurrencyString(final BigDecimal oValue)
 	{
-		return NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
+		if (null == oValue)
+			return "NaN";
+
+		if (oValue.doubleValue() >= 0)
+			return NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
+		else
+			return "-" + NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
 	}
 	
 	public static String toCurrencyStringEx(final BigDecimal oValue)
 	{
+		if (null == oValue)
+			return "NaN";
+
 		if (oValue.doubleValue() > 1)
 			return toCurrencyString(oValue);
 		

@@ -55,7 +55,7 @@ public class BaseWorker extends Thread implements IWorker
 	
 	protected void onException(final Exception e)
 	{
-		System.err.printf("Thread exception : " + CommonUtils.getExceptionMessage(e.getCause()) + "\r\n");
+		System.err.printf(Thread.currentThread().getName() +  " Thread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
 	}
 	
 	protected void doWork() throws Exception

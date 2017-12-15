@@ -4,10 +4,13 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
@@ -65,7 +68,7 @@ public class BaseStockSource implements IStockSource
 		return new RateState(oRateInfo);
 	}
 	
-	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo)
 	{
 		return new StockUserInfo();
 	}
@@ -74,22 +77,32 @@ public class BaseStockSource implements IStockSource
 	{
 	}
 
-	@Override public Order addOrder(final String strSite, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice) throws Exception
+	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
+	{
+		return new Order("cancel", "Order is absent");
+	}
+
+	public String checkOrderParameters(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nPrice)
 	{
 		final StateAnalysisResult oAnalysisResult = m_oStockExchange.getHistory().getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oAnalysisResult.getRateAnalysisResult(oRateInfo);
 		final BigDecimal nMinPrice = oRateAnalysisResult.getBidsAnalysisResult().getBestPrice();
 		final BigDecimal nMaxPrice = oRateAnalysisResult.getAsksAnalysisResult().getBestPrice();
-		if (strSite.equalsIgnoreCase("sell") && nPrice.compareTo(nMinPrice) < 0)
-			throw new Exception("Cannot create order. Price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]");
+		if (oSide.equals(OrderSide.SELL) && nPrice.compareTo(nMinPrice) < 0)
+			return "Because price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]";
 
-		if (strSite.equalsIgnoreCase("buy") && nPrice.compareTo(nMaxPrice) > 0)
-			throw new Exception("Cannot create order. Price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "]");
+		if (oSide.equals(OrderSide.BUY) && nPrice.compareTo(nMaxPrice) > 0)
+			return "Because price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "]";
 		
+		return StringUtils.EMPTY;
+	}
+
+	@Override public Order getOrder(String strOrderId, final RateInfo oRateInfo)
+	{
 		return null;
 	}
 
-	@Override public Order removeOrder(String strOrderId) throws Exception
+	@Override public Order removeOrder(String strOrderId)
 	{
 		return null;
 	}

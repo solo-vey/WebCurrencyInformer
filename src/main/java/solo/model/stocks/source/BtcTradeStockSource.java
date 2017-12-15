@@ -16,6 +16,7 @@ import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
@@ -30,6 +31,7 @@ public class BtcTradeStockSource extends BaseStockSource
 	final protected String m_strSellUrl;
 	final protected String m_strDealsUrl;
 	final protected String m_strAuthUrl;
+	final protected String m_strOrderStatusUrl;
 	
 	protected Integer m_nNonce;
 	protected Integer m_nOutOrderId;
@@ -43,6 +45,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		m_strDealsUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
 
 		m_strAuthUrl = ResourceUtils.getResource("auth.url", getStockExchange().getStockProperties());
+		m_strOrderStatusUrl = ResourceUtils.getResource("order_status.url", getStockExchange().getStockProperties());
 		
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
@@ -58,19 +61,19 @@ public class BtcTradeStockSource extends BaseStockSource
 		final String strOrderBuyUrl = m_strBuyUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final Map<String, Object> oBuyOrders = RequestUtils.sendGetAndReturnMap(strOrderBuyUrl, true);
 		final List<Order> oBidsOrders = convert2Orders((List<Object>) oBuyOrders.get("list"));
-		oRateState.setAsksOrders(oBidsOrders);
+		oRateState.setBidsOrders(oBidsOrders);
 		
 		final String strOrderSellUrl = m_strSellUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final Map<String, Object> oSellOrders = RequestUtils.sendGetAndReturnMap(strOrderSellUrl, true);
 		final List<Order> oAsksOrders = convert2Orders((List<Object>) oSellOrders.get("list"));
-		oRateState.setBidsOrders(oAsksOrders);
+		oRateState.setAsksOrders(oAsksOrders);
 		
 		final String strDealsUrl = m_strDealsUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strDealsUrl, true);
 		final List<Order> oTrades = convert2Orders(oInputTrades);
 		for(final Order oTradeOrder : oTrades)
 		{
-			if (oTradeOrder.getState().equalsIgnoreCase("buy"))
+			if (oTradeOrder.getSide().equals(OrderSide.BUY))
 				oRateState.getTrades().add(oTradeOrder);
 		}
 		
@@ -87,20 +90,20 @@ public class BtcTradeStockSource extends BaseStockSource
 	{
 		final Map<String, Object> oMapOrder = (Map<String, Object>)oInputOrder;  
 		final Order oOrder = new Order();
-		if (oMapOrder.containsKey("id"))
+		if (null != oMapOrder.get("id"))
 			oOrder.setId(oMapOrder.get("id").toString());
 
-		if (oMapOrder.containsKey("price"))
+		if (null != oMapOrder.get("price"))
 			oOrder.setPrice(MathUtils.fromString(oMapOrder.get("price").toString()));
 		
-		if (oMapOrder.containsKey("currency_trade"))
+		if (null != oMapOrder.get("currency_trade"))
 			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("currency_trade").toString()));
 		
-		if (oMapOrder.containsKey("amnt_trade"))
+		if (null != oMapOrder.get("amnt_trade"))
 			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("amnt_trade").toString()));
 
-		if (oMapOrder.containsKey("type"))
-			oOrder.setState(oMapOrder.get("type").toString());
+		if (null != oMapOrder.get("type"))
+			oOrder.setSide(oMapOrder.get("type").toString());
 		
 		return oOrder;
 	}
@@ -112,7 +115,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		m_nOutOrderId = (int)(Math.random() * 1000000);
 	}
 	
-	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo)
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
 		authUser();
@@ -121,51 +124,120 @@ public class BtcTradeStockSource extends BaseStockSource
 		return oUserInfo;
 	}
 	
-	public void authUser() throws Exception
+	public void authUser()
 	{
 		if (m_bIsAuthorized)
 			return;
-		
-		final Map<String, Object> oResult = sendPost(m_strAuthUrl, null);
-		m_bIsAuthorized = (null != oResult.get("status") && oResult.get("status").toString().equalsIgnoreCase("true"));
-	}
-	
-	@SuppressWarnings("unchecked")
-	public void setUserMoney(final StockUserInfo oUserInfo) throws Exception
-	{
-		final Map<String, Object> oMoneyInfo = sendPost(m_strMoneyUrl, null);
-		
-		final List<Map<String, Object>> oAccounts = (List<Map<String, Object>>) oMoneyInfo.get("accounts");
-		for(final Map<String, Object> oAccount : oAccounts)
+
+		try
 		{
-			final BigDecimal nBalance = MathUtils.fromString(oAccount.get("balance").toString());
-			if (nBalance.compareTo(BigDecimal.ZERO) == 0)
-				continue;
-			
-			final String strCurrency = oAccount.get("currency").toString();
-			final Currency oCurrency = Currency.valueOf(strCurrency.toUpperCase());
-			oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, BigDecimal.ZERO)); 
+			final Map<String, Object> oResult = sendPost(m_strAuthUrl, null);
+			m_bIsAuthorized = (null != oResult.get("status") && oResult.get("status").toString().equalsIgnoreCase("true"));
 		}
+		catch(final Exception e) {}
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo) throws Exception
+	public void setUserMoney(final StockUserInfo oUserInfo)
 	{
-		for(final RateInfo oRateInfo : getRates())
+		try
 		{
-			if (null != oRequestRateInfo && !oRequestRateInfo.equals(oRateInfo))
-				continue;
-			
-			final String strMarket = getRateIdentifier(oRateInfo);
-			final Map<String, Object> oOrdersInfo = sendPost(m_strMyOrdersUrl.replace("#market#", strMarket), null);
-			final List<Object> oOrders = (List<Object>) oOrdersInfo.get("your_open_orders");
-			
-			for(final Object oOrderInfo : oOrders)
+			final Map<String, Object> oMoneyInfo = sendPost(m_strMoneyUrl, null);
+			final List<Map<String, Object>> oAccounts = (List<Map<String, Object>>) oMoneyInfo.get("accounts");
+			for(final Map<String, Object> oAccount : oAccounts)
 			{
-				final Order oOrder = convert2Order(oOrderInfo); 
-				oUserInfo.addOrder(oRateInfo, oOrder); 
+				final BigDecimal nBalance = MathUtils.fromString(oAccount.get("balance").toString());
+				if (nBalance.compareTo(BigDecimal.ZERO) == 0)
+					continue;
+				
+				final String strCurrency = oAccount.get("currency").toString();
+				final Currency oCurrency = Currency.valueOf(strCurrency.toUpperCase());
+				oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, BigDecimal.ZERO)); 
 			}
 		}
+		catch(final Exception e) {}
+	}
+	
+	@SuppressWarnings("unchecked")
+	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo)
+	{
+		try
+		{
+			for(final RateInfo oRateInfo : getRates())
+			{
+				if (null != oRequestRateInfo && !oRequestRateInfo.equals(oRateInfo))
+					continue;
+				
+				final String strMarket = getRateIdentifier(oRateInfo);
+				final Map<String, Object> oOrdersInfo = sendPost(m_strMyOrdersUrl.replace("#market#", strMarket), null);
+				final List<Object> oOrders = (List<Object>) oOrdersInfo.get("your_open_orders");
+				
+				for(final Object oOrderInfo : oOrders)
+				{
+					final Order oOrder = convert2Order(oOrderInfo); 
+					oUserInfo.addOrder(oRateInfo, oOrder); 
+				}
+			}
+		}
+		catch(final Exception e) {}
+	}
+	
+	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
+	{
+		super.addOrder(oSide, oRateInfo, nVolume, nPrice);
+		
+		final Map<String, String> aParameters = new HashMap<String, String>();
+		aParameters.put("side", oSide.toString().toLowerCase());
+		aParameters.put("count", nVolume.toString());
+		aParameters.put("currency", oRateInfo.getCurrencyFrom().toString());
+		aParameters.put("currency1", oRateInfo.getCurrencyTo().toString());
+		aParameters.put("price", nPrice.toString());
+
+		final String strMarket = getRateIdentifier(oRateInfo);
+		final String strAddOrder = m_strAddOrderUrl.replace("#side#", oSide.toString().toLowerCase()).replace("#rate#", strMarket);
+
+		try
+		{
+			final Map<String, Object> oOrder = sendPost(strAddOrder, aParameters);
+			return convert2Order(oOrder);
+		}
+		catch(final Exception e)
+		{
+			return new Order("cancel", e.getMessage());
+		}
+	}
+	
+	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
+	{
+		super.getOrder(strOrderId, oRateInfo);
+		try
+		{
+			final Map<String, Object> oOrder = sendPost(m_strOrderStatusUrl.replace("#id#", strOrderId), null);
+			return convert2Order(oOrder);
+		}
+		catch(final Exception e)
+		{
+			return new Order("cancel", e.getMessage());
+		}
+	}
+	
+	@Override public Order removeOrder(final String strOrderId)
+	{
+		super.removeOrder(strOrderId);
+		final Order oOrder = getOrder(strOrderId, null);
+		try
+		{
+			final Map<String, Object> oResult = sendPost(m_strRemoveOrderUrl.replace("#id#", strOrderId), null);
+			if (!"true".equals(oResult.get("status")))
+				return new Order();
+		}
+		catch(final Exception e)
+		{
+			return new Order("cancel", e.getMessage());
+		}
+			
+		oOrder.setState("cancel");	
+		return oOrder;
 	}
 	
 	public Map<String, Object> sendPost(final String strUrl, Map<String, String> aParameters) throws Exception

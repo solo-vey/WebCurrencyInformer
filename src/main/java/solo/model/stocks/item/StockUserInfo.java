@@ -26,7 +26,7 @@ public class StockUserInfo extends BaseObject
 	
 	public List<Order> getOrders(final Currency oCurrency)
 	{
-		return m_oOrders.get(oCurrency);
+		return (m_oOrders.containsKey(oCurrency) ? m_oOrders.get(oCurrency) : new LinkedList<Order>());
 	}
 	
 	public void addOrder(final RateInfo oRateInfo, final Order oOrder)

@@ -1,20 +1,46 @@
 package solo.model.stocks.item;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-import solo.model.stocks.BaseObject;
+import org.apache.commons.lang.StringUtils;
 
-public class Order extends BaseObject
+import solo.model.stocks.BaseObject;
+import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.trade.RemoveOrderCommand;
+import solo.utils.MathUtils;
+
+public class Order extends BaseObject implements Serializable
 {
+	private static final long serialVersionUID = -9072937437513312951L;
+	
 	protected String m_strID;
 	protected BigDecimal m_nPrice;
 	protected String m_strState;
-	protected String m_strSide;
+	protected OrderSide m_oSide;
 	protected BigDecimal m_nVolume;
 	protected Date m_oCreated;
+	protected String m_strMessage;
+	
+	public Order()
+	{
+	}
+	
+	public Order(final String strID, final String strState, final String strMessage)
+	{
+		m_strID = strID;
+		m_strState = strState;
+		m_strMessage = strMessage;
+	}
+	
+	public Order(final String strState, final String strMessage)
+	{
+		m_strState = strState;
+		m_strMessage = strMessage;
+	}
 	
 	public String getId()
 	{
@@ -36,14 +62,19 @@ public class Order extends BaseObject
 		m_nPrice = nPrice;
 	}
 	
-	public String getSide()
+	public OrderSide getSide()
 	{
-		return m_strSide;
+		return m_oSide;
+	}
+	
+	public void setSide(final OrderSide oSide)
+	{
+		m_oSide = oSide;
 	}
 	
 	public void setSide(final String strSide)
 	{
-		m_strSide = strSide;
+		m_oSide = (strSide.equalsIgnoreCase(OrderSide.SELL.toString()) ? OrderSide.SELL : OrderSide.BUY);
 	}
 	
 	public String getState()
@@ -68,7 +99,7 @@ public class Order extends BaseObject
 	
 	public BigDecimal getSum()
 	{
-		return m_nPrice.multiply(m_nVolume);
+		return (null == m_nPrice || null == m_nVolume ? BigDecimal.ZERO : m_nPrice.multiply(m_nVolume));
 	}
 	
 	public Date getCreated()
@@ -89,6 +120,24 @@ public class Order extends BaseObject
 			setCreated(oFormatter.parse(strCreated));
 		}
 		catch (ParseException e) { }		
+	}
+	
+	public String getMessage()
+	{
+		return m_strMessage;
+	}
+
+	public String getInfoShort()
+	{
+		return getSide() + "/" + MathUtils.toCurrencyString(getPrice()) + 
+			"/" + MathUtils.toCurrencyStringEx(getVolume()) + "/" + MathUtils.toCurrencyString(getSum()) +
+			(StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY);
+	}
+	
+	public String getInfo()
+	{
+		return getInfoShort() +
+			" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, getId());
 	}
 }
 
