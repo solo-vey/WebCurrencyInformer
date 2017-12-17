@@ -44,7 +44,7 @@ public class Order extends BaseObject implements Serializable
 	
 	public String getId()
 	{
-		return m_strID;
+		return (null != m_strID ? m_strID : StringUtils.EMPTY);
 	}
 	
 	public void setId(final String strID)
