@@ -7,7 +7,6 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
-import ua.lz.ep.utils.ResourceUtils;
 
 public class TaskTrade extends TaskTradeBase
 {
@@ -46,7 +45,7 @@ public class TaskTrade extends TaskTradeBase
 		
 		m_nBuyVolume = oVolume;
 		m_nLastOrderPrice = oBuyPrice;
-		m_nCriticalPrice = MathUtils.getBigDecimal(oBuyPrice.doubleValue() * 1.1, 0);
+		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oBuyPrice.multiply(new BigDecimal(1.1)));
 		sendMessage(getType() + "/Create " + oBuyOrder.getInfo());
 		addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyString(oBuyOrder.getPrice()));
 		
@@ -55,22 +54,19 @@ public class TaskTrade extends TaskTradeBase
 
 	@Override protected Order createSellOrder(final BigDecimal oSellPrice)
 	{
-		final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.commision", getStockExchange().getStockProperties(), 25));
-		final BigDecimal nCommision = nStockCommision.divide(new BigDecimal(10000));
-		final BigDecimal nTradeCommision = m_nLastOrderPrice.multiply(nCommision);
+		final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(m_nLastOrderPrice, m_nLastOrderPrice);
+		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(m_nLastOrderPrice);
 		
-		final BigDecimal nStockMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock.margin", getStockExchange().getStockProperties(), nStockCommision.intValue()));
-		final BigDecimal nMargin = nStockMargin.divide(new BigDecimal(10000));
-		final BigDecimal nTradeMargin = m_nLastOrderPrice.multiply(nMargin);
-		
-		m_nCriticalPrice = m_nLastOrderPrice.add(nTradeCommision).add(nTradeMargin);
+		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, m_nLastOrderPrice.add(nTradeCommision).add(nTradeMargin));
 		final BigDecimal oSellOrderPrice = (oSellPrice.compareTo(m_nCriticalPrice) > 0 ? oSellPrice : m_nCriticalPrice); 
-		final BigDecimal oSellOrderVolume = MathUtils.getBigDecimal(m_nBuyVolume.add(m_nBuyVolume.multiply(nCommision).negate()).doubleValue(), 6); 
+		BigDecimal oSellOrderVolume = TradeUtils.getWithoutCommision(m_nBuyVolume); 
+		oSellOrderVolume = TradeUtils.getRoundedVolume(m_oRateInfo, m_nSellVolume); 
 		final Order oSellOrder = getStockSource().addOrder(OrderSide.SELL, m_oRateInfo, oSellOrderVolume, oSellOrderPrice);
 		if (oSellOrder.isNull())
 			return oSellOrder;
 
-		m_nLastOrderPrice = oSellPrice;
+		m_nLastOrderPrice = oSellOrderPrice;
+		m_nSellVolume = oSellOrderVolume;
 		sendMessage(getType() + "/Create " + oSellOrder.getInfo() + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
 		addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
 		return oSellOrder;
@@ -97,11 +93,7 @@ public class TaskTrade extends TaskTradeBase
 		{
 			m_nTotalCount++;
 
-			final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.commision", getStockExchange().getStockProperties(), 25));
-			final BigDecimal nCommision = nStockCommision.divide(new BigDecimal(10000));
-			BigDecimal nReceivedSum = m_nSellVolume.multiply(m_nLastOrderPrice);
-			nReceivedSum = nReceivedSum.add(nReceivedSum.multiply(nCommision).negate());
-			
+			final BigDecimal nReceivedSum = TradeUtils.getWithoutCommision(m_nSellVolume.multiply(m_nLastOrderPrice));
 			final BigDecimal nDelta = nReceivedSum.add(m_nSpendSum.negate());
 			m_nTotalDelta = m_nTotalDelta.add(nDelta);
 		

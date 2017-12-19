@@ -186,7 +186,7 @@ public class TaskTradeBase extends TaskBase implements ITradeTask
 	
 	protected BigDecimal calculateOrderVolume(final BigDecimal nTradeVolume, final BigDecimal nPrice)
 	{
-		return MathUtils.getBigDecimal(nTradeVolume.doubleValue() / nPrice.doubleValue(), 6);
+		return TradeUtils.getRoundedVolume(m_oRateInfo, nTradeVolume.divide(nPrice));
 	}
 
 	protected boolean checkTaskDone(final boolean bIsReloadOrder)

@@ -6,10 +6,8 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
-import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
-import solo.model.stocks.worker.WorkerFactory;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 public class StrategyUtils
 {
@@ -21,13 +19,7 @@ public class StrategyUtils
 		if (nDelta.compareTo(BigDecimal.ZERO) < 0)
 			nDelta = nDelta.negate();
 		
-		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.commision", oStockExchange.getStockProperties(), 25));
-		final BigDecimal nCommision = nStockCommision.divide(new BigDecimal(10000));
-		final BigDecimal nAskCommision = nAskPrice.multiply(nCommision);
-		final BigDecimal nBidCommision = nBidPrice.multiply(nCommision);
-		final BigDecimal nFullCommision = nAskCommision.add(nBidCommision);
-		
+		final BigDecimal nFullCommision = TradeUtils.getCommisionValue(nBidPrice, nAskPrice);
 		return (nDelta.compareTo(nFullCommision) < 0);
 	}
 
