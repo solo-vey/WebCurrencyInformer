@@ -20,4 +20,5 @@ public interface IStockSource
 	Order addOrder(OrderSide oSite, RateInfo oRateInfo, BigDecimal nVolume, BigDecimal nPrice);
 	StockUserInfo getUserInfo(final RateInfo oRateInfo);
 	void restart();
+	List<Order> getTrades(RateInfo m_oRateInfo, final int nPage, final int nCount);
 }

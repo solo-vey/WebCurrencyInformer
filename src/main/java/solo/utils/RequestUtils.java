@@ -319,14 +319,16 @@ public class RequestUtils
 			final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
 			if (null == oResponse)
 			    return null;
-
-			if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
-			    throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]");
 			
 			final InputStream oSource = (InputStream) oResponse.getEntity().getContent();
 			final StringWriter oWriter = new StringWriter();
 			IOUtils.copy(oSource, oWriter, "UTF-8");
-			return oWriter.toString();
+			final String strContent = oWriter.toString();
+
+			if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
+			    throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
+			
+			return strContent;
 		}
 		catch (final Exception e)
 		{

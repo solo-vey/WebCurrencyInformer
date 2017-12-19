@@ -1,6 +1,11 @@
 package solo.model.stocks.item.command.base;
 
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
@@ -84,6 +89,21 @@ abstract public class HasParameters extends BaseObject
 
 		final String strCurrencyFrom = strValue.toUpperCase();
 		return new RateInfo(Currency.valueOf(strCurrencyFrom), Currency.UAH); 
+	}
+	
+	public Date getParameterAsDate(final String strParameterName)
+	{
+		final String strValue = getParameter(strParameterName);
+		if (StringUtils.isBlank(strValue))
+			return null;
+
+		try
+		{
+			final DateFormat oFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH);
+			return oFormat.parse(strValue);
+		}
+		catch (ParseException e) {}
+		return null;
 	}
 	
 	public Object getParameterAsEnum(final String strParameterName, final Class<?> oEnum)

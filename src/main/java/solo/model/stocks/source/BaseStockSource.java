@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
@@ -79,22 +77,21 @@ public class BaseStockSource implements IStockSource
 
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
+		
 		return new Order("cancel", "Order is absent");
 	}
 
-	public String checkOrderParameters(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nPrice)
+	public void checkOrderParameters(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nPrice) throws Exception
 	{
 		final StateAnalysisResult oAnalysisResult = m_oStockExchange.getHistory().getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oAnalysisResult.getRateAnalysisResult(oRateInfo);
 		final BigDecimal nMinPrice = oRateAnalysisResult.getBidsAnalysisResult().getBestPrice();
 		final BigDecimal nMaxPrice = oRateAnalysisResult.getAsksAnalysisResult().getBestPrice();
 		if (oSide.equals(OrderSide.SELL) && nPrice.compareTo(nMinPrice) < 0)
-			return "Because price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]";
+			throw new Exception("Because price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]");
 
 		if (oSide.equals(OrderSide.BUY) && nPrice.compareTo(nMaxPrice) > 0)
-			return "Because price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "]";
-		
-		return StringUtils.EMPTY;
+			throw new Exception("Because price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "]");
 	}
 
 	@Override public Order getOrder(String strOrderId, final RateInfo oRateInfo)
@@ -103,6 +100,11 @@ public class BaseStockSource implements IStockSource
 	}
 
 	@Override public Order removeOrder(String strOrderId)
+	{
+		return null;
+	}
+
+	@Override public List<Order> getTrades(RateInfo m_oRateInfo, final int nPage, final int nCount)
 	{
 		return null;
 	}

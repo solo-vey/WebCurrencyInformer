@@ -2,12 +2,12 @@ package solo.model.stocks.item.rules.task;
 
 import java.math.BigDecimal;
 
-import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
+import ua.lz.ep.utils.ResourceUtils;
 
 public class TaskQuickTrade extends TaskQuickBase
 {
@@ -18,10 +18,12 @@ public class TaskQuickTrade extends TaskQuickBase
 	
 	protected BigDecimal m_nTradeVolume; 
 	protected Boolean m_bIsCycle; 
-	protected OrderSide m_oTaskSide = OrderSide.BUY; 
-	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
-	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
+
+	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO; 
+	protected BigDecimal m_nSellVolume = BigDecimal.ZERO; 
+	
 	protected Integer m_nTotalCount = 0;
+	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
 	protected BigDecimal m_nTotalDelta = BigDecimal.ZERO;
 
 	public TaskQuickTrade(final RateInfo oRateInfo, final String strCommandLine) throws Exception
@@ -32,36 +34,82 @@ public class TaskQuickTrade extends TaskQuickBase
 	@Override public void starTask()
 	{
 		m_nTradeVolume = getParameterAsBigDecimal(TRADE_VOLUME);
-		
-		final StateAnalysisResult oLastStateAnalysisResult = getStockExchange().getHistory().getLastAnalysisResult();
-		final BigDecimal oBidPrice = getBuyPrice(oLastStateAnalysisResult);
-		final BigDecimal oVolume = calculateOrderVolume(m_nTradeVolume, oBidPrice);
-		m_oOrder = getStockSource().addOrder(OrderSide.BUY, m_oRateInfo, oVolume, oBidPrice);
-		m_nCriticalPrice = MathUtils.getBigDecimal(oBidPrice.doubleValue() * 1.1, 0);
-		
-		sendMessage(getType() + "/Create " + m_oOrder.getInfo());
 		m_bIsCycle = getParameter(IS_CYCLE).equalsIgnoreCase("true");
 		m_oTaskSide = OrderSide.BUY;
-		addToHistory(m_oOrder.getSide() + " + " + MathUtils.toCurrencyString(m_oOrder.getPrice()));
+	}
+	
+	@Override protected Order createBuyOrder(final BigDecimal oBuyPrice)
+	{
+		final BigDecimal oVolume = calculateOrderVolume(m_nTradeVolume, oBuyPrice);
+		final Order oBuyOrder = getStockSource().addOrder(OrderSide.BUY, m_oRateInfo, oVolume, oBuyPrice);
+		if (oBuyOrder.isNull())
+			return oBuyOrder;
+		
+		m_nBuyVolume = oVolume;
+		m_nLastOrderPrice = oBuyPrice;
+		m_nCriticalPrice = MathUtils.getBigDecimal(oBuyPrice.doubleValue() * 1.1, 0);
+		sendMessage(getType() + "/Create " + oBuyOrder.getInfo());
+		addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyString(oBuyOrder.getPrice()));
+		
+		return oBuyOrder;
+	}
+
+	@Override protected Order createSellOrder(final BigDecimal oSellPrice)
+	{
+		final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.commision", getStockExchange().getStockProperties(), 25));
+		final BigDecimal nCommision = nStockCommision.divide(new BigDecimal(10000));
+		final BigDecimal nTradeCommision = m_nLastOrderPrice.multiply(nCommision);
+		
+		final BigDecimal nStockMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock.margin", getStockExchange().getStockProperties(), nStockCommision.intValue()));
+		final BigDecimal nMargin = nStockMargin.divide(new BigDecimal(10000));
+		final BigDecimal nTradeMargin = m_nLastOrderPrice.multiply(nMargin);
+		
+		m_nCriticalPrice = m_nLastOrderPrice.add(nTradeCommision).add(nTradeMargin);
+		final BigDecimal oSellOrderPrice = (oSellPrice.compareTo(m_nCriticalPrice) > 0 ? oSellPrice : m_nCriticalPrice); 
+		final BigDecimal oSellOrderVolume = MathUtils.getBigDecimal(m_nBuyVolume.add(m_nBuyVolume.multiply(nCommision).negate()).doubleValue(), 6); 
+		final Order oSellOrder = getStockSource().addOrder(OrderSide.SELL, m_oRateInfo, oSellOrderVolume, oSellOrderPrice);
+		if (oSellOrder.isNull())
+			return oSellOrder;
+
+		m_nLastOrderPrice = oSellPrice;
+		sendMessage(getType() + "/Create " + oSellOrder.getInfo() + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
+		addToHistory(getOrder().getSide() + " + " + MathUtils.toCurrencyString(getOrder().getPrice()) + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
+		return oSellOrder;
 	}
 
 	@Override public String getType()
 	{
-		return "QUICKTRADE";   
+		return "TRADE";   
 	}
 	
 	@Override protected void taskDone()
 	{
-		if ("cancel".equalsIgnoreCase(m_oOrder.getState()) || m_oTaskSide.equals(OrderSide.SELL))
+		if (getOrder().isCanceled())
 		{
-			m_nReceivedSum = m_oOrder.getSum();
-			m_nTotalCount++;
-			final BigDecimal nDelta = m_nReceivedSum.add(m_nSpendSum.negate());
-			m_nTotalDelta = m_nTotalDelta.add(nDelta);
+			sendMessage("Order canceled");
+			addToHistory("Order canceled");
 			
-			final String strMessage = "Result: " + MathUtils.toCurrencyString(m_nReceivedSum) + "-" + MathUtils.toCurrencyString(m_nSpendSum) + "=" + 
+			super.taskDone();
+			startNewCycle();
+			return;
+		}
+
+		if (m_oTaskSide.equals(OrderSide.SELL))
+		{
+			m_nTotalCount++;
+
+			final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.commision", getStockExchange().getStockProperties(), 25));
+			final BigDecimal nCommision = nStockCommision.divide(new BigDecimal(10000));
+			BigDecimal nReceivedSum = m_nSellVolume.multiply(m_nLastOrderPrice);
+			nReceivedSum = nReceivedSum.add(nReceivedSum.multiply(nCommision).negate());
+			
+			final BigDecimal nDelta = nReceivedSum.add(m_nSpendSum.negate());
+			m_nTotalDelta = m_nTotalDelta.add(nDelta);
+		
+			final String strMessage = "Trade: " + MathUtils.toCurrencyString(nReceivedSum) + "-" + MathUtils.toCurrencyString(m_nSpendSum) + "=" + 
 					MathUtils.toCurrencyString(nDelta) + "\r\n " + 
-					"Statistic: " + m_nTotalCount + "/" + MathUtils.toCurrencyString(m_nTradeVolume) + "/" + MathUtils.toCurrencyString(m_nTotalDelta);
+					"All: " + m_nTotalCount + "/" + MathUtils.toCurrencyString(m_nTradeVolume) + "/" + MathUtils.toCurrencyString(m_nTotalDelta);
+					
 			sendMessage(strMessage);
 			addToHistory(strMessage);
 
@@ -70,29 +118,11 @@ public class TaskQuickTrade extends TaskQuickBase
 			return;
 		}
 		
-		final Order oBuyOrder = getStockSource().getOrder(m_oOrder.getId(), m_oRateInfo);
-		if ("cancel".equalsIgnoreCase(oBuyOrder.getState()))
-		{
-			m_oOrder.setState("cancel");
-			super.taskDone();
-			startNewCycle();
-			return;
-		}
-	
-		m_nSpendSum = oBuyOrder.getSum();
+		m_nSpendSum = m_nLastOrderPrice.multiply(m_nBuyVolume);
 		sendMessage(getInfo(null) + " is executed");
 
-		final StateAnalysisResult oLastStateAnalysisResult = getStockExchange().getHistory().getLastAnalysisResult();
-		final BigDecimal oAskPrice = getSellPrice(oLastStateAnalysisResult);
-		m_nCriticalPrice = MathUtils.getBigDecimal(oBuyOrder.getPrice().doubleValue() * 1.007, 0);
-		final BigDecimal oSellOrderPrice = (oAskPrice.compareTo(m_nCriticalPrice) > 0 ? oAskPrice : m_nCriticalPrice); 
-		final BigDecimal oSellOrderVolume = MathUtils.getBigDecimal(oBuyOrder.getVolume().doubleValue() * 0.9975, 6); 
-		final Order oSellOrder = getStockSource().addOrder(OrderSide.SELL, m_oRateInfo, oSellOrderVolume, oSellOrderPrice);
-
-		sendMessage(getType() + "/Create " + oSellOrder.getInfo());
-		m_oOrder = oSellOrder;
+		setOrder(Order.NULL);
 		m_oTaskSide = OrderSide.SELL;
-		addToHistory(m_oOrder.getSide() + " + " + MathUtils.toCurrencyString(m_oOrder.getPrice()));
 	}
 	
 	@Override protected void removeTask()
@@ -103,8 +133,13 @@ public class TaskQuickTrade extends TaskQuickBase
 
 	protected void startNewCycle()
 	{
-		if (m_bIsCycle)
-			starTask();
+		if (!m_bIsCycle)
+			return;
+			
+		m_nBuyVolume = BigDecimal.ZERO; 
+		m_nSellVolume = BigDecimal.ZERO; 
+		m_oTaskSide = OrderSide.BUY;
+		setOrder(Order.NULL);
 	}
 }
 

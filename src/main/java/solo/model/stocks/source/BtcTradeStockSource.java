@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.message.BasicNameValuePair;
@@ -105,6 +106,9 @@ public class BtcTradeStockSource extends BaseStockSource
 		if (null != oMapOrder.get("type"))
 			oOrder.setSide(oMapOrder.get("type").toString());
 		
+//		if (null != oMapOrder.get("pub_date"))
+//			oOrder.setCreated(oMapOrder.get("pub_date").toString(), "yyyy-MM-dd HH:mm:ss");
+		
 		return oOrder;
 	}
 	
@@ -184,22 +188,32 @@ public class BtcTradeStockSource extends BaseStockSource
 	
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
-		super.addOrder(oSide, oRateInfo, nVolume, nPrice);
-		
-		final Map<String, String> aParameters = new HashMap<String, String>();
-		aParameters.put("side", oSide.toString().toLowerCase());
-		aParameters.put("count", nVolume.toString());
-		aParameters.put("currency", oRateInfo.getCurrencyFrom().toString());
-		aParameters.put("currency1", oRateInfo.getCurrencyTo().toString());
-		aParameters.put("price", nPrice.toString());
-
-		final String strMarket = getRateIdentifier(oRateInfo);
-		final String strAddOrder = m_strAddOrderUrl.replace("#side#", oSide.toString().toLowerCase()).replace("#rate#", strMarket);
-
 		try
 		{
+			checkOrderParameters(oSide, oRateInfo, nPrice);
+			
+			authUser();
+			super.addOrder(oSide, oRateInfo, nVolume, nPrice);
+			
+			final Map<String, String> aParameters = new HashMap<String, String>();
+			aParameters.put("side", oSide.toString().toLowerCase());
+			aParameters.put("count", nVolume.toString());
+			aParameters.put("currency", oRateInfo.getCurrencyFrom().toString());
+			aParameters.put("currency1", oRateInfo.getCurrencyTo().toString());
+			aParameters.put("price", nPrice.toString());
+
+			final String strMarket = getRateIdentifier(oRateInfo);
+			final String strAddOrder = m_strAddOrderUrl.replace("#side#", oSide.toString().toLowerCase()).replace("#rate#", strMarket);
+
 			final Map<String, Object> oOrder = sendPost(strAddOrder, aParameters);
-			return convert2Order(oOrder);
+			if (!"true".equals(oOrder.get("status").toString()))
+			{
+				final Object oDescription = oOrder.get("description"); 
+				return new Order("cancel", (null != oDescription ? oDescription.toString() : StringUtils.EMPTY));
+			}
+			
+			final String strOrderId = oOrder.get("order_id").toString();
+			return getOrder(strOrderId, oRateInfo);
 		}
 		catch(final Exception e)
 		{
@@ -209,27 +223,51 @@ public class BtcTradeStockSource extends BaseStockSource
 	
 	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
+		authUser();
 		super.getOrder(strOrderId, oRateInfo);
+		
+		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
+		setUserOrders(oUserInfo, oRateInfo);
+		Order oThisOrder = new Order();
+		for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
+		{
+			if (!oOrder.getId().equalsIgnoreCase(strOrderId))
+				continue;
+			
+			oThisOrder = oOrder;
+			break;	
+		}
+		
 		try
 		{
-			final Map<String, Object> oOrder = sendPost(m_strOrderStatusUrl.replace("#id#", strOrderId), null);
-			return convert2Order(oOrder);
+			
+			final Map<String, Object> oTradeOrderInfo = sendPost(m_strOrderStatusUrl.replace("#id#", strOrderId), null);
+			addOrderTradeInfo(oThisOrder, oTradeOrderInfo);
 		}
 		catch(final Exception e)
 		{
 			return new Order("cancel", e.getMessage());
 		}
+		
+		return oThisOrder;
 	}
 	
+	protected void addOrderTradeInfo(final Order oOrder, final Map<String, Object> oTradeOrderInfo)
+	{
+		if (null != oTradeOrderInfo.get("status"))
+			oOrder.setState(oTradeOrderInfo.get("status").toString());
+	}
+
 	@Override public Order removeOrder(final String strOrderId)
 	{
+		authUser();
 		super.removeOrder(strOrderId);
 		final Order oOrder = getOrder(strOrderId, null);
 		try
 		{
 			final Map<String, Object> oResult = sendPost(m_strRemoveOrderUrl.replace("#id#", strOrderId), null);
 			if (!"true".equals(oResult.get("status")))
-				return new Order();
+				return oOrder;
 		}
 		catch(final Exception e)
 		{

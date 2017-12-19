@@ -3,10 +3,9 @@ package solo.model.stocks.source;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
-import org.apache.commons.lang.StringUtils;
 
 import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
@@ -95,7 +94,7 @@ public class KunaStockSource extends BaseStockSource
 			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("volume").toString()));
 		
 		if (null != oMapOrder.get("created_at"))
-			oOrder.setCreated(oMapOrder.get("created_at").toString().replace("T", " ").replace("Z", ""), "yyyy-MM-hh HH:mm:ss");
+			oOrder.setCreated(oMapOrder.get("created_at").toString().replace("T", " ").replace("Z", "").split("\\+")[0], "yyyy-MM-dd HH:mm:ss");
 		
 		return oOrder;
 	}
@@ -173,44 +172,51 @@ public class KunaStockSource extends BaseStockSource
 		
 		return findOrderInTrades(strOrderId, oRateInfo);
 	}
-	
-	public Order findOrderInTrades(final String strOrderId, final RateInfo oRateInfo)
+
+	public List<Order> getTrades(final RateInfo oRateInfo, final int nPage, final int nCount)
 	{
+		final List<Order> aTrades = new LinkedList<Order>();
 		try
 		{
 			final String strMarket = getRateIdentifier(oRateInfo);
-			final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(m_strMyTradesUrl.replace("#market#", strMarket), "GET"), true);
+			String strMyTradesUrl = m_strMyTradesUrl.replace("#limit#", (new Integer(nCount)).toString()).replace("#market#", strMarket);
+			final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(strMyTradesUrl, "GET"), true);
 			for(final Object oOrderInfo : oOrdersInfo)
-			{
-				final Order oOrder = convert2Order(oOrderInfo);
-				if (oOrder.getId().equalsIgnoreCase(strOrderId))
-				{
-					oOrder.setState("done");
-					return oOrder;
-				}
-			}
+				aTrades.add(convert2Order(oOrderInfo));
 		}
 		catch (Exception e) { }
 		
+		return aTrades;
+	}
+
+	public Order findOrderInTrades(final String strOrderId, final RateInfo oRateInfo)
+	{
+		final List<Order> aTrades = getTrades(oRateInfo, 0, 100);
+		for(final Order oOrder : aTrades)
+		{
+			if (oOrder.getId().equalsIgnoreCase(strOrderId))
+			{
+				oOrder.setState("done");
+				return oOrder;
+			}
+		}
 		
 		return new Order(strOrderId, "cancel", "Order is absent");
 	}
 	
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
-		final String strError = checkOrderParameters(oSide, oRateInfo, nPrice);
-		if (StringUtils.isNotBlank(strError))
-			return new Order("cancel", strError);
-		
-		final Map<String, String> aParameters = new HashMap<String, String>();
-		aParameters.put("side", oSide.toString().toLowerCase());
-		aParameters.put("volume", nVolume.toString());
-		aParameters.put("market", getRateIdentifier(oRateInfo));
-		aParameters.put("price", nPrice.toString());
-		final String strAddOrder = m_strAddOrderUrl.replace("#side#", oSide.toString().toLowerCase()).replace("#volume#", nVolume.toString())
-													.replace("#market#", getRateIdentifier(oRateInfo)).replace("#price#", nPrice.toString());
 		try
 		{
+			checkOrderParameters(oSide, oRateInfo, nPrice);
+			
+			final Map<String, String> aParameters = new HashMap<String, String>();
+			aParameters.put("side", oSide.toString().toLowerCase());
+			aParameters.put("volume", nVolume.toString());
+			aParameters.put("market", getRateIdentifier(oRateInfo));
+			aParameters.put("price", nPrice.toString());
+			final String strAddOrder = m_strAddOrderUrl.replace("#side#", oSide.toString().toLowerCase()).replace("#volume#", nVolume.toString())
+														.replace("#market#", getRateIdentifier(oRateInfo)).replace("#price#", nPrice.toString());
 			Map<String, Object> oOrderInfo = RequestUtils.sendPostAndReturnJson(signatureUrl(strAddOrder, "POST"), aParameters, true);
 			return convert2Order(oOrderInfo);
 		}

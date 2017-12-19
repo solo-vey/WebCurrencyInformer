@@ -11,6 +11,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.trade.AddOrderCommand;
 import solo.model.stocks.item.command.trade.GetStockInfoCommand;
+import solo.model.stocks.item.command.trade.GetStockStatisticCommand;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.command.trade.StockRestartCommand;
 import solo.model.stocks.item.command.rule.AddRuleCommand;
@@ -49,10 +50,11 @@ public class CommandFactory
 		registerCommandClass(RemoveRuleCommand.NAME,	RemoveRuleCommand.class, CommandGroup.RULES);
 		registerCommandClass(RemoveAllRulesCommand.NAME,RemoveAllRulesCommand.class, CommandGroup.RULES);
 
-		registerCommandClass(GetStockInfoCommand.NAME, 	GetStockInfoCommand.class, CommandGroup.INFO);
-		registerCommandClass(AddOrderCommand.NAME, 		AddOrderCommand.class, CommandGroup.TRADE);
-		registerCommandClass(RemoveOrderCommand.NAME, 	RemoveOrderCommand.class, CommandGroup.TRADE);
-		registerCommandClass(StockRestartCommand.NAME, 	StockRestartCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(GetStockInfoCommand.NAME, 		GetStockInfoCommand.class, CommandGroup.INFO);
+		registerCommandClass(AddOrderCommand.NAME, 			AddOrderCommand.class, CommandGroup.TRADE);
+		registerCommandClass(RemoveOrderCommand.NAME, 		RemoveOrderCommand.class, CommandGroup.TRADE);
+		registerCommandClass(StockRestartCommand.NAME, 		StockRestartCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(GetStockStatisticCommand.NAME, GetStockStatisticCommand.class, CommandGroup.SYSTEM);
 	}
 	
 	static protected void registerCommandClass(final String strCommand, final Class<?> oClass, final CommandGroup oCommandGroup)

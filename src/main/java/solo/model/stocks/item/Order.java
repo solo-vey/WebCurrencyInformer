@@ -17,6 +17,8 @@ public class Order extends BaseObject implements Serializable
 {
 	private static final long serialVersionUID = -9072937437513312951L;
 	
+	public final static Order NULL = new Order(StringUtils.EMPTY, "cancel", "Null order"); 
+	
 	protected String m_strID;
 	protected BigDecimal m_nPrice;
 	protected String m_strState;
@@ -27,6 +29,21 @@ public class Order extends BaseObject implements Serializable
 	
 	public Order()
 	{
+	}
+	
+	public boolean isNull()
+	{
+		return StringUtils.isBlank(m_strID);
+	}
+	
+	public boolean isCanceled()
+	{
+		return getState().equalsIgnoreCase("cancel");
+	}
+	
+	public boolean isDone()
+	{
+		return getState().equalsIgnoreCase("done");
 	}
 	
 	public Order(final String strID, final String strState, final String strMessage)
@@ -74,17 +91,29 @@ public class Order extends BaseObject implements Serializable
 	
 	public void setSide(final String strSide)
 	{
-		m_oSide = (strSide.equalsIgnoreCase(OrderSide.SELL.toString()) ? OrderSide.SELL : OrderSide.BUY);
+		if (strSide.equalsIgnoreCase(OrderSide.SELL.toString()))
+			m_oSide = OrderSide.SELL;
+		else
+		if (strSide.equalsIgnoreCase("ask"))
+			m_oSide = OrderSide.SELL;
+		else
+			m_oSide = OrderSide.BUY;
 	}
 	
 	public String getState()
 	{
-		return m_strState;
+		return (null != m_strState ? m_strState : "cancel");
 	}
 	
 	public void setState(final String strState)
 	{
 		m_strState = strState;
+		if (m_strState.equalsIgnoreCase("canceled"))
+			m_strState = "cancel";
+		if (m_strState.equalsIgnoreCase("processed"))
+			m_strState = "done";
+		if (m_strState.equalsIgnoreCase("processing"))
+			m_strState = "wait";
 	}
 	
 	public BigDecimal getVolume()
@@ -129,6 +158,9 @@ public class Order extends BaseObject implements Serializable
 
 	public String getInfoShort()
 	{
+		if (isNull())
+			return "Null order";
+		
 		return getSide() + "/" + MathUtils.toCurrencyString(getPrice()) + 
 			"/" + MathUtils.toCurrencyStringEx(getVolume()) + "/" + MathUtils.toCurrencyString(getSum()) +
 			(StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY);
