@@ -3,14 +3,12 @@ package solo.model.stocks.item.rules.task;
 /** Тип задания */
 public enum TaskType
 {
-	/** Защита ордеров */
-	PROTECTORDERS("Защита ордеров"),
-	/** Быстрая торговля */
-	QUICKTRADE("Быстрая торговля"),
-	/** Быстрая продажа */
-	QUICKSELL("Быстрая продажа"),
-	/** Быстрая покупка */
-	QUICKBUY("Быстрая покупка");
+	/** торговля */
+	TRADE("торговля"),
+	/** продажа */
+	SELL("продажа"),
+	/** покупка */
+	BUY("покупка");
 	
 	/** Тип */
 	final String m_strName;

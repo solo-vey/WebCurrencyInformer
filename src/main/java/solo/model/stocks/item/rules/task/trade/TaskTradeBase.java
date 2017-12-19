@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task;
+package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
 import org.apache.commons.lang.StringUtils;
@@ -10,6 +10,7 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
+import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
@@ -18,7 +19,7 @@ import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
-public class TaskQuickBase extends TaskBase
+public class TaskTradeBase extends TaskBase
 {
 	private static final long serialVersionUID = -178132243757975169L;
 
@@ -35,12 +36,12 @@ public class TaskQuickBase extends TaskBase
 	protected ISellStrategy m_oSellStrategy = StrategyFactory.getSellStrategy(QuickSellStrategy.NAME);
 	protected OrderSide m_oTaskSide = OrderSide.BUY; 
 
-	public TaskQuickBase(final RateInfo oRateInfo, final String strCommandLine) throws Exception
+	public TaskTradeBase(final RateInfo oRateInfo, final String strCommandLine) throws Exception
 	{
 		this(oRateInfo, strCommandLine, CommonUtils.mergeParameters(ORDER_ID_PARAMETER, CRITICAL_PRICE_PARAMETER));
 	}
 
-	public TaskQuickBase(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate) throws Exception
+	public TaskTradeBase(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate) throws Exception
 	{
 		super(oRateInfo, strCommandLine, strTemplate);
 		starTask();

@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task;
+package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
 
@@ -9,7 +9,7 @@ import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
-public class TaskQuickTrade extends TaskQuickBase
+public class TaskTrade extends TaskTradeBase
 {
 	private static final long serialVersionUID = -178132223787975169L;
 
@@ -26,7 +26,7 @@ public class TaskQuickTrade extends TaskQuickBase
 	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
 	protected BigDecimal m_nTotalDelta = BigDecimal.ZERO;
 
-	public TaskQuickTrade(final RateInfo oRateInfo, final String strCommandLine) throws Exception
+	public TaskTrade(final RateInfo oRateInfo, final String strCommandLine) throws Exception
 	{
 		super(oRateInfo, strCommandLine, CommonUtils.mergeParameters(TRADE_VOLUME, IS_CYCLE));
 	}
