@@ -1,7 +1,6 @@
 package solo.model.stocks.item.rules.task.strategy;
 
 import java.math.BigDecimal;
-import java.util.Arrays;
 import java.util.List;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
@@ -18,13 +17,13 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		return NAME;
 	}
 	
-	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult, final Order oOrder)
+	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult, final List<Order> oMyOrders)
 	{
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders(); 
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
 		
-		oAsks = StrategyUtils.removeMyOrders(oAsks, Arrays.asList(oOrder)); 
-		oBids = StrategyUtils.removeMyOrders(oBids, Arrays.asList(oOrder));
+		oAsks = StrategyUtils.removeMyOrders(oAsks, oMyOrders); 
+		oBids = StrategyUtils.removeMyOrders(oBids, oMyOrders);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
 		

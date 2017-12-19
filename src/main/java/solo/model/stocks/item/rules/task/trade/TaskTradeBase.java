@@ -1,16 +1,21 @@
 package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
+
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
+import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
+import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
@@ -19,7 +24,7 @@ import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
-public class TaskTradeBase extends TaskBase
+public class TaskTradeBase extends TaskBase implements ITradeTask
 {
 	private static final long serialVersionUID = -178132243757975169L;
 
@@ -27,6 +32,7 @@ public class TaskTradeBase extends TaskBase
 	final static public String CRITICAL_PRICE_PARAMETER = "#price#";
 
 	private Order m_oOrder = Order.NULL;
+	protected BigDecimal m_nTradeVolume; 
 	protected BigDecimal m_nLastOrderPrice; 
 
 	protected BigDecimal m_nCriticalPrice;
@@ -54,6 +60,7 @@ public class TaskTradeBase extends TaskBase
 		setOrder(getStockSource().getOrder(strOrderID, m_oRateInfo));
 		m_oTaskSide = getOrder().getSide();
 		m_nLastOrderPrice = getOrder().getPrice();
+		m_nTradeVolume = getOrder().getSum();
 	}
 	
 	public void sendMessage(final String strMessage)
@@ -80,7 +87,7 @@ public class TaskTradeBase extends TaskBase
 		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
 		if (m_oTaskSide.equals(OrderSide.BUY) && getOrder().isNull())
 		{
-			BigDecimal oBuyPrice = m_oBuyStrategy.getBuyPrice(oRateAnalysisResult, getOrder());
+			BigDecimal oBuyPrice = m_oBuyStrategy.getBuyPrice(oRateAnalysisResult, getMyOrders());
 			if (oBuyPrice.equals(BigDecimal.ZERO))
 				return;
 			
@@ -90,7 +97,7 @@ public class TaskTradeBase extends TaskBase
 
 		if (m_oTaskSide.equals(OrderSide.SELL) && getOrder().isNull())
 		{
-			BigDecimal oSellPrice = m_oSellStrategy.getSellPrice(oRateAnalysisResult, getOrder());
+			BigDecimal oSellPrice = m_oSellStrategy.getSellPrice(oRateAnalysisResult, getMyOrders());
 			if (oSellPrice.equals(BigDecimal.ZERO))
 				return;
 			
@@ -100,7 +107,7 @@ public class TaskTradeBase extends TaskBase
 		
 		if (getOrder().getSide().equals(OrderSide.BUY))
 		{
-			BigDecimal oBuyPrice = m_oBuyStrategy.getBuyPrice(oRateAnalysisResult, getOrder());
+			BigDecimal oBuyPrice = m_oBuyStrategy.getBuyPrice(oRateAnalysisResult, getMyOrders());
 			oBuyPrice = (oBuyPrice.compareTo(m_nCriticalPrice) > 0 ? m_nCriticalPrice : oBuyPrice);
 			setNewOrderPrice(oBuyPrice, getOrder().getId(), true);
 			return;
@@ -108,7 +115,7 @@ public class TaskTradeBase extends TaskBase
 
 		if (getOrder().getSide().equals(OrderSide.SELL))
 		{
-			BigDecimal oSellPrice = m_oSellStrategy.getSellPrice(oRateAnalysisResult, getOrder());
+			BigDecimal oSellPrice = m_oSellStrategy.getSellPrice(oRateAnalysisResult, getMyOrders());
 			oSellPrice = (oSellPrice.compareTo(m_nCriticalPrice) < 0 ? m_nCriticalPrice : oSellPrice);
 			setNewOrderPrice(oSellPrice, getOrder().getId(), false);
 			return;
@@ -125,7 +132,7 @@ public class TaskTradeBase extends TaskBase
 		return Order.NULL;
 	}
 	
-	protected final Order getOrder()
+	public Order getOrder()
 	{
 		return m_oOrder;
 	}
@@ -133,6 +140,26 @@ public class TaskTradeBase extends TaskBase
 	protected void setOrder(final Order oOrder)
 	{
 		m_oOrder = oOrder;
+	}
+	
+	protected List<Order> getMyOrders()
+	{
+		final List<Order> oMyOrders = new LinkedList<Order>();
+		for(final IRule oRule : getStockExchange().getRules().getRules().values())
+		{
+			if (!(oRule instanceof TaskFactory))
+				continue;
+					
+			final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
+			if (!(oTask instanceof ITradeTask))
+				continue;
+			
+			final Order oOrder = ((ITradeTask)oTask).getOrder();
+			if (!oOrder.isNull())
+				oMyOrders.add(oOrder);
+		}
+		
+		return oMyOrders;
 	}
 	
 	protected void setNewOrderPrice(final BigDecimal oNewPrice, final String strOrderID, final boolean bIsRecalcVolume)
@@ -147,7 +174,7 @@ public class TaskTradeBase extends TaskBase
 			return;
 		
 		strMessage += "- " + getOrder().getInfoShort() + "\r\n"; 
-		final BigDecimal oNewVolume = (bIsRecalcVolume ? calculateOrderVolume(getOrder().getSum(), oNewPrice) : getOrder().getVolume());
+		final BigDecimal oNewVolume = (bIsRecalcVolume ? calculateOrderVolume(m_nTradeVolume, oNewPrice) : getOrder().getVolume());
 		setOrder(getStockSource().addOrder(getOrder().getSide(), m_oRateInfo, oNewVolume, oNewPrice));
 		strMessage += "+ " + getOrder().getInfo() + "\r\n";
 		m_nLastOrderPrice = oNewPrice;

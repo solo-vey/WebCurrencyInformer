@@ -16,7 +16,6 @@ public class TaskTrade extends TaskTradeBase
 	final static public String TRADE_VOLUME = "#volume#";
 	final static public String IS_CYCLE = "#isCycle#";
 	
-	protected BigDecimal m_nTradeVolume; 
 	protected Boolean m_bIsCycle; 
 
 	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO; 
@@ -73,7 +72,7 @@ public class TaskTrade extends TaskTradeBase
 
 		m_nLastOrderPrice = oSellPrice;
 		sendMessage(getType() + "/Create " + oSellOrder.getInfo() + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
-		addToHistory(getOrder().getSide() + " + " + MathUtils.toCurrencyString(getOrder().getPrice()) + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
+		addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
 		return oSellOrder;
 	}
 

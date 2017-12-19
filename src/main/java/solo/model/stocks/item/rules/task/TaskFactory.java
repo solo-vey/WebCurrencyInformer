@@ -81,6 +81,11 @@ public class TaskFactory extends HasParameters implements IRule
 			m_oTaskBase.check(oStateAnalysisResult, nRuleID);
 	}
 	
+	public TaskBase getTaskBase()
+	{
+		return m_oTaskBase;
+	}
+	
 	@Override public boolean equals(Object obj)
 	{
 		if (m_oTaskBase.equals(obj))
