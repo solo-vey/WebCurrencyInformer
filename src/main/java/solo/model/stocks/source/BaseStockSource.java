@@ -13,6 +13,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
 import solo.model.stocks.item.StockUserInfo;
+import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
@@ -78,15 +79,24 @@ public class BaseStockSource implements IStockSource
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
 		
-		return new Order("cancel", "Order is absent");
+		return new Order(Order.NONE, "Order is absent");
 	}
 
 	public void checkOrderParameters(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nPrice) throws Exception
 	{
 		final StateAnalysisResult oAnalysisResult = m_oStockExchange.getHistory().getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oAnalysisResult.getRateAnalysisResult(oRateInfo);
-		final BigDecimal nMinPrice = oRateAnalysisResult.getBidsAnalysisResult().getBestPrice();
-		final BigDecimal nMaxPrice = oRateAnalysisResult.getAsksAnalysisResult().getBestPrice();
+		
+		List<Order> oAsks = oRateAnalysisResult.getAsksOrders(); 
+		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
+		oAsks = StrategyUtils.removeGarbageOrders(oAsks, oBids.get(0).getPrice(), OrderSide.SELL); 
+		oBids = StrategyUtils.removeGarbageOrders(oBids, oAsks.get(0).getPrice(), OrderSide.BUY);
+		oAsks = StrategyUtils.removeFakeOrders(oAsks, BigDecimal.ONE); 
+		oBids = StrategyUtils.removeFakeOrders(oBids, BigDecimal.ONE);
+		
+		final BigDecimal nMinPrice = StrategyUtils.getBestPrice(oBids);
+		final BigDecimal nMaxPrice = StrategyUtils.getBestPrice(oAsks);
+		
 		if (oSide.equals(OrderSide.SELL) && nPrice.compareTo(nMinPrice) < 0)
 			throw new Exception("Because price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]");
 

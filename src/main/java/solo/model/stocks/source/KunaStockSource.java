@@ -196,12 +196,12 @@ public class KunaStockSource extends BaseStockSource
 		{
 			if (oOrder.getId().equalsIgnoreCase(strOrderId))
 			{
-				oOrder.setState("done");
+				oOrder.setState(Order.DONE);
 				return oOrder;
 			}
 		}
 		
-		return new Order(strOrderId, "cancel", "Order is absent");
+		return new Order(strOrderId, Order.NONE, "Order is absent");
 	}
 	
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
@@ -222,7 +222,7 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e)
 		{
-			return new Order("cancel", e.getMessage());
+			return new Order(Order.ERROR, e.getMessage());
 		}
 	}
 	
@@ -239,7 +239,7 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e)
 		{
-			return new Order("cancel", e.getMessage());
+			return new Order(Order.ERROR, e.getMessage());
 		}
 	}
 	

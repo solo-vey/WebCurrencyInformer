@@ -1,8 +1,16 @@
 package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
+
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.IRule;
+import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.Rules;
+import solo.model.stocks.item.rules.task.TaskBase;
+import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
@@ -46,14 +54,20 @@ public class TradeUtils
 	{
 		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".precision", oStockExchange.getStockProperties(), 0);
+		return ResourceUtils.getIntFromResource("stock." + strMarket + ".price.precision", oStockExchange.getStockProperties(), 0);
 	}
 	
 	public static int getVolumePrecision(final RateInfo oRateInfo)
 	{
 		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".precision", oStockExchange.getStockProperties(), 6);
+		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), 6);
+	}
+	
+	public static int getFakeMinPrice()
+	{
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		return ResourceUtils.getIntFromResource("stock.fake_price", oStockExchange.getStockProperties(), 500);
 	}
 	
 	public static BigDecimal getRoundedPrice(final RateInfo oRateInfo, final BigDecimal nPrice)
@@ -65,5 +79,27 @@ public class TradeUtils
 	{
 		return MathUtils.getBigDecimal(nVolume.doubleValue(), getVolumePrecision(oRateInfo));
 	}
+	
+	public static List<Order> getMyOrders()
+	{
+		final List<Order> oMyOrders = new LinkedList<Order>();
+		final Rules oStockRules = WorkerFactory.getMainWorker().getStockExchange().getRules();
+		for(final IRule oRule : oStockRules.getRules().values())
+		{
+			if (!(oRule instanceof TaskFactory))
+				continue;
+					
+			final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
+			if (!(oTask instanceof ITradeTask))
+				continue;
+			
+			final Order oOrder = ((ITradeTask)oTask).getOrder();
+			if (!oOrder.isNull())
+				oMyOrders.add(oOrder);
+		}
+		
+		return oMyOrders;
+	}
+
 }
 

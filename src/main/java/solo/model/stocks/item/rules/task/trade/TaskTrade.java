@@ -17,16 +17,18 @@ public class TaskTrade extends TaskTradeBase
 	
 	protected Boolean m_bIsCycle; 
 
-	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO; 
-	protected BigDecimal m_nSellVolume = BigDecimal.ZERO; 
-	
 	protected Integer m_nTotalCount = 0;
-	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
+	protected BigDecimal m_nDelta = BigDecimal.ZERO;
 	protected BigDecimal m_nTotalDelta = BigDecimal.ZERO;
 
 	public TaskTrade(final RateInfo oRateInfo, final String strCommandLine) throws Exception
 	{
 		super(oRateInfo, strCommandLine, CommonUtils.mergeParameters(TRADE_VOLUME, IS_CYCLE));
+	}
+
+	@Override public String getType()
+	{
+		return "TRADE";   
 	}
 	
 	@Override public void starTask()
@@ -40,13 +42,13 @@ public class TaskTrade extends TaskTradeBase
 	{
 		final BigDecimal oVolume = calculateOrderVolume(m_nTradeVolume, oBuyPrice);
 		final Order oBuyOrder = getStockSource().addOrder(OrderSide.BUY, m_oRateInfo, oVolume, oBuyPrice);
-		if (oBuyOrder.isNull())
-			return oBuyOrder;
+		if (oBuyOrder.isNull() || oBuyOrder.isError())
+			return Order.NULL;
 		
-		m_nBuyVolume = oVolume;
+		m_nLastOrderVolume = oVolume;
 		m_nLastOrderPrice = oBuyPrice;
 		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oBuyPrice.multiply(new BigDecimal(1.1)));
-		sendMessage(getType() + "/Create " + oBuyOrder.getInfo());
+		sendMessage("Create " + oBuyOrder.getInfo() + "/" + MathUtils.toCurrencyString(m_nCriticalPrice));
 		addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyString(oBuyOrder.getPrice()));
 		
 		return oBuyOrder;
@@ -54,37 +56,34 @@ public class TaskTrade extends TaskTradeBase
 
 	@Override protected Order createSellOrder(final BigDecimal oSellPrice)
 	{
-		final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(m_nLastOrderPrice, m_nLastOrderPrice);
-		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(m_nLastOrderPrice);
-		
-		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, m_nLastOrderPrice.add(nTradeCommision).add(nTradeMargin));
 		final BigDecimal oSellOrderPrice = (oSellPrice.compareTo(m_nCriticalPrice) > 0 ? oSellPrice : m_nCriticalPrice); 
-		BigDecimal oSellOrderVolume = TradeUtils.getWithoutCommision(m_nBuyVolume); 
-		oSellOrderVolume = TradeUtils.getRoundedVolume(m_oRateInfo, m_nSellVolume); 
+		BigDecimal oSellOrderVolume = TradeUtils.getWithoutCommision(m_nLastOrderVolume); 
+		oSellOrderVolume = TradeUtils.getRoundedVolume(m_oRateInfo, oSellOrderVolume); 
 		final Order oSellOrder = getStockSource().addOrder(OrderSide.SELL, m_oRateInfo, oSellOrderVolume, oSellOrderPrice);
-		if (oSellOrder.isNull())
-			return oSellOrder;
+		if (oSellOrder.isNull() || oSellOrder.isError())
+			return Order.NULL;
 
 		m_nLastOrderPrice = oSellOrderPrice;
-		m_nSellVolume = oSellOrderVolume;
-		sendMessage(getType() + "/Create " + oSellOrder.getInfo() + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
-		addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin));
+		m_nLastOrderVolume = oSellOrderVolume;
+		sendMessage("Create " + oSellOrder.getInfo() + "/" + MathUtils.toCurrencyString(m_nCriticalPrice));
+		addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + MathUtils.toCurrencyString(m_nCriticalPrice));
 		return oSellOrder;
 	}
-
-	@Override public String getType()
-	{
-		return "TRADE";   
-	}
 	
-	@Override protected void taskDone()
+	@Override protected void taskDone(final Order oOrder)
 	{
-		if (getOrder().isCanceled())
+		if (oOrder.isCanceled() || oOrder.isError())
 		{
-			sendMessage("Order canceled");
-			addToHistory("Order canceled");
+			if (m_oTaskSide.equals(OrderSide.BUY))
+			{
+				setOrder(Order.NULL);
+				return;
+			}
 			
-			super.taskDone();
+			sendMessage("Order " + oOrder.getState());
+			addToHistory("Order " + oOrder.getState());
+			
+			super.taskDone(oOrder);
 			startNewCycle();
 			return;
 		}
@@ -93,24 +92,31 @@ public class TaskTrade extends TaskTradeBase
 		{
 			m_nTotalCount++;
 
-			final BigDecimal nReceivedSum = TradeUtils.getWithoutCommision(m_nSellVolume.multiply(m_nLastOrderPrice));
-			final BigDecimal nDelta = nReceivedSum.add(m_nSpendSum.negate());
-			m_nTotalDelta = m_nTotalDelta.add(nDelta);
+			final BigDecimal nReceivedSum = TradeUtils.getWithoutCommision(m_nLastOrderVolume.multiply(m_nLastOrderPrice));
+			m_nDelta = m_nDelta.add(nReceivedSum);
+			m_nTotalDelta = m_nTotalDelta.add(m_nDelta);
 		
-			final String strMessage = "Trade: " + MathUtils.toCurrencyString(nReceivedSum) + "-" + MathUtils.toCurrencyString(m_nSpendSum) + "=" + 
-					MathUtils.toCurrencyString(nDelta) + "\r\n " + 
+			final String strMessage = "Trade: " + MathUtils.toCurrencyString(nReceivedSum) + "-" + MathUtils.toCurrencyString(nReceivedSum.add(m_nDelta)) + "=" + 
+					MathUtils.toCurrencyString(m_nDelta) + "\r\n " + 
 					"All: " + m_nTotalCount + "/" + MathUtils.toCurrencyString(m_nTradeVolume) + "/" + MathUtils.toCurrencyString(m_nTotalDelta);
 					
 			sendMessage(strMessage);
 			addToHistory(strMessage);
 
-			super.taskDone();
+			super.taskDone(oOrder);
 			startNewCycle();
 			return;
 		}
 		
-		m_nSpendSum = m_nLastOrderPrice.multiply(m_nBuyVolume);
+		m_nDelta = m_nLastOrderPrice.multiply(m_nLastOrderVolume).negate();
 		sendMessage(getInfo(null) + " is executed");
+		
+		final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(m_nLastOrderPrice, m_nLastOrderPrice);
+		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(m_nLastOrderPrice);
+		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, m_nLastOrderPrice.add(nTradeCommision).add(nTradeMargin));
+		final String strMessage = "Set critical price " + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin);
+		sendMessage(strMessage);
+		addToHistory("Set critical price " + strMessage);
 
 		setOrder(Order.NULL);
 		m_oTaskSide = OrderSide.SELL;
@@ -127,8 +133,7 @@ public class TaskTrade extends TaskTradeBase
 		if (!m_bIsCycle)
 			return;
 			
-		m_nBuyVolume = BigDecimal.ZERO; 
-		m_nSellVolume = BigDecimal.ZERO; 
+		m_nLastOrderVolume = BigDecimal.ZERO; 
 		m_oTaskSide = OrderSide.BUY;
 		setOrder(Order.NULL);
 	}

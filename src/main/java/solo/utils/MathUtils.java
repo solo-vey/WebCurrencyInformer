@@ -15,6 +15,12 @@ public class MathUtils
 		final BigDecimal oOriginalValue = new BigDecimal(nValue);
 		return oOriginalValue.setScale(nScale, RoundingMode.DOWN);
 	}
+
+	public static BigDecimal getRoundedBigDecimal(final double nValue, final int nScale)
+	{
+		final BigDecimal oOriginalValue = new BigDecimal(nValue);
+		return oOriginalValue.setScale(nScale, RoundingMode.CEILING);
+	}
 	
 	public static BigDecimal fromString(final String strValue)
 	{

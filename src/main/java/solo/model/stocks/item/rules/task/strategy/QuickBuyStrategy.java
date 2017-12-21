@@ -5,6 +5,8 @@ import java.util.List;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 {
@@ -17,18 +19,22 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		return NAME;
 	}
 	
-	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult, final List<Order> oMyOrders)
+	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult)
 	{
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders(); 
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
+
+		oAsks = StrategyUtils.removeGarbageOrders(oAsks, oBids.get(0).getPrice(), OrderSide.SELL); 
+		oBids = StrategyUtils.removeGarbageOrders(oBids, oAsks.get(0).getPrice(), OrderSide.BUY);
 		
+		final List<Order> oMyOrders = TradeUtils.getMyOrders();
 		oAsks = StrategyUtils.removeMyOrders(oAsks, oMyOrders); 
 		oBids = StrategyUtils.removeMyOrders(oBids, oMyOrders);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
-		
-		oAsks = StrategyUtils.removeFakeOrders(oAsks, new BigDecimal(500)); 
-		oBids = StrategyUtils.removeFakeOrders(oBids, new BigDecimal(500));
+
+		oAsks = StrategyUtils.removeFakeOrders(oAsks, null); 
+		oBids = StrategyUtils.removeFakeOrders(oBids, null);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
 		

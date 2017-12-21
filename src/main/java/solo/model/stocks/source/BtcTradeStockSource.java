@@ -4,6 +4,7 @@ import java.io.InputStream;
 import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -178,7 +179,8 @@ public class BtcTradeStockSource extends BaseStockSource
 				
 				for(final Object oOrderInfo : oOrders)
 				{
-					final Order oOrder = convert2Order(oOrderInfo); 
+					final Order oOrder = convert2Order(oOrderInfo);
+					oOrder.setState("wait");
 					oUserInfo.addOrder(oRateInfo, oOrder); 
 				}
 			}
@@ -217,7 +219,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order("cancel", e.getMessage());
+			return new Order(Order.ERROR, e.getMessage());
 		}
 	}
 	
@@ -231,11 +233,8 @@ public class BtcTradeStockSource extends BaseStockSource
 		Order oThisOrder = new Order();
 		for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
 		{
-			if (!oOrder.getId().equalsIgnoreCase(strOrderId))
-				continue;
-			
-			oThisOrder = oOrder;
-			break;	
+			if (oOrder.getId().equalsIgnoreCase(strOrderId))
+				return oOrder;
 		}
 		
 		try
@@ -246,7 +245,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order("cancel", e.getMessage());
+			return new Order(Order.ERROR, e.getMessage());
 		}
 		
 		return oThisOrder;
@@ -254,6 +253,32 @@ public class BtcTradeStockSource extends BaseStockSource
 	
 	protected void addOrderTradeInfo(final Order oOrder, final Map<String, Object> oTradeOrderInfo)
 	{
+		if (null != oTradeOrderInfo.get("id"))
+			oOrder.setId(oTradeOrderInfo.get("id").toString());
+
+		if (null != oTradeOrderInfo.get("type"))
+			oOrder.setSide(oTradeOrderInfo.get("type").toString());
+		
+		if (oOrder.getSide().equals(OrderSide.BUY) && null != oTradeOrderInfo.get("sum2_history"))
+		{
+			oOrder.setVolume(MathUtils.fromString(oTradeOrderInfo.get("sum2_history").toString()));
+			if (null != oTradeOrderInfo.get("sum1_history"))
+			{
+				final BigDecimal oSum = MathUtils.fromString(oTradeOrderInfo.get("sum1_history").toString());
+				oOrder.setPrice(MathUtils.getRoundedBigDecimal(oSum.doubleValue() / oOrder.getVolume().doubleValue(), 0));
+			}
+		}
+
+		if (oOrder.getSide().equals(OrderSide.SELL) && null != oTradeOrderInfo.get("sum1_history"))
+		{
+			oOrder.setVolume(MathUtils.fromString(oTradeOrderInfo.get("sum1_history").toString()));
+			if (null != oTradeOrderInfo.get("sum2_history"))
+			{
+				final BigDecimal oSum = MathUtils.fromString(oTradeOrderInfo.get("sum2_history").toString());
+				oOrder.setPrice(MathUtils.getRoundedBigDecimal(oSum.doubleValue() / oOrder.getVolume().doubleValue(), 0));
+			}
+		}
+
 		if (null != oTradeOrderInfo.get("status"))
 			oOrder.setState(oTradeOrderInfo.get("status").toString());
 	}
@@ -271,11 +296,16 @@ public class BtcTradeStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order("cancel", e.getMessage());
+			return new Order(Order.ERROR, e.getMessage());
 		}
 			
-		oOrder.setState("cancel");	
+		oOrder.setState(Order.CANCEL);	
 		return oOrder;
+	}
+	
+	@Override public List<Order> getTrades(RateInfo m_oRateInfo, final int nPage, final int nCount)
+	{
+		return new LinkedList<Order>();
 	}
 	
 	public Map<String, Object> sendPost(final String strUrl, Map<String, String> aParameters) throws Exception

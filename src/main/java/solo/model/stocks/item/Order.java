@@ -17,7 +17,13 @@ public class Order extends BaseObject implements Serializable
 {
 	private static final long serialVersionUID = -9072937437513312951L;
 	
-	public final static Order NULL = new Order(StringUtils.EMPTY, "cancel", "Null order"); 
+	public final static String CANCEL = "cancel";
+	public final static String DONE = "done";
+	public final static String ERROR = "error";
+	public final static String NONE = "none";
+	public final static String WAIT = "wait";
+	
+	public final static Order NULL = new Order(StringUtils.EMPTY, CANCEL, "Null order"); 
 	
 	protected String m_strID;
 	protected BigDecimal m_nPrice;
@@ -31,21 +37,6 @@ public class Order extends BaseObject implements Serializable
 	{
 	}
 	
-	public boolean isNull()
-	{
-		return StringUtils.isBlank(m_strID);
-	}
-	
-	public boolean isCanceled()
-	{
-		return getState().equalsIgnoreCase("cancel");
-	}
-	
-	public boolean isDone()
-	{
-		return getState().equalsIgnoreCase("done");
-	}
-	
 	public Order(final String strID, final String strState, final String strMessage)
 	{
 		m_strID = strID;
@@ -57,6 +48,26 @@ public class Order extends BaseObject implements Serializable
 	{
 		m_strState = strState;
 		m_strMessage = strMessage;
+	}
+	
+	public boolean isNull()
+	{
+		return StringUtils.isBlank(m_strID);
+	}
+	
+	public boolean isCanceled()
+	{
+		return getState().equalsIgnoreCase(CANCEL);
+	}
+	
+	public boolean isError()
+	{
+		return getState().equalsIgnoreCase(ERROR);
+	}
+	
+	public boolean isDone()
+	{
+		return getState().equalsIgnoreCase(DONE);
 	}
 	
 	public String getId()
@@ -102,18 +113,20 @@ public class Order extends BaseObject implements Serializable
 	
 	public String getState()
 	{
-		return (null != m_strState ? m_strState : "cancel");
+		return (null != m_strState ? m_strState : NONE);
 	}
 	
 	public void setState(final String strState)
 	{
 		m_strState = strState;
 		if (m_strState.equalsIgnoreCase("canceled"))
-			m_strState = "cancel";
+			m_strState = CANCEL;
 		if (m_strState.equalsIgnoreCase("processed"))
-			m_strState = "done";
+			m_strState = DONE;
 		if (m_strState.equalsIgnoreCase("processing"))
-			m_strState = "wait";
+			m_strState = WAIT;
+		if (m_strState.equalsIgnoreCase("core_error"))
+			m_strState = ERROR;
 	}
 	
 	public BigDecimal getVolume()

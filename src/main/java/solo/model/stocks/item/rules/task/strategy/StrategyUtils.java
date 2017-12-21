@@ -7,6 +7,7 @@ import java.util.List;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 public class StrategyUtils
@@ -23,8 +24,9 @@ public class StrategyUtils
 		return (nDelta.compareTo(nFullCommision) < 0);
 	}
 
-	public static List<Order> removeFakeOrders(List<Order> oOrders, final BigDecimal nMinSum)
+	public static List<Order> removeFakeOrders(List<Order> oOrders, BigDecimal nMinSum)
 	{
+		nMinSum = (null == nMinSum ? new BigDecimal(TradeUtils.getFakeMinPrice()) : nMinSum);		
 		final List<Order> oResult = new LinkedList<Order>();
 		for(final Order oOrder : oOrders)
 		{
@@ -80,6 +82,22 @@ public class StrategyUtils
 		
 		return oResult;
 	}
+	
+	public static List<Order> removeGarbageOrders(List<Order> oOrders, final BigDecimal nLimitPrice, OrderSide oSide)
+	{
+		final List<Order> oResult = new LinkedList<Order>();
+		for(final Order oOrder : oOrders)
+		{
+			if (oSide.equals(OrderSide.BUY) && oOrder.getPrice().compareTo(nLimitPrice) < 0)
+				oResult.add(oOrder);
+
+			if (oSide.equals(OrderSide.SELL) && oOrder.getPrice().compareTo(nLimitPrice) > 0)
+				oResult.add(oOrder);
+		}
+		
+		return oResult;
+	}
+	
 
 	public static BigDecimal getBestPrice(List<Order> oOrders)
 	{

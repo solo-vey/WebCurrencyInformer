@@ -27,6 +27,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import solo.CurrencyInformer;
+import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.worker.WorkerFactory;
 import ua.lz.ep.utils.JsonUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
@@ -312,23 +314,38 @@ public class RequestUtils
 	 * @throws Exception */
 	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
 	{
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		int nTryCount = ResourceUtils.getIntFromResource("stock.request.try_count", oStockExchange.getStockProperties(), 1);
+		
 		try
 		{	
-			final HttpClient oClient = new DefaultHttpClient();
-			setProxy(oClient, bIsUseProxy);
-			final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
-			if (null == oResponse)
-			    return null;
+			while (true)
+			{
+				final HttpClient oClient = new DefaultHttpClient();
+				setProxy(oClient, bIsUseProxy);
+				final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
+				if (null == oResponse)
+					return null;
 			
-			final InputStream oSource = (InputStream) oResponse.getEntity().getContent();
-			final StringWriter oWriter = new StringWriter();
-			IOUtils.copy(oSource, oWriter, "UTF-8");
-			final String strContent = oWriter.toString();
+				final InputStream oSource = (InputStream) oResponse.getEntity().getContent();
+				final StringWriter oWriter = new StringWriter();
+				IOUtils.copy(oSource, oWriter, "UTF-8");
+				final String strContent = oWriter.toString();
 
-			if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
-			    throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
-			
-			return strContent;
+				if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
+				{
+		            s_oLogger.error("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
+		            s_oLogger.error("URI [" + oHttpUriRequest.getURI() + "]\r\nParams : " + oHttpUriRequest.getParams());
+					nTryCount--;
+					Thread.sleep(50);
+					if (nTryCount > 0)
+						continue;
+					
+					throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
+				}
+				
+				return strContent;
+			}
 		}
 		catch (final Exception e)
 		{
