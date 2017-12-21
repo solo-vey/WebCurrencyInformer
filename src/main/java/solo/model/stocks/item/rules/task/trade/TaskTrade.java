@@ -95,6 +95,7 @@ public class TaskTrade extends TaskTradeBase
 			final BigDecimal nReceivedSum = TradeUtils.getWithoutCommision(m_nLastOrderVolume.multiply(m_nLastOrderPrice));
 			m_nDelta = m_nDelta.add(nReceivedSum);
 			m_nTotalDelta = m_nTotalDelta.add(m_nDelta);
+			m_nTradeVolume = m_nTradeVolume.add(m_nDelta);
 		
 			final String strMessage = "Trade: " + MathUtils.toCurrencyString(nReceivedSum) + "-" + MathUtils.toCurrencyString(nReceivedSum.add(m_nDelta)) + "=" + 
 					MathUtils.toCurrencyString(m_nDelta) + "\r\n " + 
@@ -116,7 +117,7 @@ public class TaskTrade extends TaskTradeBase
 		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, m_nLastOrderPrice.add(nTradeCommision).add(nTradeMargin));
 		final String strMessage = "Set critical price " + MathUtils.toCurrencyString(m_nCriticalPrice) + "/" + MathUtils.toCurrencyString(nTradeCommision) + "/" + MathUtils.toCurrencyString(nTradeMargin);
 		sendMessage(strMessage);
-		addToHistory("Set critical price " + strMessage);
+		addToHistory(strMessage);
 
 		setOrder(Order.NULL);
 		m_oTaskSide = OrderSide.SELL;

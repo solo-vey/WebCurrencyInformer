@@ -1,6 +1,7 @@
 package solo.model.stocks.worker;
 
 import java.util.Date;
+import java.util.Iterator;
 
 import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandFactory;
@@ -34,6 +35,14 @@ public class BaseWorker extends Thread implements IWorker
 	
 	public void addCommand(final ICommand oCommand)
 	{
+		final Iterator<ICommand> oIterator = m_oCommandQueue.iterator();
+		while(oIterator.hasNext())
+		{
+			final ICommand oQueueCommand = oIterator.next();  
+			if (oCommand.getCommandLine().equalsIgnoreCase(oQueueCommand.getCommandLine()))
+				return;
+		}
+		
 		m_oCommandQueue.addCommand(oCommand);
 	}
 	
