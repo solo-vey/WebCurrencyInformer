@@ -239,7 +239,6 @@ public class BtcTradeStockSource extends BaseStockSource
 		
 		try
 		{
-			
 			final Map<String, Object> oTradeOrderInfo = sendPost(m_strOrderStatusUrl.replace("#id#", strOrderId), null);
 			addOrderTradeInfo(oThisOrder, oTradeOrderInfo);
 		}

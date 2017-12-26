@@ -30,6 +30,7 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		final List<Order> oMyOrders = TradeUtils.getMyOrders();
 		oAsks = StrategyUtils.removeMyOrders(oAsks, oMyOrders); 
 		oBids = StrategyUtils.removeMyOrders(oBids, oMyOrders);
+		oBids = StrategyUtils.removeFirstTooExpenciveBids(oAsks, oBids);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
 

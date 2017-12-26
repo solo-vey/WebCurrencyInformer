@@ -5,5 +5,6 @@ public enum Stocks
 	Uknown,
 	Kuna,
 	BtcTrade,
+	Exmo,
 	Mock;
 }

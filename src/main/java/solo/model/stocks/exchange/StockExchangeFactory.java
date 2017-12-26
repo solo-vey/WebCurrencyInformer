@@ -9,9 +9,10 @@ public class StockExchangeFactory
 	
 	static
 	{
-		registerStockExchange(Stocks.Kuna, new KunaStockExchange());
-		registerStockExchange(Stocks.Mock, new MockStockExchange());
-		registerStockExchange(Stocks.BtcTrade, new BtcTradeStockExchange());
+		registerStockExchange(Stocks.Kuna, 		new KunaStockExchange());
+		registerStockExchange(Stocks.Mock, 		new MockStockExchange());
+		registerStockExchange(Stocks.BtcTrade,	new BtcTradeStockExchange());
+		registerStockExchange(Stocks.Exmo, 		new ExmoStockExchange());
 	}
 	
 	static void registerStockExchange(final Stocks oStock, final IStockExchange oStockExchange)
