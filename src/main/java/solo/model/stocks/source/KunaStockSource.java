@@ -35,7 +35,7 @@ public class KunaStockSource extends BaseStockSource
 		m_strTradesUrl = ResourceUtils.getResource("trades.url", getStockExchange().getStockProperties());
 		m_strMyTradesUrl = ResourceUtils.getResource("my_trades.url", getStockExchange().getStockProperties());
 		
-		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
+//		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
 		registerRate(new RateInfo(Currency.WAVES, Currency.UAH));
 	}

@@ -150,7 +150,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			if (oGetOrder.isDone())
 			{
 				m_oTradeInfo.addSoldVolume(oGetOrder.getVolume());
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oGetOrder.getVolume().multiply(oGetOrder.getVolume())));
+				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oGetOrder.getSum()));
 			}
 			else
 			{
@@ -159,7 +159,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 					return oGetOrder;
 				
 				m_oTradeInfo.addSoldVolume(nDeltaSellVolume);
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oGetOrder.getPrice().multiply(nDeltaSellVolume)));
+				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oGetOrder.getSum()));
 			}
 			return oGetOrder;
 		}
@@ -248,7 +248,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			m_oTradeInfo.setTradeSum(oAddOrder.getSum().add(m_oTradeInfo.getSpendSum()));
 		}
 
-		strMessage += "+ " + oGetOrder.getInfo() + "\r\n";
+		strMessage += "+ " + oAddOrder.getInfo() + "\r\n";
 		
 		getStockExchange().getRules().save();
 		sendMessage(strMessage);
@@ -306,6 +306,11 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		if (m_oTradeInfo.getTaskSide().equals(OrderSide.SELL))
 		{
+			if (m_oTradeInfo.getNeedSellVolume().compareTo(oOrder.getVolume()) == 0)
+			{
+				m_oTradeInfo.addSoldVolume(oOrder.getVolume());
+				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oOrder.getSum()));
+			}
 			m_oTradeInfo.done();
 
 			sendMessage(m_oTradeInfo.getInfo());
