@@ -5,23 +5,24 @@ import java.math.BigDecimal;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.model.stocks.BaseObject;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.utils.MathUtils;
 
-public class TradeInfo implements Serializable
+public class TradeInfo extends BaseObject implements Serializable
 {
 	private static final long serialVersionUID = -7601846839785166296L;
+	
+	final RateInfo m_oRateInfo;
 
-	protected BigDecimal m_nDelta = BigDecimal.ZERO;
 	protected Order m_oOrder = Order.NULL;
-	protected BigDecimal m_nTradeVolume = BigDecimal.ZERO;
-	protected BigDecimal m_nLastOrderPrice = BigDecimal.ZERO;
-	protected BigDecimal m_nLastOrderVolume = BigDecimal.ZERO; 
 
 	protected BigDecimal m_nCriticalPrice;
 	protected String m_strHistory = StringUtils.EMPTY;
@@ -30,9 +31,30 @@ public class TradeInfo implements Serializable
 	protected ISellStrategy m_oSellStrategy = StrategyFactory.getSellStrategy(QuickSellStrategy.NAME);
 	protected OrderSide m_oTaskSide = OrderSide.BUY; 
 	
+	protected BigDecimal m_nMaxTradeSum = BigDecimal.ZERO;
+	protected BigDecimal m_nTradeSum = BigDecimal.ZERO;
+	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
+	protected BigDecimal m_nBoughtVolume = BigDecimal.ZERO; 
+	protected BigDecimal m_nNeedBoughtVolume = BigDecimal.ZERO; 
+	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
+	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO; 
+	
+	protected Integer m_nTotalCount = 0;
+	protected BigDecimal m_nTotalDelta = BigDecimal.ZERO;
+	
+	public TradeInfo(final RateInfo oRateInfo)
+	{
+		m_oRateInfo = oRateInfo;
+	}
+	
 	public BigDecimal getDelta()
 	{
-		return m_nDelta;
+		return m_nReceivedSum.add(m_nSpendSum.negate());
+	}
+	
+	public BigDecimal getTotalDelta()
+	{
+		return m_nTotalDelta;
 	}
 	
 	public Order getOrder()
@@ -40,19 +62,56 @@ public class TradeInfo implements Serializable
 		return m_oOrder;
 	}
 	
-	public BigDecimal getTradeVolume()
+	public BigDecimal getMaxTradeSum()
 	{
-		return m_nTradeVolume;
+		return m_nMaxTradeSum;
 	}
 	
-	public BigDecimal getLastOrderPrice()
+	public BigDecimal getTradeSum()
 	{
-		return m_nLastOrderPrice;
+		return m_nTradeSum;
 	}
 	
-	public BigDecimal getLastOrderVolume()
+	public BigDecimal getAveragedBoughPrice()
 	{
-		return m_nLastOrderVolume;
+		if (getSpendSum().compareTo(BigDecimal.ZERO) == 0)
+			return BigDecimal.ZERO;
+
+		if (getBoughtVolume().compareTo(BigDecimal.ZERO) == 0)
+			return BigDecimal.ZERO;
+		
+		return TradeUtils.getRoundedPrice(m_oRateInfo, new BigDecimal(getSpendSum().doubleValue() / getBoughtVolume().doubleValue()));
+	}
+	
+	public BigDecimal getAveragedSoldPrice()
+	{
+		if (getReceivedSum().compareTo(BigDecimal.ZERO) == 0)
+			return BigDecimal.ZERO;
+
+		if (getSoldVolume().compareTo(BigDecimal.ZERO) == 0)
+			return BigDecimal.ZERO;
+		
+		return TradeUtils.getRoundedPrice(m_oRateInfo, new BigDecimal(getReceivedSum().doubleValue() / getSoldVolume().doubleValue()));
+	}
+	
+	public BigDecimal getNeedSpendSum()
+	{
+		return m_nTradeSum.add(m_nSpendSum.negate());
+	}
+	
+	public BigDecimal getNeedSellVolume()
+	{
+		return m_nBoughtVolume.add(m_nSoldVolume.negate());
+	}
+	
+	public BigDecimal getNeedBoughtVolume()
+	{
+		return m_nNeedBoughtVolume;
+	}
+	
+	public void setNeedBoughtVolume(final BigDecimal nNeedBoughtVolume)
+	{
+		m_nNeedBoughtVolume = nNeedBoughtVolume;
 	}
 	
 	public BigDecimal getCriticalPrice()
@@ -60,7 +119,12 @@ public class TradeInfo implements Serializable
 		return m_nCriticalPrice;
 	}
 	
-	public String getM_strHistory()
+	public String getCriticalPriceString()
+	{
+		return MathUtils.toCurrencyString(getCriticalPrice());
+	}
+	
+	public String getHistory()
 	{
 		return m_strHistory;
 	}
@@ -80,9 +144,29 @@ public class TradeInfo implements Serializable
 		return m_oTaskSide;
 	}
 	
-	public void setDelta(BigDecimal nDelta)
+	public Integer getTotalCount()
 	{
-		m_nDelta = nDelta;
+		return m_nTotalCount;
+	}
+	
+	public BigDecimal getSpendSum()
+	{
+		return m_nSpendSum;
+	}
+	
+	public BigDecimal getReceivedSum()
+	{
+		return m_nReceivedSum;
+	}
+	
+	public BigDecimal getBoughtVolume()
+	{
+		return m_nBoughtVolume;
+	}
+	
+	public BigDecimal getSoldVolume()
+	{
+		return m_nSoldVolume;
 	}
 	
 	public void setOrder(Order oOrder)
@@ -90,24 +174,40 @@ public class TradeInfo implements Serializable
 		m_oOrder = oOrder;
 	}
 	
-	public void setTradeVolume(BigDecimal nTradeVolume)
+	public void setMaxTradeSum(BigDecimal nMaxTradeSum)
 	{
-		m_nTradeVolume = nTradeVolume;
+		m_nMaxTradeSum = nMaxTradeSum;
+		setTradeSum(nMaxTradeSum);
 	}
 	
-	public void setLastOrderPrice(BigDecimal nLastOrderPrice)
+	public void setTradeSum(BigDecimal nTradeSum)
 	{
-		m_nLastOrderPrice = nLastOrderPrice;
+		m_nTradeSum = nTradeSum;
 	}
 	
-	public void setLastOrderVolume(BigDecimal nLastOrderVolume)
+	public void addSpendSum(BigDecimal nSpendSum)
 	{
-		m_nLastOrderVolume = nLastOrderVolume;
+		m_nSpendSum = m_nSpendSum.add(nSpendSum);
+	}
+	
+	public void addReceivedSum(BigDecimal nReceivedSum)
+	{
+		m_nReceivedSum = m_nReceivedSum.add(nReceivedSum);
+	}
+	
+	public void addBoughtVolume(BigDecimal nBuyVolume)
+	{
+		m_nBoughtVolume = m_nBoughtVolume.add(nBuyVolume);
+	}
+	
+	public void addSoldVolume(BigDecimal nSellVolume)
+	{
+		m_nSoldVolume = m_nSoldVolume.add(nSellVolume);
 	}
 	
 	public void setCriticalPrice(BigDecimal nCriticalPrice)
 	{
-		m_nCriticalPrice = nCriticalPrice;
+		m_nCriticalPrice = TradeUtils.getRoundedPrice(m_oRateInfo, nCriticalPrice);
 	}
 	
 	public void setHistory(String strHistory)
@@ -128,5 +228,49 @@ public class TradeInfo implements Serializable
 	public void setTaskSide(OrderSide oTaskSide)
 	{
 		m_oTaskSide = oTaskSide;
+	}
+	
+	protected void addToHistory(final String strMessage)
+	{
+		m_strHistory += strMessage + "\r\n";
+	}
+	
+	protected void clearHistory()
+	{
+		m_strHistory = StringUtils.EMPTY;
+	}
+
+	public BigDecimal trimSellPrice(final BigDecimal oSellPrice)
+	{
+		return (oSellPrice.compareTo(getCriticalPrice()) < 0 ? getCriticalPrice() : oSellPrice);
+	}
+	
+	public void start()
+	{
+		m_nSpendSum = BigDecimal.ZERO;
+		m_nReceivedSum = BigDecimal.ZERO;
+		m_nBoughtVolume = BigDecimal.ZERO;
+		m_nSoldVolume = BigDecimal.ZERO;
+		m_nNeedBoughtVolume = BigDecimal.ZERO;
+		setTradeSum(getMaxTradeSum());
+
+		setOrder(Order.NULL);
+		setTaskSide(OrderSide.BUY);
+		clearHistory();
+	}
+
+	public void done()
+	{
+		m_nTotalCount++;
+		m_nTotalDelta = m_nTotalDelta.add(getDelta());
+	}
+	
+	public String getInfo()
+	{
+		return "Trade: " + MathUtils.toCurrencyString(getReceivedSum()) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(getDelta()) + "\r\n " + 
+				"Buy: " + MathUtils.toCurrencyString(getAveragedBoughPrice()) + "/" + MathUtils.toCurrencyStringEx(getBoughtVolume()) + "\r\n " +
+				"Sell: " + MathUtils.toCurrencyString(getAveragedSoldPrice()) + "/" + MathUtils.toCurrencyStringEx(getSoldVolume()) + "\r\n " +
+				"All: " + getTotalCount() + "/" + MathUtils.toCurrencyString(getTradeSum()) + "/" + MathUtils.toCurrencyString(getTotalDelta());
+
 	}
 }

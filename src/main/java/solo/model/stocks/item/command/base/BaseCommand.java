@@ -27,4 +27,15 @@ abstract public class BaseCommand extends HasParameters implements ICommand
 	{
 		return "/" + strTemplate;
 	}
+	
+	@Override public boolean equals(Object oCommand)
+	{
+		if (super.equals(oCommand))
+			return true;
+		
+		if (!(oCommand instanceof ICommand))
+			return false;
+		
+		return getCommandLine().equalsIgnoreCase(((ICommand)oCommand).getCommandLine());
+	}
 }

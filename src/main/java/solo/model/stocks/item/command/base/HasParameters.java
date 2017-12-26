@@ -58,6 +58,17 @@ abstract public class HasParameters extends BaseObject
 		return (m_oParameters.containsKey(strKey) ? m_oParameters.get(strKey) : StringUtils.EMPTY);
 	}
 	
+	public void setParameter(final String strParameterName, final String strValue)
+	{
+		final String strKey = strParameterName.toLowerCase().replace("#", StringUtils.EMPTY).trim();
+		m_oParameters.put(strKey, strValue);
+	}
+
+	public Boolean getParameterAsBoolean(final String strParameterName)
+	{
+		return getParameter(strParameterName).equalsIgnoreCase("true");
+	}
+	
 	public BigDecimal getParameterAsBigDecimal(final String strParameterName)
 	{
 		return getParameterAsBigDecimal(strParameterName, BigDecimal.ZERO);

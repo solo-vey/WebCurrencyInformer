@@ -93,7 +93,7 @@ public class TradeUtils
 			if (!(oTask instanceof ITradeTask))
 				continue;
 			
-			final Order oOrder = ((ITradeTask)oTask).getOrder();
+			final Order oOrder = ((ITradeTask)oTask).getTradeInfo().getOrder();
 			if (!oOrder.isNull())
 				oMyOrders.add(oOrder);
 		}

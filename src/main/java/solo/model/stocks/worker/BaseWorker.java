@@ -1,12 +1,12 @@
 package solo.model.stocks.worker;
 
 import java.util.Date;
-import java.util.Iterator;
 
 import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.CommandQueue;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.item.command.rule.GetRulesCommand;
 import solo.utils.CommonUtils;
 
 public class BaseWorker extends Thread implements IWorker
@@ -35,14 +35,6 @@ public class BaseWorker extends Thread implements IWorker
 	
 	public void addCommand(final ICommand oCommand)
 	{
-		final Iterator<ICommand> oIterator = m_oCommandQueue.iterator();
-		while(oIterator.hasNext())
-		{
-			final ICommand oQueueCommand = oIterator.next();  
-			if (oCommand.getCommandLine().equalsIgnoreCase(oQueueCommand.getCommandLine()))
-				return;
-		}
-		
 		m_oCommandQueue.addCommand(oCommand);
 	}
 	
@@ -74,6 +66,12 @@ public class BaseWorker extends Thread implements IWorker
 			final ICommand oCommand = m_oCommandQueue.getNextCommand();
 			if (null == oCommand)
 				return;
+
+			if (oCommand instanceof GetRulesCommand)
+			{
+				int i = 0;
+				i++;
+			}
 			
 			oCommand.execute();
 			System.err.printf(Thread.currentThread().getName() +  "[" + getStock() + "] Execute command [" + CommandFactory.getCommandName(oCommand.getClass()) + "] complete. " + (new Date()) + " Info [" + oCommand.getInfo() + "]. Queue size [" + m_oCommandQueue.size() + "]\r\n");

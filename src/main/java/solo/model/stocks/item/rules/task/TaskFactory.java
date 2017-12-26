@@ -11,8 +11,6 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.HasParameters;
-import solo.model.stocks.item.rules.task.trade.TaskBuy;
-import solo.model.stocks.item.rules.task.trade.TaskSell;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.utils.CommonUtils;
 
@@ -29,8 +27,6 @@ public class TaskFactory extends HasParameters implements IRule
 	
 	static
 	{
-		registerTaskClass(TaskType.SELL,   TaskSell.class);
-		registerTaskClass(TaskType.BUY,    TaskBuy.class);
 		registerTaskClass(TaskType.TRADE,  TaskTrade.class);
 	}
 	

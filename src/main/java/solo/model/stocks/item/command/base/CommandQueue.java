@@ -1,6 +1,5 @@
 package solo.model.stocks.item.command.base;
 
-import java.util.Iterator;
 import java.util.Queue;
 import java.util.concurrent.LinkedBlockingQueue;
 
@@ -10,17 +9,13 @@ public class CommandQueue
 	
 	public void addCommand(final ICommand oCommand)
 	{
-		m_oCommandQueue.add(oCommand);
+		if (!m_oCommandQueue.contains(oCommand))
+			m_oCommandQueue.add(oCommand);
 	}
 	
 	public ICommand getNextCommand()
 	{
 		return m_oCommandQueue.poll();
-	}
-	
-	public Iterator<ICommand> iterator()
-	{
-		return m_oCommandQueue.iterator();
 	}
 	
 	public int size()
