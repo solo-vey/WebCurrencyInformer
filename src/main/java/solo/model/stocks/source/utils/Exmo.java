@@ -5,10 +5,6 @@ import okhttp3.OkHttpClient.Builder;
 
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
-import org.apache.http.HttpHost;
-import org.apache.http.client.HttpClient;
-import org.apache.http.conn.params.ConnRoutePNames;
-
 import solo.CurrencyInformer;
 import ua.lz.ep.utils.ResourceUtils;
 

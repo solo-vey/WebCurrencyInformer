@@ -122,14 +122,22 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final Order oGetOrder = getStockSource().getOrder(m_oTradeInfo.getOrder().getId(), m_oRateInfo);
 		if (oGetOrder.isNull() || oGetOrder.isError())
 			return oOrder;
+
+		if (oGetOrder.isCanceled())
+			return oGetOrder;
 		
 		if (oGetOrder.getSide().equals(OrderSide.BUY))
 		{
 			if (oGetOrder.isDone())
 			{
-				m_oTradeInfo.addSpendSum(oGetOrder.getSum());
-				m_oTradeInfo.addBoughtVolume(TradeUtils.getWithoutCommision(oGetOrder.getVolume()));
-				m_oTradeInfo.setNeedBoughtVolume(BigDecimal.ZERO);
+				if (m_oTradeInfo.getNeedBoughtVolume().compareTo(BigDecimal.ZERO) > 0)
+				{
+					m_oTradeInfo.addBoughtVolume(TradeUtils.getWithoutCommision(m_oTradeInfo.getNeedBoughtVolume()));
+					final BigDecimal nDeltaSpendSum = m_oTradeInfo.getNeedBoughtVolume().multiply(oOrder.getPrice());
+					m_oTradeInfo.addSpendSum(nDeltaSpendSum);
+					m_oTradeInfo.setNeedBoughtVolume(BigDecimal.ZERO);
+					
+				}
 			}
 			else
 			{
@@ -149,17 +157,22 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		{
 			if (oGetOrder.isDone())
 			{
-				m_oTradeInfo.addSoldVolume(oGetOrder.getVolume());
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oGetOrder.getSum()));
+				if (m_oTradeInfo.getNeedSellVolume().compareTo(BigDecimal.ZERO) > 0)
+				{
+					m_oTradeInfo.addSoldVolume(m_oTradeInfo.getNeedSellVolume());
+					final BigDecimal nDeltaSellSum = m_oTradeInfo.getNeedSellVolume().multiply(oOrder.getPrice());
+					m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
+				}
 			}
 			else
 			{
 				final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oGetOrder.getVolume().negate());
-				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) == 0)
+				final BigDecimal nDeltaSellSum = nDeltaSellVolume.multiply(oGetOrder.getPrice());
+				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) == 0 || nDeltaSellSum.compareTo(BigDecimal.ZERO) == 0)
 					return oGetOrder;
 				
 				m_oTradeInfo.addSoldVolume(nDeltaSellVolume);
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oGetOrder.getSum()));
+				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
 			}
 			return oGetOrder;
 		}
@@ -173,6 +186,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		Order oBuyOrder = getStockSource().addOrder(OrderSide.BUY, m_oRateInfo, oVolume, oBuyPrice);
 		if (oBuyOrder.isNull() || oBuyOrder.isError())
 		{
+			sendMessage("Cannot create " + oBuyOrder.getInfo());
 			final Order oLookOrder = lookForOrder(OrderSide.BUY, oVolume, oBuyPrice);
 			if (oLookOrder.isNull())
 				return Order.NULL;
@@ -183,6 +197,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		m_oTradeInfo.setTradeSum(oBuyOrder.getSum());
 		sendMessage("Create " + oBuyOrder.getInfo());
 		m_oTradeInfo.addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyString(oBuyOrder.getPrice()));
+		getStockExchange().getRules().save();
 		
 		return oBuyOrder;
 	}
@@ -203,6 +218,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		sendMessage("Create " + oSellOrder.getInfo() + "/" + m_oTradeInfo.getCriticalPriceString());
 		m_oTradeInfo.addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + m_oTradeInfo.getCriticalPriceString());
+		getStockExchange().getRules().save();
+		
 		return oSellOrder;
 	}
 	
@@ -269,7 +286,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				return oOrder;
 		}
 		
-		return oOrders.get(1); 
+		return Order.NULL;
 	}
 	
 	protected BigDecimal calculateOrderVolume(final BigDecimal nTradeVolume, final BigDecimal nPrice)
@@ -306,12 +323,15 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		if (m_oTradeInfo.getTaskSide().equals(OrderSide.SELL))
 		{
-			if (m_oTradeInfo.getNeedSellVolume().compareTo(oOrder.getVolume()) == 0)
+			if (m_oTradeInfo.getNeedSellVolume().compareTo(BigDecimal.ZERO) > 0)
 			{
-				m_oTradeInfo.addSoldVolume(oOrder.getVolume());
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(oOrder.getSum()));
+				m_oTradeInfo.addSoldVolume(m_oTradeInfo.getNeedSellVolume());
+				final BigDecimal nDeltaSellSum = m_oTradeInfo.getNeedSellVolume().multiply(oOrder.getPrice());
+				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
 			}
 			m_oTradeInfo.done();
+			if (!oOrder.isCanceled() && !oOrder.isError())
+				m_oTradeInfo.setTradeSum(m_oTradeInfo.getReceivedSum());
 
 			sendMessage(m_oTradeInfo.getInfo());
 			m_oTradeInfo.addToHistory(m_oTradeInfo.getInfo());

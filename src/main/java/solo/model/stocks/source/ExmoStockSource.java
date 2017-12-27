@@ -7,6 +7,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
@@ -15,6 +17,7 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.source.utils.Exmo;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
@@ -85,21 +88,38 @@ public class ExmoStockSource extends BaseStockSource
 			final Map<String, Object> oMapOrder = (Map<String, Object>)oInputOrder;  
 			if (null != oMapOrder.get("trade_id"))
 				oOrder.setId(oMapOrder.get("trade_id").toString());
+			else
+			if (null != oMapOrder.get("order_id"))
+				oOrder.setId(oMapOrder.get("order_id").toString());
+
+			if (null != oMapOrder.get("type"))
+				oOrder.setSide(oMapOrder.get("type").toString());
 
 			if (null != oMapOrder.get("price"))
 				oOrder.setPrice(MathUtils.fromString(oMapOrder.get("price").toString()));
 			else
-			if (null != oMapOrder.get("out_amount"))
-				oOrder.setPrice(MathUtils.fromString(oMapOrder.get("out_amount").toString()));
+			if (null != oMapOrder.get("out_amount") && null != oMapOrder.get("in_amount"))
+			{
+				final BigDecimal nOutAmount = MathUtils.fromString(oMapOrder.get("out_amount").toString());
+				final BigDecimal nInAmount = MathUtils.fromString(oMapOrder.get("in_amount").toString());
+				
+				if (nOutAmount.compareTo(BigDecimal.ZERO) > 0 && nInAmount.compareTo(BigDecimal.ZERO) > 0)
+				{
+					if (oOrder.getSide().equals(OrderSide.BUY))
+						oOrder.setPrice(MathUtils.getBigDecimal(nOutAmount.doubleValue() / nInAmount.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION));
+					else
+						oOrder.setPrice(MathUtils.getBigDecimal(nInAmount.doubleValue() / nOutAmount.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION));
+				}
+			}
 			
 			if (null != oMapOrder.get("quantity"))
 				oOrder.setVolume(MathUtils.fromString(oMapOrder.get("quantity").toString()));
 			else
-			if (null != oMapOrder.get("in_amount"))
+			if (null != oMapOrder.get("in_amount") && oOrder.getSide().equals(OrderSide.BUY))
 				oOrder.setVolume(MathUtils.fromString(oMapOrder.get("in_amount").toString()));
-
-			if (null != oMapOrder.get("type"))
-				oOrder.setSide(oMapOrder.get("type").toString());
+			else
+			if (null != oMapOrder.get("out_amount") && oOrder.getSide().equals(OrderSide.SELL))
+					oOrder.setVolume(MathUtils.fromString(oMapOrder.get("out_amount").toString()));
 			
 			if (null != oMapOrder.get("date"))
 			{
@@ -194,7 +214,13 @@ public class ExmoStockSource extends BaseStockSource
 				put("order_id", strOrderId);
 			}});
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
-			return convert2Order(oOrderData);
+			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
+				return new Order(strOrderId, Order.CANCEL, oOrderData.get("error").toString());
+
+			final Order oOrder = convert2Order(oOrderData);
+			oOrder.setState(Order.DONE);
+			oOrder.setId(strOrderId);
+			return oOrder;
 		}
 		catch(final Exception e)
 		{
@@ -219,10 +245,10 @@ public class ExmoStockSource extends BaseStockSource
 			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
 			final String oOrderJson = oUserInfoRequest.Request("order_create", aParameters);
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
-			if ("true".equals(oOrderData.get("result")))
+			if ("true".equals(oOrderData.get("result").toString()))
 			{
 				final String strOrderId = oOrderData.get("order_id").toString(); 
-				final Order oOrder = getOrder(strOrderId, null);
+				final Order oOrder = getOrder(strOrderId, oRateInfo);
 				return oOrder;
 			}
 			
@@ -242,16 +268,13 @@ public class ExmoStockSource extends BaseStockSource
 		try
 		{
 			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
+			final String oOrderJson = oUserInfoRequest.Request("order_cancel", new HashMap<String, String>() {{
 				put("order_id", strOrderId);
 			}});
 			
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
-			if ("true".equals(oOrderData.get("result")))
-			{
-				final Order oOrder = getOrder(strOrderId, null);
-				return oOrder;
-			}
+			if (null != oOrderData.get("result") && "true".equals(oOrderData.get("result").toString()))
+				return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
 			
 			return new Order(Order.ERROR, oOrderData.get("error").toString());
 		}

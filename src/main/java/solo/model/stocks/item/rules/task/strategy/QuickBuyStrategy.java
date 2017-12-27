@@ -27,29 +27,31 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		oAsks = StrategyUtils.removeGarbageOrders(oAsks, oBids.get(0).getPrice(), OrderSide.SELL); 
 		oBids = StrategyUtils.removeGarbageOrders(oBids, oAsks.get(0).getPrice(), OrderSide.BUY);
 		
+		final BigDecimal oMinChangePrice = TradeUtils.getMinChangePrice();
+		
 		final List<Order> oMyOrders = TradeUtils.getMyOrders();
 		oAsks = StrategyUtils.removeMyOrders(oAsks, oMyOrders); 
 		oBids = StrategyUtils.removeMyOrders(oBids, oMyOrders);
 		oBids = StrategyUtils.removeFirstTooExpenciveBids(oAsks, oBids);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
-			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
+			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		oAsks = StrategyUtils.removeFakeOrders(oAsks, null); 
 		oBids = StrategyUtils.removeFakeOrders(oBids, null);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
-			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
+			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		
 		oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks); 
 		oBids = StrategyUtils.removeTooExpenciveOrders(oBids);
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
-			return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
+			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		while(true)
 		{
 			oAsks = StrategyUtils.removeTopOrders(oAsks); 
 			oBids = StrategyUtils.removeTopOrders(oBids);
 			if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
-				return StrategyUtils.getBestPrice(oBids).add(BigDecimal.ONE);
+				return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		}
 	}
 

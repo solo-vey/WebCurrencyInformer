@@ -17,6 +17,8 @@ import ua.lz.ep.utils.ResourceUtils;
 
 public class TradeUtils
 {
+	public static final int DEFAULT_PRICE_PRECISION = 6;
+
 	public static BigDecimal getStockCommision()
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
@@ -61,7 +63,7 @@ public class TradeUtils
 	{
 		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), 6);
+		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), DEFAULT_PRICE_PRECISION);
 	}
 	
 	public static int getFakeMinPrice()
@@ -70,9 +72,21 @@ public class TradeUtils
 		return ResourceUtils.getIntFromResource("stock.fake_price", oStockExchange.getStockProperties(), 500);
 	}
 	
+	public static BigDecimal getMinChangePrice()
+	{
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strMinDelta = ResourceUtils.getResource("stock.min_change_price", oStockExchange.getStockProperties(), "1");
+		return MathUtils.fromString(strMinDelta);
+	}
+	
 	public static BigDecimal getRoundedPrice(final RateInfo oRateInfo, final BigDecimal nPrice)
 	{
 		return MathUtils.getBigDecimal(nPrice.doubleValue(), getPricePrecision(oRateInfo));
+	}
+	
+	public static BigDecimal getRoundedCriticalPrice(final RateInfo oRateInfo, final BigDecimal nPrice)
+	{
+		return MathUtils.getBigDecimalRoundedUp(nPrice.doubleValue(), getPricePrecision(oRateInfo));
 	}
 	
 	public static BigDecimal getRoundedVolume(final RateInfo oRateInfo, final BigDecimal nVolume)

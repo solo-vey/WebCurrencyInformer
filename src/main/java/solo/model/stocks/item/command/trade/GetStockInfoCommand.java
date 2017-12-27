@@ -49,6 +49,32 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 			for(final Order oOrder : oOrdersInfo.getValue())
 				strMessage += oOrdersInfo.getKey().getCurrencyFrom() + "/" + oOrder.getInfo() + "\r\n";
 		}
+		
+		BigDecimal oTotalUahSum = BigDecimal.ZERO;
+		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
+		{
+			final RateInfo oRateInfo = new RateInfo(oCurrencyInfo.getKey(), Currency.UAH);
+			if (oCurrencyInfo.getKey().equals(Currency.UAH))
+				oTotalUahSum = oTotalUahSum.add(oCurrencyInfo.getValue().getBalance());
+			else
+			{
+				if (null == getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo))
+					continue;
+				
+				final BigDecimal oBidPrice = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo).getBidsAnalysisResult().getBestPrice();
+				final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
+				final BigDecimal oSum = oVolume.multiply(oBidPrice);
+				oTotalUahSum = oTotalUahSum.add(oSum);
+			}
+		}
+
+		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
+		{
+			for(final Order oOrder : oOrdersInfo.getValue())
+				oTotalUahSum = oTotalUahSum.add(oOrder.getSum());
+		}
+		
+		strMessage += "Total UAH = " + MathUtils.toCurrencyString(oTotalUahSum) + "\r\n";
 
 		sendMessage(strMessage);
 	}

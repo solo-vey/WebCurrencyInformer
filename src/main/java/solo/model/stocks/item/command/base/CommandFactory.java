@@ -11,7 +11,6 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.trade.AddOrderCommand;
 import solo.model.stocks.item.command.trade.GetStockInfoCommand;
-import solo.model.stocks.item.command.trade.GetStockStatisticCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
@@ -56,7 +55,6 @@ public class CommandFactory
 		registerCommandClass(AddOrderCommand.NAME, 			AddOrderCommand.class, CommandGroup.TRADE);
 		registerCommandClass(RemoveOrderCommand.NAME, 		RemoveOrderCommand.class, CommandGroup.TRADE);
 		registerCommandClass(StockRestartCommand.NAME, 		StockRestartCommand.class, CommandGroup.SYSTEM);
-		registerCommandClass(GetStockStatisticCommand.NAME, GetStockStatisticCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(GetTradeInfoCommand.NAME, 		GetTradeInfoCommand.class, CommandGroup.TRADE);
 		registerCommandClass(SetTaskParameterCommand.NAME, 	SetTaskParameterCommand.class, CommandGroup.TRADE);
 	}

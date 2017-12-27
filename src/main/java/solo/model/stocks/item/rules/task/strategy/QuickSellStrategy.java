@@ -23,6 +23,8 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 	{
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders();
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
+		
+		final BigDecimal oMinChangePrice = TradeUtils.getMinChangePrice().negate();
 
 		oAsks = StrategyUtils.removeGarbageOrders(oAsks, oBids.get(0).getPrice(), OrderSide.SELL); 
 		oBids = StrategyUtils.removeGarbageOrders(oBids, oAsks.get(0).getPrice(), OrderSide.BUY);
@@ -38,6 +40,6 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks);
 		
-		return StrategyUtils.getBestPrice(oAsks).add(BigDecimal.ONE.negate());
+		return StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);
 	}
 }

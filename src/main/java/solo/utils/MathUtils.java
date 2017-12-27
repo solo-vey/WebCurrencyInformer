@@ -16,6 +16,12 @@ public class MathUtils
 		return oOriginalValue.setScale(nScale, RoundingMode.DOWN);
 	}
 
+	public static BigDecimal getBigDecimalRoundedUp(final double nValue, final int nScale)
+	{
+		final BigDecimal oOriginalValue = new BigDecimal(nValue);
+		return oOriginalValue.setScale(nScale, RoundingMode.UP);
+	}
+
 	public static BigDecimal getRoundedBigDecimal(final double nValue, final int nScale)
 	{
 		final BigDecimal oOriginalValue = new BigDecimal(nValue);
