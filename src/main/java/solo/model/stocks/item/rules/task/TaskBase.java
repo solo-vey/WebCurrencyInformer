@@ -67,7 +67,7 @@ public class TaskBase extends HasParameters implements IRule
 	
 	@Override public boolean equals(Object obj)
 	{
-		if (obj instanceof TaskFactory && ((TaskFactory)obj).m_oTaskBase.equals(obj))
+		if (obj instanceof TaskFactory && ((TaskFactory)obj).m_oTaskBase.equals(this))
 			return true;
 		
 		return super.equals(obj);

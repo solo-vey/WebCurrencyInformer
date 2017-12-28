@@ -37,7 +37,7 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 		oAsks = StrategyUtils.removeFakeOrders(oAsks, null); 
 		oBids = StrategyUtils.removeFakeOrders(oBids, null);
 		
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks);
 		
 		return StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);

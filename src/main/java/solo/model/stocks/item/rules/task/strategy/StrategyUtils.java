@@ -48,7 +48,8 @@ public class StrategyUtils
 
 	public static List<Order> removeFirstTooExpenciveBids(List<Order> oAsks, List<Order> oBids)
 	{
-		final BigDecimal nBidsDelta = oBids.get(0).getPrice().add(oBids.get(1).getPrice().negate());
+		final List<Order> aBidsNext = removeTopOrders(oBids);
+		final BigDecimal nBidsDelta = oBids.get(0).getPrice().add(aBidsNext.get(0).getPrice().negate());
 		final BigDecimal nBidsAsksDelta = oAsks.get(0).getPrice().add(oBids.get(0).getPrice().negate());
 		if (nBidsDelta.compareTo(nBidsAsksDelta) <= 0)
 			return oBids;
@@ -58,7 +59,8 @@ public class StrategyUtils
 
 	public static List<Order> removeFirstTooExpenciveAsks(List<Order> oAsks, List<Order> oBids)
 	{
-		final BigDecimal nAsksDelta = oAsks.get(1).getPrice().add(oBids.get(0).getPrice().negate());
+		final List<Order> aAsksNext = removeTopOrders(oAsks);
+		final BigDecimal nAsksDelta = aAsksNext.get(0).getPrice().add(oAsks.get(0).getPrice().negate());
 		final BigDecimal nBidsAsksDelta = oAsks.get(0).getPrice().add(oBids.get(0).getPrice().negate());
 		if (nAsksDelta.compareTo(nBidsAsksDelta) <= 0)
 			return oBids;

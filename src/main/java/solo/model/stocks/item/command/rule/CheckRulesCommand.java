@@ -1,7 +1,5 @@
 package solo.model.stocks.item.command.rule;
 
-import java.util.Map.Entry;
-
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.StateAnalysisResult;
@@ -32,7 +30,12 @@ public class CheckRulesCommand extends BaseCommand implements ISystemCommand
 		
 		final IStockExchange oStockExchange = getStockExchange();
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
-		for(final Entry<Integer, IRule> oRuleInfo : oStockExchange.getRules().getRules().entrySet())
-			oRuleInfo.getValue().check(oStateAnalysisResult, oRuleInfo.getKey());
+		final IRule[] aRules = oStockExchange.getRules().getRules().values().toArray(new IRule[]{});
+		for(int nRulePos = 0; nRulePos < aRules.length; nRulePos++)
+		{
+			final IRule oRule = aRules[nRulePos];
+			final Integer nRuleID = oStockExchange.getRules().getRuleID(oRule);
+			oRule.check(oStateAnalysisResult, nRuleID);	
+		}
 	}
 }

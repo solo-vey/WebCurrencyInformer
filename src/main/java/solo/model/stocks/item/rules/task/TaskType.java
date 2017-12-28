@@ -5,10 +5,8 @@ public enum TaskType
 {
 	/** торговля */
 	TRADE("торговля"),
-	/** продажа */
-	SELL("продажа"),
-	/** покупка */
-	BUY("покупка");
+	/** торговля */
+	CONTROLER("контролер");
 	
 	/** Тип */
 	final String m_strName;

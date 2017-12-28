@@ -7,6 +7,7 @@ import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
+import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
@@ -49,6 +50,14 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 				sendMessage(oTaskTrade.getTradeInfo().getInfo());
 				if (m_bIsFull)
 					sendMessage(oTaskTrade.getTradeInfo().toString());
+			}
+			else
+			if (oTask instanceof TradeControler)
+			{
+				final TradeControler oTradeControler = (TradeControler)oTask;
+				sendMessage(oTradeControler.getTradesInfo().getInfo());
+				if (m_bIsFull)
+					sendMessage(oTradeControler.getTradesInfo().toString());
 			}
 			else
 				sendMessage(oTask.getInfo(m_nRuleID));

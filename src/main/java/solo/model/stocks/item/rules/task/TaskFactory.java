@@ -12,6 +12,7 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.HasParameters;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
+import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.utils.CommonUtils;
 
 public class TaskFactory extends HasParameters implements IRule
@@ -28,6 +29,7 @@ public class TaskFactory extends HasParameters implements IRule
 	static
 	{
 		registerTaskClass(TaskType.TRADE,  TaskTrade.class);
+		registerTaskClass(TaskType.CONTROLER,  TradeControler.class);
 	}
 	
 	static protected void registerTaskClass(final TaskType oTaskType, final Class<?> oClass)
