@@ -98,9 +98,15 @@ abstract public class HasParameters extends BaseObject
 		if (StringUtils.isBlank(strValue))
 			return null;
 
-		final String strCurrencyFrom = strValue.toUpperCase().substring(0, 3);
-		final Currency oCurrencyTo = (strValue.length() > 3 ? Currency.valueOf(strValue.toUpperCase().substring(3)) : Currency.UAH);
-		return new RateInfo(Currency.valueOf(strCurrencyFrom), oCurrencyTo); 
+		Currency oCurrencyFrom = Currency.UAH;
+		for(final Currency oCurrency : Currency.values())
+		{
+			if (strValue.toUpperCase().startsWith(oCurrency.toString().toUpperCase()))
+				oCurrencyFrom = oCurrency;
+		}
+		final String strCurrencyTo = strValue.toUpperCase().substring(oCurrencyFrom.toString().toUpperCase().length());
+		final Currency oCurrencyTo = (StringUtils.isNotBlank(strCurrencyTo) ? Currency.valueOf(strCurrencyTo.toUpperCase()) : Currency.UAH);
+		return new RateInfo(oCurrencyFrom, oCurrencyTo); 
 	}
 	
 	public Date getParameterAsDate(final String strParameterName)

@@ -23,7 +23,7 @@ public class Order extends BaseObject implements Serializable
 	public final static String NONE = "none";
 	public final static String WAIT = "wait";
 	
-	public final static Order NULL = new Order(StringUtils.EMPTY, CANCEL, "Null order"); 
+	public final static Order NULL = new Order(StringUtils.EMPTY, NONE, "Null order"); 
 	
 	protected String m_strID;
 	protected BigDecimal m_nPrice;

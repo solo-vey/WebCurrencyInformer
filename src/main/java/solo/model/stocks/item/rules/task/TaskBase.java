@@ -59,7 +59,7 @@ public class TaskBase extends HasParameters implements IRule
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
 		final String strMessage = "Occurred " + getInfo(null) + "/" + MathUtils.toCurrencyString(nPrice) + 
-			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom()) + 
+			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);

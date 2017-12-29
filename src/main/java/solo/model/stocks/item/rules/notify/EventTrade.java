@@ -29,7 +29,7 @@ public class EventTrade extends EventBase
 	
 	public String getInfo(final Integer nRuleID)
 	{
-		return getType() + "/" + m_oRateInfo.getCurrencyFrom() +  
+		return getType() + "/" + m_oRateInfo +  
 			(null != nRuleID ? "/" + MathUtils.toCurrencyString(getMinTradePrice()) + "-" + MathUtils.toCurrencyString(getMaxTradePrice()) : StringUtils.EMPTY) + 
 			(null != nRuleID ? " /removeRule_" + nRuleID : StringUtils.EMPTY);   
 	}

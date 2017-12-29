@@ -55,7 +55,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public String getInfo(final Integer nRuleID)
 	{
 		String strInfo = getType() + 
-				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom().toString().toLowerCase()) + 
+				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
 				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true) + 
 				"\r\n";   
 		final List<TaskTrade> aTaskTrades = getTaskTrades();
@@ -121,8 +121,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		try
 		{
-			final String strRuleInfo = "task" + 
-					"_" + m_oRateInfo.getCurrencyFrom().toString().toLowerCase() + 
+			final String strRuleInfo = "task" + "_" + m_oRateInfo + 
 					"_" + TaskType.TRADE.toString().toLowerCase() + "_" + m_oTradeVolume;
 			final TaskFactory oTaskTrade = (TaskFactory) RulesFactory.getRule(strRuleInfo);
 			((TaskTrade)oTaskTrade.getTaskBase()).setTradeControler(this);
@@ -144,4 +143,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 
 		sendMessage(getType() + "\r\n" + getTradesInfo().getInfo());
 	}	
+
+	public void buyDone(final TaskTrade oTaskTrade) 
+	{
+	}
 }

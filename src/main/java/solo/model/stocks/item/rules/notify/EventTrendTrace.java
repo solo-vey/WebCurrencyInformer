@@ -41,7 +41,7 @@ public class EventTrendTrace extends EventBase
 	public String getInfo(final Integer nRuleID)
 	{
 		final JapanCandle oLastCandle = m_oHistory.get(m_oHistory.size() - 1);
-		return getType() + "/" + m_oRateInfo.getCurrencyFrom() + "/" + 
+		return getType() + "/" + m_oRateInfo + "/" + 
 			MathUtils.toCurrencyString(getMinPrice()) + "-" + MathUtils.toCurrencyString(getMaxPrice()) + "\r\n" +
 			oLastCandle.getType() + "/" + MathUtils.toCurrencyString(oLastCandle.getStart()) + "/" + MathUtils.toCurrencyString(oLastCandle.getMax()) + 
 			"/" + MathUtils.toCurrencyString(oLastCandle.getMin()) + "/" + MathUtils.toCurrencyString(oLastCandle.getEnd()) +
@@ -88,7 +88,7 @@ public class EventTrendTrace extends EventBase
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
 		final String strMessage = getInfo(null) + " is occurred. " + 
-			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom()) + 
+			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);

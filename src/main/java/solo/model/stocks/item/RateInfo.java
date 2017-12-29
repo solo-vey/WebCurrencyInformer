@@ -43,7 +43,7 @@ public class RateInfo implements Serializable
 	/** Строковое представление документа */
 	@Override public String toString()
 	{
-		return m_oCurrencyFrom + "->" + m_oCurrencyTo;
+		return m_oCurrencyFrom.toString().toLowerCase() + m_oCurrencyTo.toString().toLowerCase();
 	}
 	
 	@Override public int hashCode()

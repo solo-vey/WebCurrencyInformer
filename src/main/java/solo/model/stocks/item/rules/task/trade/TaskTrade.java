@@ -61,7 +61,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	public void sendMessage(final String strMessage)
 	{
 		final String strMessageFooter = getType() +
-			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom().toString().toLowerCase()) +   
+			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) +   
 			" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, getStockExchange().getRules().getRuleID(this)); 
 		super.sendMessage(strMessage + "\r\n" + strMessageFooter);
 	}
@@ -70,7 +70,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		return getType() + "/" + (m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
 					m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
-					CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom().toString().toLowerCase()) +   
+					CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) +   
 					" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
 					(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
 	}
@@ -339,6 +339,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 									"/" + MathUtils.toCurrencyString(nTradeMargin);
 		sendMessage(strMessage);
 		m_oTradeInfo.addToHistory(strMessage);
+		getTradeControler().buyDone(this);
 
 		m_oTradeInfo.setOrder(Order.NULL);
 		m_oTradeInfo.setTaskSide(OrderSide.SELL);

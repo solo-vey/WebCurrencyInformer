@@ -49,7 +49,7 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 		{
 			for(final Order oOrder : oOrdersInfo.getValue())
-				strMessage += oOrdersInfo.getKey().getCurrencyFrom() + "/" + oOrder.getInfo() + "\r\n";
+				strMessage += oOrdersInfo.getKey() + "/" + oOrder.getInfo() + "\r\n";
 		}
 		
 		final RateInfo oRateEthUahInfo = new RateInfo(Currency.ETH, Currency.UAH);

@@ -52,7 +52,7 @@ public class EventBase extends HasParameters implements IRule
 	
 	public String getInfo(final Integer nRuleID)
 	{
-		return getType() + "/" + m_oRateInfo.getCurrencyFrom() + "/" + MathUtils.toCurrencyString(m_nPrice) + 
+		return getType() + "/" + m_oRateInfo + "/" + MathUtils.toCurrencyString(m_nPrice) + 
 			(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
 	}
 	
@@ -63,7 +63,7 @@ public class EventBase extends HasParameters implements IRule
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
 		final String strMessage = "Occurred " + getInfo(null) + "/" + MathUtils.toCurrencyString(nPrice) + 
- 			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo.getCurrencyFrom()) + 
+ 			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);

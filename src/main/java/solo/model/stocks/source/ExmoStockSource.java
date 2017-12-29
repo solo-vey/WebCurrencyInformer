@@ -35,10 +35,10 @@ public class ExmoStockSource extends BaseStockSource
 		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
 		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
 		
-		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
-		registerRate(new RateInfo(Currency.BTC, Currency.RUB));
 		registerRate(new RateInfo(Currency.ETH, Currency.RUB));
+		registerRate(new RateInfo(Currency.ETH, Currency.USD));
+		registerRate(new RateInfo(Currency.ETH, Currency.EUR));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -217,7 +217,7 @@ public class ExmoStockSource extends BaseStockSource
 			}});
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
-				return new Order(strOrderId, Order.CANCEL, oOrderData.get("error").toString());
+				return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
 
 			final Order oOrder = convert2Order(oOrderData);
 			oOrder.setState(Order.DONE);
