@@ -37,6 +37,8 @@ public class ExmoStockSource extends BaseStockSource
 		
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
+		registerRate(new RateInfo(Currency.BTC, Currency.RUB));
+		registerRate(new RateInfo(Currency.ETH, Currency.RUB));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -106,9 +108,9 @@ public class ExmoStockSource extends BaseStockSource
 				if (nOutAmount.compareTo(BigDecimal.ZERO) > 0 && nInAmount.compareTo(BigDecimal.ZERO) > 0)
 				{
 					if (oOrder.getSide().equals(OrderSide.BUY))
-						oOrder.setPrice(MathUtils.getBigDecimal(nOutAmount.doubleValue() / nInAmount.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION));
+						oOrder.setPrice(MathUtils.getBigDecimal(nOutAmount.doubleValue() / nInAmount.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION));
 					else
-						oOrder.setPrice(MathUtils.getBigDecimal(nInAmount.doubleValue() / nOutAmount.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION));
+						oOrder.setPrice(MathUtils.getBigDecimal(nInAmount.doubleValue() / nOutAmount.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION));
 				}
 			}
 			

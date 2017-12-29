@@ -63,7 +63,7 @@ public class BaseStockExchange implements IStockExchange
 	
 	public StockCurrencyVolume getStockCurrencyVolume(final Currency oCurrency)
 	{
-		return m_oStockCurrencyVolumes.get(oCurrency);
+		return (null != m_oStockCurrencyVolumes.get(oCurrency) ? m_oStockCurrencyVolumes.get(oCurrency) : new StockCurrencyVolume(oCurrency, 1.0));
 	}
 	
 	public Rules getRules()

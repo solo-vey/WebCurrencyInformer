@@ -264,7 +264,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		strMessage += "+ " + oAddOrder.getInfo();
 		
 		getStockExchange().getRules().save();
-		sendMessage(strMessage);
+//		sendMessage(strMessage);
 
 		final String strHistory = oGetOrder.getSide() + " " + (oGetOrder.getPrice().compareTo(oNewPrice) < 0 ? "^ " : "v ") + MathUtils.toCurrencyString(oNewPrice) + "/" + MathUtils.toCurrencyStringEx(oNewVolume);
 		m_oTradeInfo.addToHistory(strHistory);
@@ -318,8 +318,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		if (m_oTradeInfo.getTaskSide().equals(OrderSide.SELL))
 		{
-			final BigDecimal nDeltaSellSum = m_oTradeInfo.getNeedSellVolume().multiply(oOrder.getPrice());
 			m_oTradeInfo.addSoldVolume(m_oTradeInfo.getNeedSellVolume());
+			final BigDecimal nDeltaSellSum = m_oTradeInfo.getNeedSellVolume().multiply(oOrder.getPrice());
 			m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
 				
 			sendMessage(m_oTradeInfo.getInfo());

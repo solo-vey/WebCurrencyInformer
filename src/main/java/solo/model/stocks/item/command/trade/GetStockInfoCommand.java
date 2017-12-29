@@ -8,11 +8,13 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
+import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
 
 /** Формат комманды 
@@ -50,6 +52,9 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 				strMessage += oOrdersInfo.getKey().getCurrencyFrom() + "/" + oOrder.getInfo() + "\r\n";
 		}
 		
+		final RateInfo oRateEthUahInfo = new RateInfo(Currency.ETH, Currency.UAH);
+		final RateAnalysisResult oEthUahRateAnalysisResult = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateEthUahInfo);
+		final BigDecimal oEthUahPrice = (null != oEthUahRateAnalysisResult ? oEthUahRateAnalysisResult.getBidsAnalysisResult().getBestPrice() : BigDecimal.ZERO);
 		BigDecimal oTotalUahSum = BigDecimal.ZERO;
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 		{
@@ -59,19 +64,50 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 			else
 			{
 				if (null == getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo))
-					continue;
-				
-				final BigDecimal oBidPrice = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo).getBidsAnalysisResult().getBestPrice();
-				final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
-				final BigDecimal oSum = oVolume.multiply(oBidPrice);
-				oTotalUahSum = oTotalUahSum.add(oSum);
+				{
+					if (null == oEthUahPrice)
+						continue;
+					
+					final RateInfo oEthRateInfo = new RateInfo(Currency.ETH, oCurrencyInfo.getKey());
+					if (null == getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo))
+						continue;
+
+					final BigDecimal oEthBidPrice = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oCrossBidPrice = MathUtils.getBigDecimal(oEthUahPrice.doubleValue() / oEthBidPrice.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION);
+
+					final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
+					final BigDecimal oSum = oVolume.multiply(oCrossBidPrice);
+					oTotalUahSum = oTotalUahSum.add(oSum);
+				}
+				else
+				{
+					final BigDecimal oBidPrice = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo).getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
+					final BigDecimal oSum = oVolume.multiply(oBidPrice);
+					oTotalUahSum = oTotalUahSum.add(oSum);
+				}
 			}
 		}
 
 		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 		{
 			for(final Order oOrder : oOrdersInfo.getValue())
-				oTotalUahSum = oTotalUahSum.add(oOrder.getSum());
+			{
+				if (oOrdersInfo.getKey().getCurrencyTo().equals(Currency.UAH))
+					oTotalUahSum = oTotalUahSum.add(oOrder.getSum());
+				else
+				{
+					final RateInfo oEthRateInfo = new RateInfo(Currency.ETH, oOrdersInfo.getKey().getCurrencyTo());
+					if (null == getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo))
+						continue;
+					
+					final BigDecimal oEthBidPrice = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oCrossBidPrice = MathUtils.getBigDecimal(oEthUahPrice.doubleValue() / oEthBidPrice.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION);
+
+					final BigDecimal oSum = oOrder.getSum().multiply(oCrossBidPrice);
+					oTotalUahSum = oTotalUahSum.add(oSum);
+				}
+			}
 		}
 		
 		strMessage += "Total UAH = " + MathUtils.toCurrencyString(oTotalUahSum) + "\r\n";

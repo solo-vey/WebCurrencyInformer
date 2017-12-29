@@ -234,7 +234,10 @@ public class BtcTradeStockSource extends BaseStockSource
 		for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
 		{
 			if (oOrder.getId().equalsIgnoreCase(strOrderId))
-				return oOrder;
+			{
+				oThisOrder = oOrder;
+				break;
+			}
 		}
 		
 		try
@@ -258,22 +261,22 @@ public class BtcTradeStockSource extends BaseStockSource
 		if (null != oTradeOrderInfo.get("type"))
 			oOrder.setSide(oTradeOrderInfo.get("type").toString());
 		
-		if (oOrder.getSide().equals(OrderSide.BUY) && null != oTradeOrderInfo.get("sum2_history"))
+		if (oOrder.getSide().equals(OrderSide.BUY) && null != oTradeOrderInfo.get("sum2"))
 		{
-			oOrder.setVolume(MathUtils.fromString(oTradeOrderInfo.get("sum2_history").toString()));
-			if (null != oTradeOrderInfo.get("sum1_history"))
+			oOrder.setVolume(MathUtils.fromString(oTradeOrderInfo.get("sum2").toString()));
+			if (null != oTradeOrderInfo.get("sum1"))
 			{
-				final BigDecimal oSum = MathUtils.fromString(oTradeOrderInfo.get("sum1_history").toString());
+				final BigDecimal oSum = MathUtils.fromString(oTradeOrderInfo.get("sum1").toString());
 				oOrder.setPrice(MathUtils.getRoundedBigDecimal(oSum.doubleValue() / oOrder.getVolume().doubleValue(), 0));
 			}
 		}
 
-		if (oOrder.getSide().equals(OrderSide.SELL) && null != oTradeOrderInfo.get("sum1_history"))
+		if (oOrder.getSide().equals(OrderSide.SELL) && null != oTradeOrderInfo.get("sum1"))
 		{
-			oOrder.setVolume(MathUtils.fromString(oTradeOrderInfo.get("sum1_history").toString()));
-			if (null != oTradeOrderInfo.get("sum2_history"))
+			oOrder.setVolume(MathUtils.fromString(oTradeOrderInfo.get("sum1").toString()));
+			if (null != oTradeOrderInfo.get("sum2"))
 			{
-				final BigDecimal oSum = MathUtils.fromString(oTradeOrderInfo.get("sum2_history").toString());
+				final BigDecimal oSum = MathUtils.fromString(oTradeOrderInfo.get("sum2").toString());
 				oOrder.setPrice(MathUtils.getRoundedBigDecimal(oSum.doubleValue() / oOrder.getVolume().doubleValue(), 0));
 			}
 		}

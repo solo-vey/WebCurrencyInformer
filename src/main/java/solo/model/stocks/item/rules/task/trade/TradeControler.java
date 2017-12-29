@@ -59,10 +59,25 @@ public class TradeControler extends TaskBase implements ITradeControler
 				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true) + 
 				"\r\n";   
 		final List<TaskTrade> aTaskTrades = getTaskTrades();
+		int nTaskRuleID = -1;
 		for(final TaskTrade oTaskTrade : aTaskTrades)
 		{
+			for(final IRule oRule : getStockExchange().getRules().getRules().values())
+			{
+				if (!(oRule instanceof TaskFactory))
+					continue;
+					
+				final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
+				if (!(oTask instanceof TaskTrade))
+					continue;
+					
+				if (oTask.equals(oTaskTrade))
+					nTaskRuleID = getStockExchange().getRules().getRuleID(oRule);	
+			}
+		
 			strInfo += " -> " + (oTaskTrade.getTradeInfo().getOrder().equals(Order.NULL) ?  oTaskTrade.getTradeInfo().getTaskSide() + "/" : StringUtils.EMPTY) + 
-					oTaskTrade.getTradeInfo().getOrder().getInfoShort() + "\r\n";   
+					oTaskTrade.getTradeInfo().getOrder().getInfoShort() +    
+					" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nTaskRuleID, GetTradeInfoCommand.FULL_PARAMETER, true) + "\r\n"; 
 		}
 
 		return strInfo +  

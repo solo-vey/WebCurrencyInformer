@@ -17,7 +17,7 @@ import ua.lz.ep.utils.ResourceUtils;
 
 public class TradeUtils
 {
-	public static final int DEFAULT_PRICE_PRECISION = 6;
+	public static final int DEFAULT_VOLUME_PRECISION = 6;
 
 	public static BigDecimal getStockCommision()
 	{
@@ -63,7 +63,7 @@ public class TradeUtils
 	{
 		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), DEFAULT_PRICE_PRECISION);
+		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), DEFAULT_VOLUME_PRECISION);
 	}
 	
 	public static int getFakeMinPrice()
