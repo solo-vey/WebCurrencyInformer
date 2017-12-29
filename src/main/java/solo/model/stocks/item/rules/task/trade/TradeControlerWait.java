@@ -8,13 +8,16 @@ import solo.model.stocks.item.RateInfo;
 public class TradeControlerWait extends TradeControler
 {
 	private static final long serialVersionUID = 2548242566461334806L;
+
+	final static public String TRADE_WAIT = "#wait#";
 	
 	public Date m_oCreateAfterDate = new Date();
 	public int m_nMinutes = 1;
 	
 	public TradeControlerWait(RateInfo oRateInfo, String strCommandLine)
 	{
-		super(oRateInfo, strCommandLine);
+		super(oRateInfo, strCommandLine, TRADE_WAIT);
+		m_nMinutes = getParameterAsInt(TRADE_WAIT);
 	}
 	
 	@Override public String getType()

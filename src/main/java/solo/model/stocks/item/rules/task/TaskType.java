@@ -6,7 +6,9 @@ public enum TaskType
 	/** торговля */
 	TRADE("торговля"),
 	/** торговля */
-	CONTROLER("контролер");
+	CONTROLER("контролер"),
+	/** торговля с задержкой следующей покупки */
+	CONTROLERWAIT("контролер с задержкой");
 	
 	/** Тип */
 	final String m_strName;
