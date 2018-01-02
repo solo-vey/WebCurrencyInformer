@@ -48,7 +48,7 @@ public class TradeControlerWait extends TradeControler
 	    	final BigDecimal nCriticalPrice = oTaskTrade.getTradeInfo().getCriticalPrice();
 	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nCriticalPrice.doubleValue() * RESET_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
 	    	oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
-	    	sendMessage(MessageLevel.DEBUG, getType() + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
+	    	sendMessage(getType() + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
 	    			"Reset critical price " + MathUtils.toCurrencyString(nNewCriticalPrice)); 
 	    }
 	}
