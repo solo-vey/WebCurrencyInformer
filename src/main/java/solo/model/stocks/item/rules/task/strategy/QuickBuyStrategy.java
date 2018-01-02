@@ -36,8 +36,8 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
-		oAsks = StrategyUtils.removeFakeOrders(oAsks, null); 
-		oBids = StrategyUtils.removeFakeOrders(oBids, null);
+		oAsks = StrategyUtils.removeFakeOrders(oAsks, null, oRateAnalysisResult.getRateInfo()); 
+		oBids = StrategyUtils.removeFakeOrders(oBids, null, oRateAnalysisResult.getRateInfo());
 		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		

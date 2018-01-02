@@ -17,6 +17,11 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected int m_nTradeCount = 0;
 	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
 	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
+	protected BigDecimal m_nSum = BigDecimal.ZERO;
+	
+	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO;
+	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO;
+	protected BigDecimal m_nVolume = BigDecimal.ZERO;
 	
 	public BigDecimal getDelta()
 	{
@@ -38,6 +43,31 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_nReceivedSum;
 	}
 	
+	public BigDecimal getSum()
+	{
+		return m_nSum;
+	}
+	
+	public void setSum(final BigDecimal nSum)
+	{
+		m_nSum = nSum;
+	}
+	
+	public BigDecimal getSoldVolume()
+	{
+		return m_nSoldVolume;
+	}
+	
+	public BigDecimal getBuyVolume()
+	{
+		return m_nBuyVolume;
+	}
+	
+	public BigDecimal getVolume()
+	{
+		return m_nVolume;
+	}
+	
 	public Integer getTradeCount()
 	{
 		return m_nTradeCount;
@@ -49,6 +79,7 @@ public class TradesInfo extends BaseObject implements Serializable
 			return;
 		
 		m_nSpendSum = m_nSpendSum.add(nSpendSum);
+		m_nSum = m_nSum.add(nSpendSum.negate());
 		addToHistory("Add spend sum : " + MathUtils.toCurrencyString(nSpendSum)); 
 	}
 	
@@ -58,7 +89,28 @@ public class TradesInfo extends BaseObject implements Serializable
 			return;
 
 		m_nReceivedSum = m_nReceivedSum.add(nReceivedSum);
+		m_nSum = m_nSum.add(nReceivedSum);
 		addToHistory("Add received sum : " + MathUtils.toCurrencyString(nReceivedSum)); 
+	}
+	
+	public void addSoldVolume(BigDecimal nSoldVolume)
+	{
+		if (nSoldVolume.compareTo(BigDecimal.ZERO) == 0)
+			return;
+		
+		m_nSoldVolume = m_nSoldVolume.add(nSoldVolume);
+		m_nVolume = m_nVolume.add(nSoldVolume.negate());
+		addToHistory("Add sold volume : " + MathUtils.toCurrencyString(nSoldVolume)); 
+	}
+	
+	public void addBuyVolume(BigDecimal nBuyVolume)
+	{
+		if (nBuyVolume.compareTo(BigDecimal.ZERO) == 0)
+			return;
+
+		m_nBuyVolume = m_nBuyVolume.add(nBuyVolume);
+		m_nVolume = m_nVolume.add(nBuyVolume);
+		addToHistory("Add buy volume : " + MathUtils.toCurrencyString(nBuyVolume)); 
 	}
 	
 	public void incTradeCount()
@@ -79,6 +131,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	public String getInfo()
 	{
 		return  "Count: " + getTradeCount() + "\r\n" + 
-				"Trade: " + MathUtils.toCurrencyString(getReceivedSum()) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(getDelta());
+				"Money: " + getSum() + " / " + getVolume() + "\r\n" + 
+				"Trades: " + MathUtils.toCurrencyString(getReceivedSum()) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(getDelta());
 	}
 }

@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 public class StrategyUtils
@@ -24,9 +25,9 @@ public class StrategyUtils
 		return (nDelta.compareTo(nFullCommision) < 0);
 	}
 
-	public static List<Order> removeFakeOrders(List<Order> oOrders, BigDecimal nMinSum)
+	public static List<Order> removeFakeOrders(List<Order> oOrders, BigDecimal nMinSum, final RateInfo oRateInfo)
 	{
-		nMinSum = (null == nMinSum ? new BigDecimal(TradeUtils.getFakeMinPrice()) : nMinSum);		
+		nMinSum = (null == nMinSum ? new BigDecimal(TradeUtils.getFakeMinPrice(oRateInfo)) : nMinSum);		
 		final List<Order> oResult = new LinkedList<Order>();
 		for(final Order oOrder : oOrders)
 		{

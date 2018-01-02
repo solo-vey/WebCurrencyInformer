@@ -12,15 +12,14 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RulesFactory;
-import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
-import solo.model.stocks.item.command.rule.GetRulesCommand;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.TaskType;
+import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
 
 public class TradeControler extends TaskBase implements ITradeControler
@@ -44,6 +43,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		super(oRateInfo, strCommandLine, CommonUtils.mergeParameters(TRADE_VOLUME, strTemplate));
 		m_oTradeVolume = getParameterAsBigDecimal(TRADE_VOLUME);
+		getTradesInfo().setSum(m_oTradeVolume);
 	}
 	
 	@Override public String getType()
@@ -132,8 +132,6 @@ public class TradeControler extends TaskBase implements ITradeControler
 			final TaskFactory oTaskTrade = (TaskFactory) RulesFactory.getRule(strRuleInfo);
 			((TaskTrade)oTaskTrade.getTaskBase()).setTradeControler(this);
 			getStockExchange().getRules().addRule(oTaskTrade);
-			
-			sendMessage("Trade new trade. " + BaseCommand.getCommand(GetRulesCommand.NAME));
 		}
 		catch(final Exception e) 
 		{
@@ -147,10 +145,22 @@ public class TradeControler extends TaskBase implements ITradeControler
 		getTradesInfo().addSpendSum(oTaskTrade.getTradeInfo().getSpendSum());
 		getTradesInfo().addReceivedSum(oTaskTrade.getTradeInfo().getReceivedSum());
 
-		sendMessage(getType() + "\r\n" + getTradesInfo().getInfo());
+		sendMessage(MessageLevel.TRADE_RESULT, getType() + "\r\n" + getTradesInfo().getInfo());
 	}	
 
 	public void buyDone(final TaskTrade oTaskTrade) 
 	{
+	}
+
+	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
+	{
+		getTradesInfo().addSpendSum(nSpendSum);
+		getTradesInfo().addBuyVolume(nBuyVolume);
+	}
+	
+	public void addSell(final BigDecimal nReceivedSum, final BigDecimal nSoldVolume) 
+	{
+		getTradesInfo().addReceivedSum(nReceivedSum);
+		getTradesInfo().addSoldVolume(nSoldVolume);
 	}
 }

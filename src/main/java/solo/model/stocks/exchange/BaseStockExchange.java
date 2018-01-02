@@ -9,13 +9,13 @@ import solo.model.stocks.analyse.SimpleStateAnalysis;
 import solo.model.stocks.history.StockRateStatesLocalHistory;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockCurrencyVolume;
-import solo.model.stocks.oracle.IRateOracle;
-import solo.model.stocks.oracle.SimpleRateOracle;
 import solo.model.stocks.source.IStockSource;
+import solo.transport.MessageLevel;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class BaseStockExchange implements IStockExchange
 {
+	final protected MessageLevel m_oMessageLevel = MessageLevel.DEBUG; 
 	final protected String m_strStockName;
 	final protected String m_strStockProperies;
 	protected IStockSource m_oStockSource;
@@ -29,10 +29,8 @@ public class BaseStockExchange implements IStockExchange
 		m_strStockName = strStockName;
 		m_strStockProperies = strStockProperies;
 
-		final IRateOracle oRateOracle = new SimpleRateOracle();
 		final int nHistoryLength = ResourceUtils.getIntFromResource("history.length", getStockProperties(), 100);
-		final int nForecastLength = ResourceUtils.getIntFromResource("forecast.length", getStockProperties(), 1);
-		m_oStockRateStatesLocalHistory = new StockRateStatesLocalHistory(nHistoryLength, nForecastLength, oRateOracle);
+		m_oStockRateStatesLocalHistory = new StockRateStatesLocalHistory(nHistoryLength);
 		m_oRules = new Rules(this);
 	}
 	
@@ -69,5 +67,10 @@ public class BaseStockExchange implements IStockExchange
 	public Rules getRules()
 	{
 		return m_oRules;
+	}
+	
+	public MessageLevel getMessageLevel()
+	{
+		return m_oMessageLevel;
 	}
 }

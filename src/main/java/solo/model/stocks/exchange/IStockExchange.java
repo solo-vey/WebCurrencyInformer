@@ -6,6 +6,7 @@ import solo.model.stocks.history.StockRateStatesLocalHistory;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockCurrencyVolume;
 import solo.model.stocks.source.IStockSource;
+import solo.transport.MessageLevel;
 
 public interface IStockExchange
 {
@@ -16,4 +17,5 @@ public interface IStockExchange
 	Rules getRules();
 	StockRateStatesLocalHistory getHistory();
 	IStateAnalysis getAnalysis();
+	MessageLevel getMessageLevel();
 }

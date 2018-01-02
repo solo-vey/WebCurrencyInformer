@@ -66,10 +66,11 @@ public class TradeUtils
 		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), DEFAULT_VOLUME_PRECISION);
 	}
 	
-	public static int getFakeMinPrice()
+	public static int getFakeMinPrice(final RateInfo oRateInfo)
 	{
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock.fake_price", oStockExchange.getStockProperties(), 500);
+		return ResourceUtils.getIntFromResource("stock." + strMarket + ".fake_price", oStockExchange.getStockProperties(), 500);
 	}
 	
 	public static BigDecimal getMinChangePrice()

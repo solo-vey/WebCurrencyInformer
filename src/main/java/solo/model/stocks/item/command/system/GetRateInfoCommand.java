@@ -1,15 +1,11 @@
 package solo.model.stocks.item.command.system;
 
-import java.util.List;
-
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
-import solo.model.stocks.oracle.RateForecast;
-import solo.model.stocks.oracle.RatesForecast;
 import solo.utils.MathUtils;
 
 /** Формат комманды 
@@ -39,14 +35,6 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 							" / " + MathUtils.toCurrencyString(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
 		strMessage += "Trades : " + MathUtils.toCurrencyString(oAnalysisResult.getTradesAnalysisResult().getBestPrice()) + 
 							" / " + MathUtils.toCurrencyString(oAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
-		
-		final List<RatesForecast> oForecasts = oStockExchange.getHistory().getFuture();
-		if (null != oForecasts && oForecasts.size() > 0)
-		{
-			final RatesForecast oForecast = oForecasts.get(0);
-			final RateForecast oRateForecast = oForecast.getForecust(m_oRateInfo);
-			strMessage += "Forecast : " + MathUtils.toCurrencyString(oRateForecast.getPrice()) + "/" + oRateForecast.getTrendType();
-		}
 		
 		sendMessage(strMessage);
 	}

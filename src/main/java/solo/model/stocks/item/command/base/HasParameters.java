@@ -19,6 +19,7 @@ import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.ITransport;
+import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
@@ -168,5 +169,11 @@ abstract public class HasParameters extends BaseObject
 		
 		final ICommand oCommand = new SendMessageCommand(strMessage);
 		getMainWorker().addCommand(oCommand);
+	}
+	
+	public void sendMessage(final MessageLevel oLevel, final String strMessage)
+	{
+		if (oLevel.isLevelHigh(getStockExchange().getMessageLevel()))
+			sendMessage(strMessage);
 	}
 }

@@ -19,7 +19,7 @@ import ua.lz.ep.utils.ResourceUtils;
 
 public class BaseStockSource implements IStockSource
 {
-	final private List<RateInfo> m_aRates = new LinkedList<RateInfo>();
+	final protected List<RateInfo> m_aRates = new LinkedList<RateInfo>();
 	final protected BigDecimal m_nSumIgnore;
 	final protected IStockExchange m_oStockExchange;
 
@@ -91,8 +91,8 @@ public class BaseStockSource implements IStockSource
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
 		oAsks = StrategyUtils.removeGarbageOrders(oAsks, oBids.get(0).getPrice(), OrderSide.SELL); 
 		oBids = StrategyUtils.removeGarbageOrders(oBids, oAsks.get(0).getPrice(), OrderSide.BUY);
-		oAsks = StrategyUtils.removeFakeOrders(oAsks, BigDecimal.ONE); 
-		oBids = StrategyUtils.removeFakeOrders(oBids, BigDecimal.ONE);
+		oAsks = StrategyUtils.removeFakeOrders(oAsks, BigDecimal.ONE, oRateInfo); 
+		oBids = StrategyUtils.removeFakeOrders(oBids, BigDecimal.ONE, oRateInfo);
 		
 		final BigDecimal nMinPrice = StrategyUtils.getBestPrice(oBids);
 		final BigDecimal nMaxPrice = StrategyUtils.getBestPrice(oAsks);
