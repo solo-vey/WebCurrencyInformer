@@ -27,9 +27,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	private static final long serialVersionUID = -178132243757975169L;
 
 	final static public String TRADE_VOLUME = "#volume#";
+	final static public String CRITICAL_PRICE_PARAMETER = "criticalPrice";
 
 	protected TradeInfo m_oTradeInfo;
-	protected ITradeControler m_oTradeControler = ITradeControler.NULL;
 
 	public TaskTrade(final RateInfo oRateInfo, final String strCommandLine) throws Exception
 	{
@@ -134,9 +134,11 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		{
 			if (oGetOrder.isDone())
 			{
-				m_oTradeInfo.addBoughtVolume(TradeUtils.getWithoutCommision(m_oTradeInfo.getNeedBoughtVolume()));
-				final BigDecimal nDeltaSpendSum = m_oTradeInfo.getNeedBoughtVolume().multiply(oOrder.getPrice());
-				m_oTradeInfo.addSpendSum(nDeltaSpendSum);
+				final BigDecimal nNeedBuyVolume = m_oTradeInfo.getNeedBoughtVolume();
+				final BigDecimal nBuyVolume = TradeUtils.getWithoutCommision(nNeedBuyVolume);
+				final BigDecimal nDeltaSpendSum = nNeedBuyVolume.multiply(oOrder.getPrice());
+				
+				m_oTradeInfo.addBuy(nDeltaSpendSum, nBuyVolume);
 				m_oTradeInfo.setNeedBoughtVolume(BigDecimal.ZERO);
 			}
 			else
@@ -145,9 +147,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				if (nDeltaSpendSum.compareTo(BigDecimal.ZERO) == 0)
 					return oGetOrder;
 	
-				m_oTradeInfo.addSpendSum(nDeltaSpendSum);
 				final BigDecimal nDeltaBoughtVolume = m_oTradeInfo.getNeedBoughtVolume().add(oGetOrder.getVolume().negate());
-				m_oTradeInfo.addBoughtVolume(TradeUtils.getWithoutCommision(nDeltaBoughtVolume));
+				m_oTradeInfo.addBuy(nDeltaSpendSum, TradeUtils.getWithoutCommision(nDeltaBoughtVolume));
 				m_oTradeInfo.setNeedBoughtVolume(oGetOrder.getVolume());
 			}
 			return oGetOrder;
@@ -157,19 +158,15 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		{
 			if (oGetOrder.isDone())
 			{
-				final BigDecimal nDeltaSellSum = m_oTradeInfo.getNeedSellVolume().multiply(oOrder.getPrice());
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
-				m_oTradeInfo.addSoldVolume(m_oTradeInfo.getNeedSellVolume());
+				final BigDecimal nSellVolume = m_oTradeInfo.getNeedSellVolume();
+				final BigDecimal nDeltaSellSum = nSellVolume.multiply(oOrder.getPrice());
+				m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nSellVolume);
 			}
 			else
 			{
 				final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oGetOrder.getVolume().negate());
 				final BigDecimal nDeltaSellSum = nDeltaSellVolume.multiply(oGetOrder.getPrice());
-				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) == 0 || nDeltaSellSum.compareTo(BigDecimal.ZERO) == 0)
-					return oGetOrder;
-				
-				m_oTradeInfo.addSoldVolume(nDeltaSellVolume);
-				m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
+				m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nDeltaSellVolume);
 			}
 			return oGetOrder;
 		}
@@ -319,11 +316,11 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		if (m_oTradeInfo.getTaskSide().equals(OrderSide.SELL))
 		{
-			m_oTradeInfo.addSoldVolume(m_oTradeInfo.getNeedSellVolume());
-			final BigDecimal nDeltaSellSum = m_oTradeInfo.getNeedSellVolume().multiply(oOrder.getPrice());
-			m_oTradeInfo.addReceivedSum(TradeUtils.getWithoutCommision(nDeltaSellSum));
+			final BigDecimal nSellVolume = m_oTradeInfo.getNeedSellVolume();
+			final BigDecimal nDeltaSellSum = nSellVolume.multiply(oOrder.getPrice());
+			m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nSellVolume);
 				
-			sendMessage(MessageLevel.TRADE_RESULT, m_oTradeInfo.getInfo());
+			sendMessage(MessageLevel.TRADERESULT, m_oTradeInfo.getInfo());
 			m_oTradeInfo.addToHistory(m_oTradeInfo.getInfo());
 
 			supertaskDone(oOrder);
@@ -349,7 +346,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	protected void supertaskDone(final Order oOrder)
 	{
 		if (getTradeControler().equals(ITradeControler.NULL))
-			sendMessage(MessageLevel.TRADE_RESULT, "Task done. " + getInfo(null) + "\r\n" + m_oTradeInfo.getHistory());
+			sendMessage(MessageLevel.TRADERESULT, "Task done. " + getInfo(null) + "\r\n" + m_oTradeInfo.getHistory());
 
 		getTradeControler().tradeDone(this);
 		getStockExchange().getRules().removeRule(this);
@@ -357,12 +354,20 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	
 	@Override public ITradeControler getTradeControler()
 	{
-		return m_oTradeControler;
+		return m_oTradeInfo.getTradeControler();
 	}
 
 	public void setTradeControler(final ITradeControler oTradeControler)
 	{
-		m_oTradeControler = oTradeControler;
+		m_oTradeInfo.setTradeControler(oTradeControler);
+	}
+	
+	@Override public void setParameter(final String strParameterName, final String strValue)
+	{
+		if (strParameterName.equalsIgnoreCase("criticalPrice"))
+			m_oTradeInfo.setCriticalPrice(MathUtils.fromString(strValue));
+				
+		super.setParameter(strParameterName, strValue);
 	}
 }
 

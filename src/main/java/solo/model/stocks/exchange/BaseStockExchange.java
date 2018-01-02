@@ -3,6 +3,8 @@ package solo.model.stocks.exchange;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.currency.Currency;
 import solo.model.stocks.analyse.IStateAnalysis;
 import solo.model.stocks.analyse.SimpleStateAnalysis;
@@ -15,7 +17,10 @@ import ua.lz.ep.utils.ResourceUtils;
 
 public class BaseStockExchange implements IStockExchange
 {
-	final protected MessageLevel m_oMessageLevel = MessageLevel.DEBUG; 
+	private static final String MESSAGE_LEVEL_PARAMETER = "messageLevel";
+	
+	protected MessageLevel m_oMessageLevel = MessageLevel.TRADERESULT;
+	
 	final protected String m_strStockName;
 	final protected String m_strStockProperies;
 	protected IStockSource m_oStockSource;
@@ -72,5 +77,19 @@ public class BaseStockExchange implements IStockExchange
 	public MessageLevel getMessageLevel()
 	{
 		return m_oMessageLevel;
+	}
+	
+	public void setParameter(String strName, String strValue)
+	{
+		if (strName.equalsIgnoreCase(MESSAGE_LEVEL_PARAMETER))
+			m_oMessageLevel = MessageLevel.valueOf(strValue.toUpperCase());
+	}
+	
+	public String getParameter(String strName)
+	{
+		if (strName.equalsIgnoreCase(MESSAGE_LEVEL_PARAMETER))
+			return m_oMessageLevel.toString();
+		
+		return StringUtils.EMPTY;
 	}
 }

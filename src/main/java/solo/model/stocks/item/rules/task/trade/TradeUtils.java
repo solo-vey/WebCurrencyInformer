@@ -18,6 +18,7 @@ import ua.lz.ep.utils.ResourceUtils;
 public class TradeUtils
 {
 	public static final int DEFAULT_VOLUME_PRECISION = 6;
+	public static final int DEFAULT_PRICE_PRECISION = 0;
 
 	public static BigDecimal getStockCommision()
 	{

@@ -18,4 +18,6 @@ public interface IStockExchange
 	StockRateStatesLocalHistory getHistory();
 	IStateAnalysis getAnalysis();
 	MessageLevel getMessageLevel();
+	void setParameter(String strName, String strValue);
+	String getParameter(String strName);
 }

@@ -26,6 +26,7 @@ import solo.model.stocks.item.command.system.HelpCommand;
 import solo.model.stocks.item.command.system.HistoryCommand;
 import solo.model.stocks.item.command.system.LoadRateInfoCommand;
 import solo.model.stocks.item.command.system.SendMessageCommand;
+import solo.model.stocks.item.command.system.SetStockParameterCommand;
 import solo.model.stocks.item.command.system.UnknownCommand;
 import solo.utils.CommonUtils;
 
@@ -45,6 +46,7 @@ public class CommandFactory
 		registerCommandClass(SendMessageCommand.NAME, 			SendMessageCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(GetTransportMessagesCommand.NAME,	GetTransportMessagesCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(CheckRulesCommand.NAME,	CheckRulesCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(SetStockParameterCommand.NAME, SetStockParameterCommand.class, CommandGroup.SYSTEM);
 
 		registerCommandClass(AddRuleCommand.NAME, 		AddRuleCommand.class, CommandGroup.RULES);
 		registerCommandClass(GetRulesCommand.NAME,		GetRulesCommand.class, CommandGroup.RULES);

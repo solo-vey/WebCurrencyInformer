@@ -18,6 +18,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
 	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
 	protected BigDecimal m_nSum = BigDecimal.ZERO;
+	protected BigDecimal m_nBuySum = BigDecimal.ZERO;
 	
 	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO;
@@ -48,9 +49,15 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_nSum;
 	}
 	
-	public void setSum(final BigDecimal nSum)
+	public void setSum(final BigDecimal nSum, final Integer nMaxTrades)
 	{
 		m_nSum = nSum;
+		m_nBuySum = MathUtils.getRoundedBigDecimal(nSum.doubleValue() / nMaxTrades, TradeUtils.DEFAULT_PRICE_PRECISION); 
+	}
+	
+	public BigDecimal getBuySum()
+	{
+		return m_nBuySum;
 	}
 	
 	public BigDecimal getSoldVolume()
@@ -73,44 +80,32 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_nTradeCount;
 	}
 	
-	public void addSpendSum(BigDecimal nSpendSum)
+	public void addBuy(BigDecimal nSpendSum, BigDecimal nBuyVolume)
 	{
-		if (nSpendSum.compareTo(BigDecimal.ZERO) == 0)
+		if (nSpendSum.compareTo(BigDecimal.ZERO) == 0 && nBuyVolume.compareTo(BigDecimal.ZERO) == 0)
 			return;
 		
 		m_nSpendSum = m_nSpendSum.add(nSpendSum);
 		m_nSum = m_nSum.add(nSpendSum.negate());
-		addToHistory("Add spend sum : " + MathUtils.toCurrencyString(nSpendSum)); 
+
+		m_nBuyVolume = m_nBuyVolume.add(nBuyVolume);
+		m_nVolume = m_nVolume.add(nBuyVolume);
+		
+		addToHistory("Buy : " + MathUtils.toCurrencyString(nSpendSum) + " / " + MathUtils.toCurrencyStringEx(nBuyVolume)); 
 	}
 	
-	public void addReceivedSum(BigDecimal nReceivedSum)
+	public void addSell(BigDecimal nReceivedSum, BigDecimal nSoldVolume)
 	{
-		if (nReceivedSum.compareTo(BigDecimal.ZERO) == 0)
+		if (nReceivedSum.compareTo(BigDecimal.ZERO) == 0 && nSoldVolume.compareTo(BigDecimal.ZERO) == 0)
 			return;
 
 		m_nReceivedSum = m_nReceivedSum.add(nReceivedSum);
 		m_nSum = m_nSum.add(nReceivedSum);
-		addToHistory("Add received sum : " + MathUtils.toCurrencyString(nReceivedSum)); 
-	}
-	
-	public void addSoldVolume(BigDecimal nSoldVolume)
-	{
-		if (nSoldVolume.compareTo(BigDecimal.ZERO) == 0)
-			return;
-		
+
 		m_nSoldVolume = m_nSoldVolume.add(nSoldVolume);
 		m_nVolume = m_nVolume.add(nSoldVolume.negate());
-		addToHistory("Add sold volume : " + MathUtils.toCurrencyString(nSoldVolume)); 
-	}
-	
-	public void addBuyVolume(BigDecimal nBuyVolume)
-	{
-		if (nBuyVolume.compareTo(BigDecimal.ZERO) == 0)
-			return;
-
-		m_nBuyVolume = m_nBuyVolume.add(nBuyVolume);
-		m_nVolume = m_nVolume.add(nBuyVolume);
-		addToHistory("Add buy volume : " + MathUtils.toCurrencyString(nBuyVolume)); 
+		
+		addToHistory("Sell : " + MathUtils.toCurrencyString(nReceivedSum) + " / " + MathUtils.toCurrencyStringEx(nSoldVolume)); 
 	}
 	
 	public void incTradeCount()
@@ -131,7 +126,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	public String getInfo()
 	{
 		return  "Count: " + getTradeCount() + "\r\n" + 
-				"Money: " + getSum() + " / " + getVolume() + "\r\n" + 
+				"Money: " + MathUtils.toCurrencyString(getSum()) + " / " + MathUtils.toCurrencyStringEx(getVolume()) + "\r\n" + 
 				"Trades: " + MathUtils.toCurrencyString(getReceivedSum()) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(getDelta());
 	}
 }

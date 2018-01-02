@@ -129,6 +129,13 @@ public class ExmoStockSource extends BaseStockSource
 				oOrder.setCreated(new Date(((long)nDate) * 1000));
 			}
 
+			if (null != oMapOrder.get("created"))
+			{
+				final String strDate = oMapOrder.get("created").toString();
+				final Long nDate = Long.decode(strDate);
+				oOrder.setCreated(new Date(((long)nDate) * 1000));
+			}
+			
 			oOrder.setState(Order.WAIT);
 		}
 		

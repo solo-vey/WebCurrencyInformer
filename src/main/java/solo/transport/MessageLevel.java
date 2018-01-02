@@ -5,7 +5,7 @@ public enum MessageLevel
 	ALL(0),
 	TRACE(10),
 	DEBUG(100),
-	TRADE_RESULT(1000),
+	TRADERESULT(1000),
 	ERROR(2000);
 	
 	protected int m_nLevel;
@@ -22,6 +22,6 @@ public enum MessageLevel
 	
 	public boolean isLevelHigh(final MessageLevel oMessageLevel)
 	{
-		return oMessageLevel.getLevel() >= getLevel();
+		return oMessageLevel.getLevel() <= getLevel();
 	}
 }
