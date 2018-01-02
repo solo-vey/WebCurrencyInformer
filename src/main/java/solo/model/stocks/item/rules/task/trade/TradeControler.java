@@ -36,15 +36,15 @@ public class TradeControler extends TaskBase implements ITradeControler
 
 	public TradeControler(RateInfo oRateInfo, String strCommandLine)
 	{
-		this(oRateInfo, strCommandLine, TRADE_VOLUME);
+		super(oRateInfo, strCommandLine, TRADE_VOLUME);
 		m_oTradeVolume = getParameterAsBigDecimal(TRADE_VOLUME);
 	}
 	
 	public TradeControler(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate)
 	{
-		super(oRateInfo, strCommandLine, strTemplate);
+		super(oRateInfo, strCommandLine, CommonUtils.mergeParameters(TRADE_VOLUME, strTemplate));
+		m_oTradeVolume = getParameterAsBigDecimal(TRADE_VOLUME);
 	}
-	
 	
 	@Override public String getType()
 	{

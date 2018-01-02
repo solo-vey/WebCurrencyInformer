@@ -3,6 +3,8 @@ package solo.model.stocks.item.rules.task.trade;
 import java.util.Calendar;
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.RateInfo;
 
 public class TradeControlerWait extends TradeControler
@@ -11,13 +13,15 @@ public class TradeControlerWait extends TradeControler
 
 	final static public String TRADE_WAIT = "#wait#";
 	
-	public Date m_oCreateAfterDate = new Date();
+	public Date m_oCreateAfterDate;
 	public int m_nMinutes = 1;
 	
 	public TradeControlerWait(RateInfo oRateInfo, String strCommandLine)
 	{
 		super(oRateInfo, strCommandLine, TRADE_WAIT);
-		m_nMinutes = getParameterAsInt(TRADE_WAIT);
+		if (StringUtils.isNotBlank(getParameter(TRADE_WAIT)))
+			m_nMinutes = getParameterAsInt(TRADE_WAIT);
+		m_oCreateAfterDate = new Date();
 	}
 	
 	@Override public String getType()
