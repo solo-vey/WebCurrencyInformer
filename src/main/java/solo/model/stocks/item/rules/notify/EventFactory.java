@@ -83,5 +83,11 @@ public class EventFactory extends HasParameters implements IRule
 		if (null != m_oEventBase)
 			m_oEventBase.check(oStateAnalysisResult, nRuleID);
 	}
+	
+	public void remove()
+	{
+		if (null != m_oEventBase)
+			m_oEventBase.remove();
+	}
 }
 

@@ -65,6 +65,10 @@ public class TaskBase extends HasParameters implements IRule
 		WorkerFactory.getMainWorker().addCommand(oSendMessageCommand);
 	}
 	
+	public void remove()
+	{
+	}
+	
 	@Override public boolean equals(Object obj)
 	{
 		if (obj instanceof TaskFactory && ((TaskFactory)obj).m_oTaskBase.equals(this))

@@ -6,6 +6,7 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
@@ -13,6 +14,7 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
@@ -20,6 +22,9 @@ import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.TaskType;
+import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
+import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
@@ -27,6 +32,7 @@ import solo.utils.MathUtils;
 public class TradeControler extends TaskBase implements ITradeControler
 {
 	protected static final double RESET_CRITICAL_PRICE_PERCENT = 0.999;
+	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.98;
 
 	private static final long serialVersionUID = 2548242166461334806L;
 	
@@ -35,7 +41,6 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	protected Integer m_nMaxTrades = 2;
 	protected TradesInfo m_oTradesInfo;
-	protected List<ITradeTask> m_oControlTasks = new LinkedList<ITradeTask>();
 
 	public TradeControler(RateInfo oRateInfo, String strCommandLine)
 	{
@@ -63,7 +68,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public TradesInfo getTradesInfo()
 	{
 		if (null == m_oTradesInfo)
-			m_oTradesInfo = new TradesInfo();
+			m_oTradesInfo = new TradesInfo(m_oRateInfo);
 		return m_oTradesInfo;   
 	}
 	
@@ -73,87 +78,106 @@ public class TradeControler extends TaskBase implements ITradeControler
 				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
 				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true) + 
 				"\r\n";   
-		final List<TaskTrade> aTaskTrades = getTaskTrades();
-		int nTaskRuleID = -1;
-		for(final TaskTrade oTaskTrade : aTaskTrades)
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
-			for(final IRule oRule : getStockExchange().getRules().getRules().values())
-			{
-				if (!(oRule instanceof TaskFactory))
-					continue;
-					
-				final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
-				if (!(oTask instanceof TaskTrade))
-					continue;
-					
-				if (oTask.equals(oTaskTrade))
-					nTaskRuleID = getStockExchange().getRules().getRuleID(oRule);	
-			}
+			int nTaskRuleID = getRuleID(oTaskTrade);
 			
 			String strQuickSell = StringUtils.EMPTY;
 			if (oTaskTrade.getTradeInfo().getTaskSide().equals(OrderSide.SELL))
 			{
-				final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimalRoundedUp(oTaskTrade.getTradeInfo().getCriticalPrice().doubleValue() * RESET_CRITICAL_PRICE_PERCENT, TradeUtils.DEFAULT_PRICE_PRECISION);
+				final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimalRoundedUp(oTaskTrade.getTradeInfo().getCriticalPrice().doubleValue() * RESET_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
 				strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, nTaskRuleID, 
 						SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
-						SetTaskParameterCommand.VALUE_PARAMETER, MathUtils.toCurrencyString(nNewCriticalPrice).replace(",", StringUtils.EMPTY)) + "\r\n";
+						SetTaskParameterCommand.VALUE_PARAMETER, MathUtils.toCurrencyString(nNewCriticalPrice).replace(",", StringUtils.EMPTY));
 			}
 		
-			strInfo += " -> " + (oTaskTrade.getTradeInfo().getOrder().equals(Order.NULL) ?  oTaskTrade.getTradeInfo().getTaskSide() + "/" : StringUtils.EMPTY) + 
-					oTaskTrade.getTradeInfo().getOrder().getInfoShort() +
-					strQuickSell +
-					" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nTaskRuleID, GetTradeInfoCommand.FULL_PARAMETER, true) + "\r\n"; 
+			strInfo += " -> " + oTaskTrade.getInfo(nTaskRuleID).replace("\r\n", "\r\n    ") + strQuickSell + "\r\n"; 
 		}
 
 		return strInfo +  
 				(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
 	}
 	
-	protected List<TaskTrade> getTaskTrades()
+	protected int getRuleID(final IRule oTask)
 	{
-		final List<TaskTrade> aTaskTrades = new LinkedList<TaskTrade>();
 		for(final IRule oRule : getStockExchange().getRules().getRules().values())
 		{
-			if (!(oRule instanceof TaskFactory))
+			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+			if (null != oTradeTask && oTradeTask.equals(oTask))
+				return getStockExchange().getRules().getRuleID(oRule);	
+
+			final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
+			if (null != oTradeControler && oTradeControler.equals(oTask))
+				return getStockExchange().getRules().getRuleID(oRule);	
+		}
+		
+		return -1;
+	}
+	
+	protected List<ITradeTask> getTaskTrades()
+	{
+		final List<ITradeTask> aTaskTrades = new LinkedList<ITradeTask>();
+		for(final IRule oRule : getStockExchange().getRules().getRules().values())
+		{
+			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+			if (null == oTradeTask)
 				continue;
-				
-			final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
-			if (!(oTask instanceof TaskTrade))
-				continue;
-				
-			final TaskTrade oTaskTrade = (TaskTrade)oTask;
-			if (this.equals(oTaskTrade.getTradeControler()))
-				aTaskTrades.add((TaskTrade)oTask);	
+			
+			if (this.equals(oTradeTask.getTradeControler()))
+				aTaskTrades.add(oTradeTask);	
 		}
 		return aTaskTrades;
 	}
 	
 	@Override public void check(final StateAnalysisResult oStateAnalysisResult, final Integer nRuleID)
 	{
-		final List<TaskTrade> aTaskTrades = getTaskTrades();
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		for(final ITradeTask oTaskTrade : aTaskTrades)
+			oTaskTrade.check(oStateAnalysisResult, nRuleID);
+		
+		m_oTradesInfo.updateOrderInfo(aTaskTrades);
+		
 		boolean bIsBuyPrecent = false;
-		for(final TaskTrade oTaskTrade : aTaskTrades)
+		for(final ITradeTask oTaskTrade : aTaskTrades)
 			bIsBuyPrecent |= oTaskTrade.getTradeInfo().getTaskSide().equals(OrderSide.BUY);
 
-		for(final TaskTrade oTaskTrade : aTaskTrades)
+		for(final ITradeTask oTaskTrade : aTaskTrades)
 			checkTrade(oTaskTrade, bIsBuyPrecent, aTaskTrades);
 
 		if (aTaskTrades.size() < m_nMaxTrades && !bIsBuyPrecent)
-			createNewTrade();
+			createNewTrade(oStateAnalysisResult);
+		
+		if (m_oTradesInfo.getFreeVolume().compareTo(BigDecimal.ZERO) > 0)
+			sellFreeVolume(oStateAnalysisResult);
 	}
 	
-	protected void checkTrade(final TaskTrade oTaskTrade, boolean bIsBuyPrecent, List<TaskTrade> aTaskTrades)
+	protected void checkTrade(final ITradeTask oTaskTrade, boolean bIsBuyPrecent, List<ITradeTask> aTaskTrades)
 	{
 	}
 	
-	protected void createNewTrade()
+	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult)
 	{
 		try
 		{
-			final String strRuleInfo = "task" + "_" + m_oRateInfo + 
-					"_" + TaskType.TRADE.toString().toLowerCase() + "_" + m_oTradesInfo.getBuySum();
-			final TaskFactory oTaskTrade = (TaskFactory) RulesFactory.getRule(strRuleInfo);
-			((TaskTrade)oTaskTrade.getTaskBase()).setTradeControler(this);
+			BigDecimal nBuySum = m_oTradesInfo.getBuySum();
+			if (nBuySum.compareTo(m_oTradesInfo.getFreeSum()) > 0)
+				nBuySum = TradeUtils.getRoundedVolume(m_oRateInfo, m_oTradesInfo.getFreeSum());
+				
+			final CurrencyAmount oCurrencyAmount = getStockSource().getUserInfo(m_oRateInfo).getMoney().get(m_oRateInfo.getCurrencyTo());
+			if (null != oCurrencyAmount && oCurrencyAmount.getBalance().compareTo(nBuySum) < 0)
+				nBuySum = oCurrencyAmount.getBalance();
+
+			final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+			final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo).getBidsOrders().get(0).getPrice();
+			final BigDecimal oMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01)); 
+			if (nBuySum.compareTo(oMinTradeSum) < 0)
+				return;
+			
+			final String strRuleInfo = "task" + "_" + m_oRateInfo + "_" + TaskType.TRADE.toString().toLowerCase() + "_" + nBuySum;
+			final TaskFactory oTask = (TaskFactory) RulesFactory.getRule(strRuleInfo);
+			final TaskTrade oTaskTrade = ((TaskTrade)oTask.getTaskBase()); 
+			oTaskTrade.setTradeControler(this);
 			getStockExchange().getRules().addRule(oTaskTrade);
 		}
 		catch(final Exception e) 
@@ -162,10 +186,58 @@ public class TradeControler extends TaskBase implements ITradeControler
 		}
 	}
 	
+	protected void sellFreeVolume(final StateAnalysisResult oStateAnalysisResult)
+	{
+		try
+		{
+			final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+			BigDecimal nSellVolume = m_oTradesInfo.getFreeVolume();
+			if (nSellVolume.compareTo(oMinTradeVolume) < 0)
+				return;
+
+			final CurrencyAmount oCurrencyAmount = getStockSource().getUserInfo(m_oRateInfo).getMoney().get(m_oRateInfo.getCurrencyFrom());
+			if (null == oCurrencyAmount)
+				return;
+			
+			if (oCurrencyAmount.getBalance().compareTo(nSellVolume) < 0)
+				nSellVolume = oCurrencyAmount.getBalance();
+				
+			if (nSellVolume.compareTo(oMinTradeVolume) < 0)
+				return;
+
+			final String strRuleInfo = "task" + "_" + m_oRateInfo + "_" + TaskType.TRADE.toString().toLowerCase() + "_0";
+			final TaskFactory oTask = (TaskFactory) RulesFactory.getRule(strRuleInfo);
+			final TaskTrade oTaskTrade = ((TaskTrade)oTask.getTaskBase()); 
+			oTaskTrade.setTradeControler(this);
+			oTaskTrade.getTradeInfo().setTaskSide(OrderSide.SELL);
+			final ISellStrategy oSellStrategy = StrategyFactory.getSellStrategy(QuickSellStrategy.NAME);
+			final BigDecimal oSellPrice = oSellStrategy.getSellPrice(oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo));
+			oTaskTrade.getTradeInfo().setCriticalPrice(MathUtils.getBigDecimal(oSellPrice.doubleValue() * MIN_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo)));
+			final Order oSellOrder = getStockSource().addOrder(OrderSide.SELL, m_oRateInfo, nSellVolume, oSellPrice);
+			oTaskTrade.getTradeInfo().setOrder(oSellOrder);
+			getStockExchange().getRules().addRule(oTaskTrade);
+
+		}
+		catch(final Exception e) 
+		{
+		}
+	}
+
+	public void remove()
+	{
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		for(final ITradeTask oTaskTrade : aTaskTrades)
+			oTaskTrade.setTradeControler(ITradeControler.NULL);
+	}
+	
 	public void tradeDone(final TaskTrade oTaskTrade)
 	{
 		getTradesInfo().incTradeCount();
-		sendMessage(MessageLevel.TRADERESULT, getType() + " " + m_oRateInfo.toString() + "\r\n" + getTradesInfo().getInfo());
+		int nRuleID = getRuleID(this);
+
+		final String strTradesInfoCommand = CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID);
+		final ICommand oCommand = CommandFactory.getCommand(strTradesInfoCommand);
+		getMainWorker().addCommand(oCommand);
 	}	
 
 	public void buyDone(final TaskTrade oTaskTrade) 
@@ -190,6 +262,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		if (strParameterName.equalsIgnoreCase("tradeSum"))
 			m_oTradesInfo.setSum(MathUtils.fromString(strValue), m_nMaxTrades);
+		
+		if (strParameterName.equalsIgnoreCase("tradeCount"))
+			m_nMaxTrades = Integer.decode(strValue);
 				
 		super.setParameter(strParameterName, strValue);
 	}

@@ -73,7 +73,7 @@ public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
 						continue;
 
 					final BigDecimal oEthBidPrice = getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
-					final BigDecimal oCrossBidPrice = MathUtils.getBigDecimal(oEthUahPrice.doubleValue() / oEthBidPrice.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION);
+					final BigDecimal oCrossBidPrice = MathUtils.getBigDecimal(oEthUahPrice.doubleValue() / oEthBidPrice.doubleValue(), TradeUtils.getVolumePrecision(oRateInfo));
 
 					final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
 					final BigDecimal oSum = oVolume.multiply(oCrossBidPrice);

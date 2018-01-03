@@ -11,26 +11,27 @@ public class StrategyFactory
 	static
 	{
 		addBuyStrategy(new QuickBuyStrategy());
+		addBuyStrategy(new CarefullBuyStrategy());
 		addSellStrategy(new QuickSellStrategy());
 	}
 	
 	static public void addBuyStrategy(final IBuyStrategy oBuyStrategy)
 	{
-		s_oBuyStrategies.put(oBuyStrategy.getName(), oBuyStrategy);
+		s_oBuyStrategies.put(oBuyStrategy.getName().toLowerCase(), oBuyStrategy);
 	}
 	
 	static public void addSellStrategy(final ISellStrategy oSellStrategy)
 	{
-		s_oSellStrategies.put(oSellStrategy.getName(), oSellStrategy);
+		s_oSellStrategies.put(oSellStrategy.getName().toLowerCase(), oSellStrategy);
 	}
 
 	static public IBuyStrategy getBuyStrategy(final String strStrategyName)
 	{
-		return s_oBuyStrategies.get(strStrategyName);
+		return s_oBuyStrategies.get(strStrategyName.toLowerCase());
 	}
 
 	static public ISellStrategy getSellStrategy(final String strStrategyName)
 	{
-		return s_oSellStrategies.get(strStrategyName);
+		return s_oSellStrategies.get(strStrategyName.toLowerCase());
 	}
 }

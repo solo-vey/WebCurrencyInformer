@@ -11,9 +11,6 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
-import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
-import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.utils.MathUtils;
 
 public class TradeInfo extends BaseObject implements Serializable
@@ -29,8 +26,8 @@ public class TradeInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nCriticalPrice;
 	protected BigDecimal m_nCriticalVolume;
 	
-	protected IBuyStrategy m_oBuyStrategy = StrategyFactory.getBuyStrategy(QuickBuyStrategy.NAME);
-	protected ISellStrategy m_oSellStrategy = StrategyFactory.getSellStrategy(QuickSellStrategy.NAME);
+	protected IBuyStrategy m_oBuyStrategy;
+	protected ISellStrategy m_oSellStrategy;
 	protected OrderSide m_oTaskSide = OrderSide.BUY; 
 	
 	protected BigDecimal m_nTradeSum = BigDecimal.ZERO;
@@ -43,6 +40,8 @@ public class TradeInfo extends BaseObject implements Serializable
 	public TradeInfo(final RateInfo oRateInfo)
 	{
 		m_oRateInfo = oRateInfo;
+		m_oBuyStrategy = TradeUtils.getBuyStrategy(m_oRateInfo);
+		m_oSellStrategy = TradeUtils.getSellStrategy(m_oRateInfo);
 	}
 	
 	public BigDecimal getDelta()

@@ -7,6 +7,9 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.ISystemCommand;
+import solo.model.stocks.item.rules.task.trade.ITradeControler;
+import solo.model.stocks.item.rules.task.trade.ITradeTask;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 /** Формат комманды 
  */
@@ -35,6 +38,10 @@ public class CheckRulesCommand extends BaseCommand implements ISystemCommand
 		{
 			final IRule oRule = aRules[nRulePos];
 			final Integer nRuleID = oStockExchange.getRules().getRuleID(oRule);
+			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
+				continue;
+			
 			oRule.check(oStateAnalysisResult, nRuleID);	
 		}
 	}

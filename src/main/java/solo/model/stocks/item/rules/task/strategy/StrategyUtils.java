@@ -21,8 +21,10 @@ public class StrategyUtils
 		if (nDelta.compareTo(BigDecimal.ZERO) < 0)
 			nDelta = nDelta.negate();
 		
-		final BigDecimal nFullCommision = TradeUtils.getCommisionValue(nBidPrice, nAskPrice);
-		return (nDelta.compareTo(nFullCommision) < 0);
+		final BigDecimal nCommision = TradeUtils.getCommisionValue(nBidPrice, nAskPrice);
+		final BigDecimal nMargin = TradeUtils.getMarginValue(nAskPrice);
+		final BigDecimal nMinDelta = nCommision.add(nMargin);
+		return (nDelta.compareTo(nMinDelta) < 0);
 	}
 
 	public static List<Order> removeFakeOrders(List<Order> oOrders, BigDecimal nMinSum, final RateInfo oRateInfo)

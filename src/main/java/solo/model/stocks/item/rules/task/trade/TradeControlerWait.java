@@ -7,8 +7,9 @@ import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.model.stocks.analyse.StateAnalysisResult;
+import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
-import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
 
 public class TradeControlerWait extends TradeControler
@@ -33,7 +34,7 @@ public class TradeControlerWait extends TradeControler
 		return "CONTROLERWAIT";   
 	}
 	
-	@Override protected void checkTrade(final TaskTrade oTaskTrade, boolean bIsBuyPrecent, List<TaskTrade> aTaskTrades)
+	@Override protected void checkTrade(final ITradeTask oTaskTrade, boolean bIsBuyPrecent, List<ITradeTask> aTaskTrades)
 	{
 		if (bIsBuyPrecent || aTaskTrades.size() < m_nMaxTrades)
 			return;
@@ -43,17 +44,26 @@ public class TradeControlerWait extends TradeControler
 	    oCalendar.add(Calendar.MINUTE, -15);
 	    final Date oMaxDateCreate = oCalendar.getTime();			
 
-	    if (null != oTaskTrade.getTradeInfo().getOrder().getCreated() && oTaskTrade.getTradeInfo().getOrder().getCreated().before(oMaxDateCreate))
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+		final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
+	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oMaxDateCreate) && oOrder.getVolume().compareTo(nMinTradeVolume) > 0)
 	    {
 	    	final BigDecimal nCriticalPrice = oTaskTrade.getTradeInfo().getCriticalPrice();
 	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nCriticalPrice.doubleValue() * RESET_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
-	    	oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
-	    	sendMessage(getType() + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
-	    			"Reset critical price " + MathUtils.toCurrencyString(nNewCriticalPrice)); 
+	    	
+			final BigDecimal nAveragedBoughPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice();
+	    	final BigDecimal nMinCriticalPrice = MathUtils.getBigDecimal(nAveragedBoughPrice.doubleValue() * MIN_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
+	    	
+	    	if (nNewCriticalPrice.compareTo(nMinCriticalPrice) > 0)
+	    	{
+	    		oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
+	    		sendMessage(getType() + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
+	    				"Reset critical price " + MathUtils.toCurrencyString(nNewCriticalPrice));
+	    	}
 	    }
 	}
 	
-	protected void createNewTrade()
+	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult)
 	{
 		if (null == m_oCreateAfterDate)
 			setNewCreateAfter();
@@ -61,7 +71,7 @@ public class TradeControlerWait extends TradeControler
 		if (null != m_oCreateAfterDate && m_oCreateAfterDate.after(new Date()))
 			return;
 		
-		super.createNewTrade();
+		super.createNewTrade(oStateAnalysisResult);
 		m_oCreateAfterDate = null;
 	}
 

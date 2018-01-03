@@ -19,7 +19,7 @@ public class BaseStockExchange implements IStockExchange
 {
 	private static final String MESSAGE_LEVEL_PARAMETER = "messageLevel";
 	
-	protected MessageLevel m_oMessageLevel = MessageLevel.TRADERESULT;
+	protected MessageLevel m_oMessageLevel = MessageLevel.DEBUG;
 	
 	final protected String m_strStockName;
 	final protected String m_strStockProperies;

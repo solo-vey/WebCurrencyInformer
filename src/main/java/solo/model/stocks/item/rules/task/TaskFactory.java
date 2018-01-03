@@ -86,6 +86,12 @@ public class TaskFactory extends HasParameters implements IRule
 		return m_oTaskBase;
 	}
 	
+	public void remove()
+	{
+		if (null != m_oTaskBase)
+			m_oTaskBase.remove();
+	}
+	
 	@Override public boolean equals(Object obj)
 	{
 		if (m_oTaskBase.equals(obj))

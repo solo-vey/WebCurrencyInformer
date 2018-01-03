@@ -60,6 +60,10 @@ public class EventBase extends HasParameters implements IRule
 	{
 	}
 	
+	public void remove()
+	{
+	}
+	
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
 		final String strMessage = "Occurred " + getInfo(null) + "/" + MathUtils.toCurrencyString(nPrice) + 

@@ -41,6 +41,11 @@ public class Rules
 	
 	public void removeRule(final Integer nRuleID)
 	{
+		final IRule oRule = m_oRules.get(nRuleID);
+		if (null == oRule)
+			return;
+		
+		oRule.remove();
 		m_oRules.remove(nRuleID);
 		save();
 	}

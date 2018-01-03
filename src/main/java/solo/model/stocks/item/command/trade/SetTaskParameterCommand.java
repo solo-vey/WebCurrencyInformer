@@ -4,9 +4,11 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.base.HasParameters;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
-import solo.model.stocks.item.rules.task.TaskFactory;
+import solo.model.stocks.item.rules.task.trade.ITradeTask;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
@@ -43,9 +45,10 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 			return;
 		}
 
-		if (oRule instanceof TaskFactory)
+		final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+		if (null != oTradeTask && oTradeTask instanceof HasParameters)
 		{
-			((TaskFactory)oRule).getTaskBase().setParameter(m_strName, m_strValue);
+			((HasParameters)oTradeTask).setParameter(m_strName, m_strValue);
 			sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
 					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nRuleID));
 		}

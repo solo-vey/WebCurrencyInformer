@@ -7,7 +7,6 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
-import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
@@ -17,10 +16,8 @@ import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
-import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
-import ua.lz.ep.utils.ResourceUtils;
 
 public class TaskTrade extends TaskBase implements ITradeTask
 {
@@ -69,10 +66,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	
 	public String getInfo(final Integer nRuleID)
 	{
+		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 
+				CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + " " : StringUtils.EMPTY);
 		return getType() + "/" + (m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
 					m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
-					CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) +   
-					" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
+					strGetRateCommand +   
+					CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
 					(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
 	}
 
@@ -130,6 +129,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (oGetOrder.isCanceled())
 			return oGetOrder;
 		
+		m_oTradeInfo.setOrder(oGetOrder);
 		if (oGetOrder.getSide().equals(OrderSide.BUY))
 		{
 			if (oGetOrder.isDone())
@@ -225,10 +225,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (oGetOrder.isCanceled() || oGetOrder.isDone())
 			return;
 
-		final String strMarket = m_oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + m_oRateInfo.getCurrencyTo().toString().toLowerCase(); 
-		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		final String strMinVolume = ResourceUtils.getResource("stock." + strMarket + ".min_volume", oStockExchange.getStockProperties(), "0.000001");
-		final BigDecimal nMinTradeVolume = MathUtils.getBigDecimal(Double.parseDouble(strMinVolume), TradeUtils.getVolumePrecision(m_oRateInfo));
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
 		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0)
 			return;
 
@@ -366,6 +363,13 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		if (strParameterName.equalsIgnoreCase("criticalPrice"))
 			m_oTradeInfo.setCriticalPrice(MathUtils.fromString(strValue));
+
+		if (strParameterName.equalsIgnoreCase("attachOrder") && m_oTradeInfo.getOrder().isNull())
+		{
+			final Order oGetOrder = getStockSource().getOrder(strValue, m_oRateInfo);
+			if (!oGetOrder.isNull() && !oGetOrder.isError() && !oGetOrder.isCanceled())
+				m_oTradeInfo.setOrder(oGetOrder);
+		}
 				
 		super.setParameter(strParameterName, strValue);
 	}

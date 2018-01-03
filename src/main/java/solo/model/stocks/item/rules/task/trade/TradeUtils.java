@@ -11,6 +11,11 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
+import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
+import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
@@ -57,7 +62,7 @@ public class TradeUtils
 	{
 		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".price.precision", oStockExchange.getStockProperties(), 0);
+		return ResourceUtils.getIntFromResource("stock." + strMarket + ".price.precision", oStockExchange.getStockProperties(), DEFAULT_PRICE_PRECISION);
 	}
 	
 	public static int getVolumePrecision(final RateInfo oRateInfo)
@@ -95,6 +100,31 @@ public class TradeUtils
 	{
 		return MathUtils.getBigDecimal(nVolume.doubleValue(), getVolumePrecision(oRateInfo));
 	}
+
+	public static BigDecimal getMinTradeVolume(final RateInfo oRateInfo)
+	{
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strMinVolume = ResourceUtils.getResource("stock." + strMarket + ".min_volume", oStockExchange.getStockProperties(), "0.000001");
+		final BigDecimal nMinTradeVolume = MathUtils.getBigDecimal(Double.parseDouble(strMinVolume), TradeUtils.getVolumePrecision(oRateInfo));
+		return nMinTradeVolume;
+	}
+
+	public static IBuyStrategy getBuyStrategy(final RateInfo oRateInfo)
+	{
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strBuyStrategy = ResourceUtils.getResource("stock." + strMarket + ".buy_strategy", oStockExchange.getStockProperties(), QuickBuyStrategy.NAME);
+		return StrategyFactory.getBuyStrategy(strBuyStrategy);
+	}
+
+	public static ISellStrategy getSellStrategy(final RateInfo oRateInfo)
+	{
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strSellStrategy = ResourceUtils.getResource("stock." + strMarket + ".sell_strategy", oStockExchange.getStockProperties(), QuickSellStrategy.NAME);
+		return StrategyFactory.getSellStrategy(strSellStrategy);
+	}
 	
 	public static List<Order> getMyOrders()
 	{
@@ -102,20 +132,43 @@ public class TradeUtils
 		final Rules oStockRules = WorkerFactory.getMainWorker().getStockExchange().getRules();
 		for(final IRule oRule : oStockRules.getRules().values())
 		{
-			if (!(oRule instanceof TaskFactory))
-				continue;
-					
-			final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
-			if (!(oTask instanceof ITradeTask))
+			final ITradeTask oTradeTask = getRuleAsTradeTask(oRule);
+			if (null == oTradeTask)
 				continue;
 			
-			final Order oOrder = ((ITradeTask)oTask).getTradeInfo().getOrder();
+			final Order oOrder = oTradeTask.getTradeInfo().getOrder();
 			if (!oOrder.isNull())
 				oMyOrders.add(oOrder);
 		}
 		
 		return oMyOrders;
 	}
+	
+	public static ITradeTask getRuleAsTradeTask(final IRule oRule)
+	{
+		if (oRule instanceof ITradeTask)
+			return (ITradeTask)oRule;
 
+		if (!(oRule instanceof TaskFactory))
+			return null;
+			
+		final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
+		if (oTask instanceof ITradeTask)
+			return (ITradeTask)oTask;
+		
+		return null;
+	}
+	
+	public static ITradeControler getRuleAsTradeControler(final IRule oRule)
+	{
+		if (!(oRule instanceof TaskFactory))
+			return null;
+			
+		final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
+		if (oTask instanceof ITradeControler)
+			return (ITradeControler)oTask;
+		
+		return null;
+	}
 }
 

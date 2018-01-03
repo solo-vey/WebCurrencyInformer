@@ -35,7 +35,7 @@ public class CommandHistory
 		final String strFullCommand = CommandFactory.getCommandName(oCommand.getClass()) + 
 			(StringUtils.isNotBlank(strCommandLine) ? "_" + strCommandLine.replace(" ", "_") : StringUtils.EMPTY);
 		m_oHistory.remove(strFullCommand);
-		if (m_oHistory.size() > 200)
+		while (m_oHistory.size() > 50)
 			m_oHistory.remove(0);
 		
 		m_oHistory.add(strFullCommand);
