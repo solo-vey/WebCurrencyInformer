@@ -22,8 +22,8 @@ public class WorkerFactory
 	
 	static public void start()
 	{
-//		(new MainWorker(Stocks.Kuna)).startWorker();
-//		(new MainWorker(Stocks.BtcTrade)).startWorker();
+		(new MainWorker(Stocks.Kuna)).startWorker();
+		(new MainWorker(Stocks.BtcTrade)).startWorker();
 		(new MainWorker(Stocks.Exmo)).startWorker();
 		
 		s_oRootWorker.run();
