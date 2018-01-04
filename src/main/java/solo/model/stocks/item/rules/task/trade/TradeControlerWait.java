@@ -63,7 +63,7 @@ public class TradeControlerWait extends TradeControler
 	    }
 	}
 	
-	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult)
+	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult, List<ITradeTask> aTaskTrades)
 	{
 		if (null == m_oCreateAfterDate)
 			setNewCreateAfter();
@@ -71,7 +71,7 @@ public class TradeControlerWait extends TradeControler
 		if (null != m_oCreateAfterDate && m_oCreateAfterDate.after(new Date()))
 			return;
 		
-		super.createNewTrade(oStateAnalysisResult);
+		super.createNewTrade(oStateAnalysisResult, aTaskTrades);
 		m_oCreateAfterDate = null;
 	}
 

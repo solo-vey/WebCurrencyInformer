@@ -23,6 +23,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	protected BigDecimal m_nSum = BigDecimal.ZERO;
 	protected BigDecimal m_nLockedSum = BigDecimal.ZERO;
+	protected BigDecimal m_nSumToSell = BigDecimal.ZERO;
 	protected BigDecimal m_nVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nLockedVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nBuySum = BigDecimal.ZERO;
@@ -81,6 +82,11 @@ public class TradesInfo extends BaseObject implements Serializable
 	public BigDecimal getFreeSum()
 	{
 		return m_nSum.add(m_nLockedSum.negate());
+	}
+	
+	public BigDecimal getSumToSell()
+	{
+		return m_nSumToSell;
 	}
 	
 	public void setSum(final BigDecimal nSum, final Integer nMaxTrades)
@@ -171,6 +177,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	{
 		m_nLockedSum = BigDecimal.ZERO;
 		m_nLockedVolume = BigDecimal.ZERO;
+		m_nSumToSell = BigDecimal.ZERO;
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
 			final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
@@ -181,16 +188,21 @@ public class TradesInfo extends BaseObject implements Serializable
 				m_nLockedSum = m_nLockedSum.add(oOrder.getSum());
 
 			if (oOrder.getSide().equals(OrderSide.SELL))
+			{
 				m_nLockedVolume = m_nLockedVolume.add(oOrder.getVolume());
+				m_nSumToSell = m_nSumToSell.add(oOrder.getSum());
+			}
 		}
 	}
 	
 	public String getInfo()
 	{
+		final BigDecimal nReceiveAndSellSum = getReceivedSum().add(getSumToSell());
+		final BigDecimal nDelta = nReceiveAndSellSum.add(getSpendSum().negate());
 		return  m_oRateInfo.toString() + "\r\n" +
 				"Count: " + getTradeCount() + "\r\n" + 
-				"Money: " + MathUtils.toCurrencyString(getSum()) + "/" + MathUtils.toCurrencyString(getLockedSum()) + "/" + MathUtils.toCurrencyString(getFreeSum()) + "\r\n" + 
+				"Money: " + MathUtils.toCurrencyString(getSum()) + "/" + MathUtils.toCurrencyString(getLockedSum()) + "/" + MathUtils.toCurrencyString(getFreeSum()) + "/" + MathUtils.toCurrencyString(getSumToSell()) + "\r\n" + 
 				"Volume:" + MathUtils.toCurrencyStringEx(getVolume()) + "/" + MathUtils.toCurrencyStringEx(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx(getFreeVolume()) + "\r\n" + 
-				"Trades: " + MathUtils.toCurrencyString(getReceivedSum()) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(getDelta());
+				"Trades: " + MathUtils.toCurrencyString(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(nDelta);
 	}
 }

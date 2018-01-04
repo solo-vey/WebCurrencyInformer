@@ -7,6 +7,7 @@ import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.HasParameters;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.CommonUtils;
@@ -46,11 +47,19 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 		}
 
 		final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+		final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
 		if (null != oTradeTask && oTradeTask instanceof HasParameters)
 		{
 			((HasParameters)oTradeTask).setParameter(m_strName, m_strValue);
 			sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
-					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nRuleID));
+					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
+		}
+		else
+		if (null != oTradeControler && oTradeControler instanceof HasParameters)
+		{
+			((HasParameters)oTradeControler).setParameter(m_strName, m_strValue);
+			sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
+					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
 		}
 		else
 			sendMessage(oRule.getInfo(m_nRuleID));

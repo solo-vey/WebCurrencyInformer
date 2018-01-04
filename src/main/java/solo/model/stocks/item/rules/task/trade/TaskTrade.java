@@ -349,6 +349,11 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		getStockExchange().getRules().removeRule(this);
 	}
 	
+	public void remove()
+	{
+		setTradeControler(ITradeControler.NULL);
+	}
+	
 	@Override public ITradeControler getTradeControler()
 	{
 		return m_oTradeInfo.getTradeControler();
