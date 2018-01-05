@@ -181,7 +181,7 @@ public class TradesInfo extends BaseObject implements Serializable
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
 			final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
-			if (oOrder.isNull() || oOrder.isError() || oOrder.isCanceled())
+			if (oOrder.isNull() || oOrder.isError() || oOrder.isCanceled() || oOrder.isDone())
 				continue;
 			
 			if (oOrder.getSide().equals(OrderSide.BUY))
@@ -199,8 +199,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	{
 		final BigDecimal nReceiveAndSellSum = getReceivedSum().add(getSumToSell());
 		final BigDecimal nDelta = nReceiveAndSellSum.add(getSpendSum().negate());
-		return  m_oRateInfo.toString() + "\r\n" +
-				"Count: " + getTradeCount() + "\r\n" + 
+		return  "Count: " + getTradeCount() + "\r\n" + 
 				"Money: " + MathUtils.toCurrencyString(getSum()) + "/" + MathUtils.toCurrencyString(getLockedSum()) + "/" + MathUtils.toCurrencyString(getFreeSum()) + "/" + MathUtils.toCurrencyString(getSumToSell()) + "\r\n" + 
 				"Volume:" + MathUtils.toCurrencyStringEx(getVolume()) + "/" + MathUtils.toCurrencyStringEx(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx(getFreeVolume()) + "\r\n" + 
 				"Trades: " + MathUtils.toCurrencyString(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(nDelta);

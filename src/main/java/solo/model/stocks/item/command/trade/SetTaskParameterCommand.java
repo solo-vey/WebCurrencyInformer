@@ -5,7 +5,6 @@ import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.HasParameters;
-import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;

@@ -37,8 +37,14 @@ public class ExmoStockSource extends BaseStockSource
 		
 		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
 		registerRate(new RateInfo(Currency.ETH, Currency.RUB));
-		registerRate(new RateInfo(Currency.ETH, Currency.USD));
-		registerRate(new RateInfo(Currency.ETH, Currency.EUR));
+//		registerRate(new RateInfo(Currency.ETH, Currency.USD));
+//		registerRate(new RateInfo(Currency.ETH, Currency.EUR));
+
+		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
+		
+		registerRate(new RateInfo(Currency.WAVES, Currency.RUB));
+
+		registerRate(new RateInfo(Currency.USD, Currency.RUB));
 	}
 	
 	@SuppressWarnings("unchecked")
