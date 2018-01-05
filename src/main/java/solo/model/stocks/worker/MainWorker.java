@@ -6,6 +6,7 @@ import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandHistory;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.transport.ITransport;
+import solo.transport.MessageLevel;
 import solo.transport.TransportFactory;
 import solo.utils.CommonUtils;
 
@@ -56,6 +57,9 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	protected void onException(final Exception e)
 	{
 		super.onException(e);
+		
+		if (getStockExchange().getMessageLevel().isLevelHigh(MessageLevel.DEBUG))
+			return;
 		
 		try
 		{

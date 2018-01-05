@@ -20,6 +20,8 @@ import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.TaskType;
+import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
@@ -27,7 +29,7 @@ import solo.utils.MathUtils;
 public class TradeControler extends TaskBase implements ITradeControler
 {
 	protected static final double RESET_CRITICAL_PRICE_PERCENT = 0.999;
-	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.98;
+	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.99;
 
 	private static final long serialVersionUID = 2548242166461334806L;
 	
@@ -36,6 +38,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	protected Integer m_nMaxTrades = 2;
 	protected TradesInfo m_oTradesInfo;
+	protected IBuyStrategy m_oBuyStrategy = null;
 
 	public TradeControler(RateInfo oRateInfo, String strCommandLine)
 	{
@@ -53,6 +56,19 @@ public class TradeControler extends TaskBase implements ITradeControler
 		m_nMaxTrades = (m_nMaxTrades.equals(Integer.MIN_VALUE) ? 2 : m_nMaxTrades);
 		final BigDecimal nTradeSum = getParameterAsBigDecimal(TRADE_SUM);
 		getTradesInfo().setSum(nTradeSum, m_nMaxTrades);
+	}
+	
+	public String getFullInfo()
+	{ 
+		String strInfo = m_oRateInfo.toString().toUpperCase();
+		strInfo += " / buyStrategy [" + (null != getBuyStrategy() ? getBuyStrategy().getName() : "Default") + "]";
+		strInfo += " / tradeCount [" + m_nMaxTrades + "]\r\n";
+		return getTradesInfo().getInfo() + "\r\n" + strInfo;
+	}
+	
+	public IBuyStrategy getBuyStrategy()
+	{
+		return m_oBuyStrategy;
 	}
 	
 	@Override public String getType()
@@ -181,6 +197,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 				final BigDecimal nNeedSellVolume = m_oTradesInfo.getFreeVolume();
 				oTaskTrade.getTradeInfo().addBuy(BigDecimal.ZERO, nNeedSellVolume);
 			}
+			if (null != getBuyStrategy())
+				oTaskTrade.getTradeInfo().setBuyStrategy(getBuyStrategy());
 			
 			oTaskTrade.setTradeControler(this);
 			getStockExchange().getRules().addRule(oTaskTrade);
@@ -233,6 +251,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 		
 		if (strParameterName.equalsIgnoreCase("tradeCount"))
 			m_nMaxTrades = Integer.decode(strValue);
+		
+		if (strParameterName.equalsIgnoreCase("buyStrategy"))
+			m_oBuyStrategy = StrategyFactory.getBuyStrategy(strValue);
 				
 		super.setParameter(strParameterName, strValue);
 	}

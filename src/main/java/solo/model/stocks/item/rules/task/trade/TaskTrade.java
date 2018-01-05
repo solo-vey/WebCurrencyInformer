@@ -232,7 +232,13 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		String strMessage = StringUtils.EMPTY; 
 		final Order oRemoveOrder = getStockSource().removeOrder(oGetOrder.getId());
 		if (oRemoveOrder.isNull() || oRemoveOrder.isError())
+		{
+			final Order oCheckRemoveOrder = getStockSource().getOrder(oGetOrder.getId(), m_oRateInfo);
+			if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled() || oCheckRemoveOrder.isError())
+				return;
+
 			sendMessage(MessageLevel.ERROR, "Cannot delete order\r\n" + oGetOrder.getInfoShort() + "\r\n" + oRemoveOrder.getInfoShort());
+		}
 		
 		strMessage += "- " + oGetOrder.getInfoShort() + "\r\n"; 
 		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oNewPrice) : oGetOrder.getVolume());

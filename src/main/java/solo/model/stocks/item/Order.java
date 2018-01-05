@@ -172,7 +172,8 @@ public class Order extends BaseObject implements Serializable
 	public String getInfoShort()
 	{
 		if (isNull())
-			return "Null order" + (StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY);
+			return "Null order" + (StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY)
+			 	+ (StringUtils.isNotBlank(getState()) ? ". State [" + getState() + "]" : StringUtils.EMPTY);
 		
 		return getSide() + "/" + MathUtils.toCurrencyString(getPrice()) + 
 			"/" + MathUtils.toCurrencyStringEx(getVolume()) + "/" + MathUtils.toCurrencyString(getSum()) +

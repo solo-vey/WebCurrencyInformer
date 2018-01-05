@@ -2,6 +2,8 @@ package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.currency.Currency;
 import solo.model.stocks.item.RateInfo;
 
@@ -9,6 +11,7 @@ public interface ITradeControler
 {
 	final static ITradeControler NULL = new NullTradeControler();
 	
+	String getFullInfo();
 	TradesInfo getTradesInfo();
 	void tradeDone(final TaskTrade oTaskTrade);
 	void buyDone(final TaskTrade oTaskTrade);
@@ -18,6 +21,7 @@ public interface ITradeControler
 
 class NullTradeControler implements ITradeControler
 {
+	public String getFullInfo() { return StringUtils.EMPTY; }
 	public TradesInfo getTradesInfo() { return new TradesInfo(new RateInfo(Currency.UAH, Currency.UAH)); };
 	public void tradeDone(final TaskTrade oTaskTrade) {}
 	public void buyDone(final TaskTrade oTaskTrade) {}

@@ -19,7 +19,7 @@ public class TradeControlerWait extends TradeControler
 	final static public String TRADE_WAIT = "#wait#";
 	
 	public Date m_oCreateAfterDate;
-	public int m_nMinutes = 1;
+	public int m_nMinutes = 5;
 	
 	public TradeControlerWait(RateInfo oRateInfo, String strCommandLine)
 	{
@@ -32,6 +32,13 @@ public class TradeControlerWait extends TradeControler
 	@Override public String getType()
 	{
 		return "CONTROLERWAIT";   
+	}
+	
+	@Override public String getFullInfo()
+	{ 
+		String strInfo = super.getFullInfo();
+		strInfo += " / wait [" + m_nMinutes + "]";
+		return strInfo;
 	}
 	
 	@Override protected void checkTrade(final ITradeTask oTaskTrade, boolean bIsBuyPrecent, List<ITradeTask> aTaskTrades)
@@ -66,7 +73,7 @@ public class TradeControlerWait extends TradeControler
 	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult, List<ITradeTask> aTaskTrades)
 	{
 		if (null == m_oCreateAfterDate)
-			setNewCreateAfter();
+			setNewCreateAfter(oStateAnalysisResult, aTaskTrades);
 		
 		if (null != m_oCreateAfterDate && m_oCreateAfterDate.after(new Date()))
 			return;
@@ -77,14 +84,23 @@ public class TradeControlerWait extends TradeControler
 
 	public void buyDone(final TaskTrade oTaskTrade) 
 	{
-		setNewCreateAfter();			
+		m_oCreateAfterDate = null;			
 	}
 
-	public void setNewCreateAfter() 
+	public void setNewCreateAfter(final StateAnalysisResult oStateAnalysisResult, List<ITradeTask> aTaskTrades) 
 	{
 		final Calendar oCalendar = Calendar.getInstance();
 	    oCalendar.setTime(new Date());
-	    oCalendar.add(Calendar.MINUTE, m_nMinutes);
+	    if (aTaskTrades.size() > 0)
+	    	oCalendar.add(Calendar.MINUTE, m_nMinutes);
 	    m_oCreateAfterDate = oCalendar.getTime();			
+	}
+	
+	@Override public void setParameter(final String strParameterName, final String strValue)
+	{
+		if (strParameterName.equalsIgnoreCase("wait"))
+			m_nMinutes = Integer.decode(strValue);
+				
+		super.setParameter(strParameterName, strValue);
 	}
 }

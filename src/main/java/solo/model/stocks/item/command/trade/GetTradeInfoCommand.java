@@ -44,16 +44,17 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 		final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
 		if (null != oTradeTask)
 		{
-			sendMessage(oTradeTask.getTradeInfo().getInfo());
 			if (m_bIsFull)
 				sendMessage(oTradeTask.getTradeInfo().toString());
+
+			sendMessage(oTradeTask.getTradeInfo().getInfo());
 		}
 		else
 		if (null != oTradeControler)
 		{
-			sendMessage(oTradeControler.getTradesInfo().getInfo());
 			if (m_bIsFull)
 				sendMessage(oTradeControler.getTradesInfo().toString());
+			sendMessage(oTradeControler.getFullInfo());
 		}
 		else
 			sendMessage(oRule.getInfo(m_nRuleID));
