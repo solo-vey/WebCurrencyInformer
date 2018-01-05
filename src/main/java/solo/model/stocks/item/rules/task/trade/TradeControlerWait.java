@@ -9,6 +9,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.utils.MathUtils;
 
@@ -89,9 +90,13 @@ public class TradeControlerWait extends TradeControler
 
 	public void setNewCreateAfter(final StateAnalysisResult oStateAnalysisResult, List<ITradeTask> aTaskTrades) 
 	{
+		boolean bIsSellPrecent = false;
+		for(final ITradeTask oTaskTrade : aTaskTrades)
+			bIsSellPrecent |= oTaskTrade.getTradeInfo().getTaskSide().equals(OrderSide.SELL);
+		
 		final Calendar oCalendar = Calendar.getInstance();
 	    oCalendar.setTime(new Date());
-	    if (aTaskTrades.size() > 0)
+	    if (bIsSellPrecent)
 	    	oCalendar.add(Calendar.MINUTE, m_nMinutes);
 	    m_oCreateAfterDate = oCalendar.getTime();			
 	}
