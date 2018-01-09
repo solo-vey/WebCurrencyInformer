@@ -5,6 +5,7 @@ import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandHistory;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.item.command.base.LastErrors;
 import solo.transport.ITransport;
 import solo.transport.MessageLevel;
 import solo.transport.TransportFactory;
@@ -15,6 +16,7 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	final protected StockWorker m_oStockWorker; 
 	final protected TransportWorker m_oTransportWorker; 
 	final protected CommandHistory m_oHistory; 
+	final protected LastErrors m_oLastErrors = new LastErrors();
 
 	public MainWorker(final Stocks oStock)
 	{
@@ -54,17 +56,21 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		return m_oHistory;
 	}
 	
-	protected void onException(final Exception e)
+	public LastErrors getLastErrors()
+	{
+		return m_oLastErrors;
+	}
+	
+	public void onException(final Exception e)
 	{
 		super.onException(e);
-		
-		if (getStockExchange().getMessageLevel().isLevelHigh(MessageLevel.DEBUG))
-			return;
 		
 		try
 		{
 			final String strMessage = CommonUtils.getExceptionMessage(e.getCause());			
-			m_oTransportWorker.getTransport().sendMessage("Exception : " + strMessage);
+			if (MessageLevel.DEBUG.isLevelHigh(getStockExchange().getMessageLevel()))
+				m_oTransportWorker.getTransport().sendMessage("Exception : " + strMessage);
+			m_oLastErrors.addError(strMessage);
 		}
 		catch (Exception eSend)
 		{

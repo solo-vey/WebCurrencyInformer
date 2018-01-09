@@ -173,6 +173,9 @@ abstract public class HasParameters extends BaseObject
 	
 	public void sendMessage(final MessageLevel oLevel, final String strMessage)
 	{
+		if (oLevel.equals(MessageLevel.ERROR))
+			getMainWorker().getLastErrors().addError(strMessage);
+			
 		if (oLevel.isLevelHigh(getStockExchange().getMessageLevel()))
 			sendMessage(strMessage);
 	}

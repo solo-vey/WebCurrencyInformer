@@ -1,10 +1,22 @@
 package solo.transport.telegram;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.methods.CloseableHttpResponse;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.entity.ContentType;
+import org.apache.http.entity.mime.MultipartEntityBuilder;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClients;
 
+import solo.CurrencyInformer;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessages;
 import solo.utils.RequestUtils;
@@ -46,6 +58,11 @@ public class TelegramTransport implements ITransport
 		return getApiUrl().replace("METHOD_NAME", "sendMessage");
 	}
 	
+	protected String getSendPhotoUrl()
+	{
+		return getApiUrl().replace("METHOD_NAME", "sendPhoto");
+	}
+	
 	protected String getUpdatesUrl()
 	{
 		return getApiUrl().replace("METHOD_NAME", "getUpdates");
@@ -61,6 +78,41 @@ public class TelegramTransport implements ITransport
 		aParameters.put("text", strText);
 		return RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true);
 	}
+	
+    
+	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
+    { 
+    	  MultipartEntityBuilder builder = MultipartEntityBuilder.create(); 
+    	  builder.addTextBody("chat_id", m_strUserID, ContentType.TEXT_PLAIN); 
+    	  builder.addBinaryBody("photo", oPhoto, ContentType.APPLICATION_OCTET_STREAM, oPhoto.getName()); 
+    	  if (null != strCaption) 
+    		  builder.addTextBody("caption", strCaption, ContentType.TEXT_PLAIN);
+    	  
+    	  uploadFileRequest(getSendPhotoUrl(), builder, false);
+  	 } 
+    
+    private String uploadFileRequest(String url, MultipartEntityBuilder builder, Boolean returnAllJson) throws Exception
+    { 
+    	CloseableHttpClient httpClient = HttpClients.createDefault(); 
+    	HttpPost uploadFile = new HttpPost(url);
+
+    	final String strProxyHost = ResourceUtils.getResource("proxy.host", CurrencyInformer.PROPERTIES_FILE_NAME);
+		final int nProxyPort = ResourceUtils.getIntFromResource("proxy.port", CurrencyInformer.PROPERTIES_FILE_NAME, 0);
+		
+		RequestConfig requestConfig = RequestConfig.custom()
+	    		.setProxy(new HttpHost(strProxyHost, nProxyPort))
+	    		.build();
+		uploadFile.setConfig(requestConfig);		
+    	  
+    	HttpEntity multipart = builder.build(); 
+    	 
+    	uploadFile.setEntity(multipart); 
+    	 
+    	CloseableHttpResponse postResponse = httpClient.execute(uploadFile); 
+    	HttpEntity responseEntity = postResponse.getEntity(); 
+    	   
+    	return IOUtils.toString(responseEntity.getContent());
+    }
 
 	@Override
 	public ITransportMessages getMessages() throws Exception
@@ -79,7 +131,7 @@ public class TelegramTransport implements ITransport
 		m_nNextMessageID = Integer.parseInt(strLastMessageID) + 1;
 		return oMessages;
 	}
-	
+
 	public Integer getTimeOut()
 	{
 		return (null == m_nNextMessageID ? 0 : m_nGetUpdatesTimeout); 

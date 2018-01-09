@@ -29,7 +29,7 @@ import solo.utils.MathUtils;
 public class TradeControler extends TaskBase implements ITradeControler
 {
 	protected static final double RESET_CRITICAL_PRICE_PERCENT = 0.999;
-	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.99;
+	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.995;
 
 	private static final long serialVersionUID = 2548242166461334806L;
 	

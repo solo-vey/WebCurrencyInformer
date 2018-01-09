@@ -20,7 +20,7 @@ public class TradeControlerWait extends TradeControler
 	final static public String TRADE_WAIT = "#wait#";
 	
 	public Date m_oCreateAfterDate;
-	public int m_nMinutes = 5;
+	public int m_nMinutes = 2;
 	
 	public TradeControlerWait(RateInfo oRateInfo, String strCommandLine)
 	{

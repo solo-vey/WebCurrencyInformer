@@ -7,12 +7,12 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.StockRateStates;
+import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 
 public interface IStockSource
 {
-	StockRateStates getStockRates() throws Exception;
+	RateState getRateState(RateInfo oRateInfo) throws Exception;
 	IStockExchange getStockExchange();
 	List<RateInfo> getRates();
 	Order getOrder(String strOrderId, final RateInfo oRateInfo);

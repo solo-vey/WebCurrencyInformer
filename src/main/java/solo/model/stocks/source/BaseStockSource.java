@@ -3,7 +3,6 @@ package solo.model.stocks.source;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
-
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
@@ -11,7 +10,6 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
-import solo.model.stocks.item.StockRateStates;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.utils.MathUtils;
@@ -51,18 +49,7 @@ public class BaseStockSource implements IStockSource
 		return m_oStockExchange;
 	}
 	
-	public StockRateStates getStockRates() throws Exception
-	{
-		final StockRateStates oStockRateStates = new StockRateStates();
-		for(final RateInfo oRateInfo : m_aRates)
-		{
-			final RateState oRateState = getRateState(oRateInfo);
-			oStockRateStates.addRate(oRateState);
-		}
-		return oStockRateStates;
-	}
-	
-	protected RateState getRateState(RateInfo oRateInfo) throws Exception
+	public RateState getRateState(RateInfo oRateInfo) throws Exception
 	{
 		return new RateState(oRateInfo);
 	}

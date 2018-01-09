@@ -41,7 +41,7 @@ public class KunaStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected RateState getRateState(final RateInfo oRateInfo) throws Exception
+	public RateState getRateState(final RateInfo oRateInfo) throws Exception
 	{
 		final RateState oRateState = super.getRateState(oRateInfo);
 		
