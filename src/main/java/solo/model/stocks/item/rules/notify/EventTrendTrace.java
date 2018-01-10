@@ -43,7 +43,7 @@ public class EventTrendTrace extends EventBase
 		final JapanCandle oLastCandle = m_oHistory.get(m_oHistory.size() - 1);
 		return getType() + "/" + m_oRateInfo + "/" + 
 			MathUtils.toCurrencyString(getMinPrice()) + "-" + MathUtils.toCurrencyString(getMaxPrice()) + "\r\n" +
-			oLastCandle.getType() + "/" + MathUtils.toCurrencyString(oLastCandle.getStart()) + "/" + MathUtils.toCurrencyString(oLastCandle.getMax()) + 
+			oLastCandle.getCandleType() + "/" + MathUtils.toCurrencyString(oLastCandle.getStart()) + "/" + MathUtils.toCurrencyString(oLastCandle.getMax()) + 
 			"/" + MathUtils.toCurrencyString(oLastCandle.getMin()) + "/" + MathUtils.toCurrencyString(oLastCandle.getEnd()) +
 			(null != nRuleID ? " /removeRule_" + nRuleID : StringUtils.EMPTY);   
 	}

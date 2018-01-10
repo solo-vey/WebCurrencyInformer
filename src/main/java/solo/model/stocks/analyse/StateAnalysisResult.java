@@ -22,8 +22,6 @@ public class StateAnalysisResult extends BaseObject
 	
 	public StateAnalysisResult(final StockRateStates oStockRateStates, final IStockExchange oStockExchange) throws Exception
 	{
-		System.err.printf(Thread.currentThread().getName() +  " Analyse rates\r\n");
-
 		final MainWorker oMainWorker = WorkerFactory.getMainWorker();
 		final List<RateInfo> oRates = oStockExchange.getStockSource().getRates();
 		final ExecutorService oThreadPool = Executors.newFixedThreadPool(oRates.size());
@@ -43,8 +41,6 @@ public class StateAnalysisResult extends BaseObject
 		{
 			WorkerFactory.getMainWorker().onException(e);
 		}
-
-		System.err.printf(Thread.currentThread().getName() +  " Analyse rates complete\r\n");
 	}
 	
 	public Set<RateInfo> getRates()
@@ -82,7 +78,6 @@ class AnalyseRateThread implements Runnable
 			final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(m_oStockRateStates, m_oRateInfo, oStockExchange);
 			m_oRatesAnalysisResult.put(m_oRateInfo, oRateAnalysisResult);
 			oStockExchange.getStockCandlestick().addRateInfo(m_oRateInfo, oRateAnalysisResult);
-			System.err.printf(Thread.currentThread().getName() +  " Analyse rate " + m_oRateInfo + "\r\n");
 		}
 		catch (final Exception e)
 		{

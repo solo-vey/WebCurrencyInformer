@@ -229,9 +229,10 @@ public class ExmoStockSource extends BaseStockSource
 			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
 				put("order_id", strOrderId);
 			}});
+			
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
-				return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
+				return new Order(strOrderId, Order.CANCEL, oOrderData.get("error").toString());
 
 			final Order oOrder = convert2Order(oOrderData);
 			oOrder.setState(Order.DONE);
@@ -248,7 +249,9 @@ public class ExmoStockSource extends BaseStockSource
 	{
 		try
 		{
-			checkOrderParameters(oSide, oRateInfo, nPrice);
+	        System.out.println("Add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice);
+
+	        checkOrderParameters(oSide, oRateInfo, nPrice);
 			
 			super.addOrder(oSide, oRateInfo, nVolume, nPrice);
 			
@@ -265,13 +268,18 @@ public class ExmoStockSource extends BaseStockSource
 			{
 				final String strOrderId = oOrderData.get("order_id").toString(); 
 				final Order oOrder = getOrder(strOrderId, oRateInfo);
+
+				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
 				return oOrder;
 			}
 			
-			return new Order(Order.ERROR, oOrderData.get("error").toString());
+			final String strError = (oOrderData.containsKey("error") ? oOrderData.get("error").toString() : "Unknown");
+	        System.err.println("Can't add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice + "\r\n Error : " + strError);
+			return new Order(Order.ERROR, strError);
 		}
 		catch(final Exception e)
 		{
+	        System.err.println("Can't add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice + "\r\n Exception : " + e.getMessage());
 			return new Order(Order.ERROR, e.getMessage());
 		}
 	}
@@ -280,6 +288,8 @@ public class ExmoStockSource extends BaseStockSource
 	@Override public Order removeOrder(final String strOrderId)
 	{
 		super.removeOrder(strOrderId);
+		
+        System.out.println("Remove order: " + strOrderId);
 		
 		try
 		{
@@ -291,12 +301,15 @@ public class ExmoStockSource extends BaseStockSource
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "true".equals(oOrderData.get("result").toString()))
 				return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
-			
-			return new Order(Order.ERROR, oOrderData.get("error").toString());
+
+			final String strError = (oOrderData.containsKey("error") ? oOrderData.get("error").toString() : "Unknown");
+	        System.err.println("Can't remove order: " + strOrderId + "\r\n Error : " + strError);
+			return new Order(Order.ERROR, strError);
 		}
 		catch(final Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+	        System.err.println("Can't remove order: " + strOrderId);
+			return new Order(Order.ERROR, e.getMessage() + "\r\n Exception : " + e.getMessage());
 		}
 	}
 }

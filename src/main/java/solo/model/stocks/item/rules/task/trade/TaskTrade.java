@@ -1,8 +1,6 @@
 package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
-import java.util.List;
-
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
@@ -10,7 +8,6 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
@@ -177,15 +174,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	protected Order createBuyOrder(BigDecimal oBuyPrice)
 	{
 		final BigDecimal oVolume = calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oBuyPrice);
-		Order oBuyOrder = getStockSource().addOrder(OrderSide.BUY, m_oRateInfo, oVolume, oBuyPrice);
-		if (oBuyOrder.isNull() || oBuyOrder.isError())
-		{
-			sendMessage(MessageLevel.ERROR, "Cannot create " + oBuyOrder.getInfo());
-			final Order oLookOrder = lookForOrder(OrderSide.BUY, oVolume, oBuyPrice);
-			if (oLookOrder.isNull())
-				return Order.NULL;
-			oBuyOrder = oLookOrder;
-		}
+		final Order oBuyOrder = addOrder(OrderSide.BUY, oVolume, oBuyPrice);
+		if (oBuyOrder.isNull())
+			return oBuyOrder;
 		
 		m_oTradeInfo.setNeedBoughtVolume(oBuyOrder.getVolume());
 		m_oTradeInfo.setTradeSum(oBuyOrder.getSum());
@@ -201,14 +192,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final BigDecimal oSellOrderPrice = m_oTradeInfo.trimSellPrice(oSellPrice); 
 		BigDecimal oSellOrderVolume = m_oTradeInfo.getNeedSellVolume(); 
 		oSellOrderVolume = TradeUtils.getRoundedVolume(m_oRateInfo, oSellOrderVolume); 
-		Order oSellOrder = getStockSource().addOrder(OrderSide.SELL, m_oRateInfo, oSellOrderVolume, oSellOrderPrice);
-		if (oSellOrder.isNull() || oSellOrder.isError())
-		{
-			final Order oLookOrder = lookForOrder(OrderSide.SELL, oSellOrderVolume, oSellOrderPrice);
-			if (oLookOrder.isNull())
-				return Order.NULL;
-			oSellOrder = oLookOrder;
-		}
+		Order oSellOrder = addOrder(OrderSide.SELL, oSellOrderVolume, oSellOrderPrice);
+		if (oSellOrder.isNull())
+			return oSellOrder;
 
 		sendMessage(MessageLevel.DEBUG, "Create " + oSellOrder.getInfo() + "/" + m_oTradeInfo.getCriticalPriceString());
 		m_oTradeInfo.addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + m_oTradeInfo.getCriticalPriceString());
@@ -229,61 +215,72 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0)
 			return;
 
-		String strMessage = StringUtils.EMPTY; 
-		final Order oRemoveOrder = getStockSource().removeOrder(oGetOrder.getId());
-		if (oRemoveOrder.isNull() || oRemoveOrder.isError())
+		final Order oRemoveOrder = removeOrder(oGetOrder);
+		if (oRemoveOrder.isDone())
 		{
-			final Order oCheckRemoveOrder = getStockSource().getOrder(oGetOrder.getId(), m_oRateInfo);
-			if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled() || oCheckRemoveOrder.isError())
-				return;
-
-			sendMessage(MessageLevel.ERROR, "Cannot delete order\r\n" + oGetOrder.getInfoShort() + "\r\n" + oRemoveOrder.getInfoShort());
+			getStockExchange().getRules().save();
+			return;
 		}
 		
-		strMessage += "- " + oGetOrder.getInfoShort() + "\r\n"; 
 		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oNewPrice) : oGetOrder.getVolume());
-		Order oAddOrder = getStockSource().addOrder(oGetOrder.getSide(), m_oRateInfo, oNewVolume, oNewPrice);
-		if (oAddOrder.isNull() || oAddOrder.isError())
-		{
-			final Order oLookOrder = lookForOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
-			if (oLookOrder.isNull())
-			{
-				sendMessage(MessageLevel.ERROR, "Cannot recreate order\r\n" + oGetOrder.getSide() + "/" + MathUtils.toCurrencyStringEx(oNewVolume) + "/" + MathUtils.toCurrencyString(oNewPrice) + "\r\n" + oAddOrder.getInfoShort());
-				m_oTradeInfo.setOrder(Order.NULL);
-				return;
-			}
-			oAddOrder = oLookOrder;
-		}
-
+		final Order oAddOrder = addOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
 		m_oTradeInfo.setOrder(oAddOrder);
+		
 		if (oGetOrder.getSide().equals(OrderSide.BUY))
 		{
 			m_oTradeInfo.setNeedBoughtVolume(oAddOrder.getVolume());
 			m_oTradeInfo.setTradeSum(oAddOrder.getSum().add(m_oTradeInfo.getSpendSum()));
 		}
-
-		strMessage += "+ " + oAddOrder.getInfo();
-		
 		getStockExchange().getRules().save();
+
+		final String strMessage = "- " + oGetOrder.getInfoShort() + "\r\n+ " + oAddOrder.getInfo();
 		sendMessage(MessageLevel.TRACE, strMessage);
 
 		final String strHistory = oGetOrder.getSide() + " " + (oGetOrder.getPrice().compareTo(oNewPrice) < 0 ? "^ " : "v ") + MathUtils.toCurrencyString(oNewPrice) + "/" + MathUtils.toCurrencyStringEx(oNewVolume);
 		m_oTradeInfo.addToHistory(strHistory);
 	}
 
-	protected Order lookForOrder(OrderSide oSide, BigDecimal oVolume, BigDecimal oPrice)
+	protected Order removeOrder(final Order oGetOrder)
 	{
-		final StockUserInfo oUserInfo = getStockSource().getUserInfo(m_oRateInfo);
-		final List<Order> oOrders = oUserInfo.getOrders(m_oRateInfo);
-		for(final Order oOrder : oOrders)
+		int nTryCount = 5;
+		final String strMessage = "Cannot delete order\r\n" + oGetOrder.getInfoShort();
+		Order oRemoveOrder = new Order(Order.ERROR, strMessage);
+		while (nTryCount > 0)
 		{
-			final BigDecimal oVolumeOnePersent = oVolume.divide(new BigDecimal(100));
-			if (oOrder.getPrice().compareTo(oPrice) == 0 && oOrder.getSide().equals(oSide) && 
-					oVolume.add(oOrder.getVolume().negate()).compareTo(oVolumeOnePersent) < 0)
-				return oOrder;
+			oRemoveOrder = getStockSource().removeOrder(oGetOrder.getId());
+			if (oRemoveOrder.isCanceled())
+				return oRemoveOrder;
+
+			final Order oCheckRemoveOrder = getStockSource().getOrder(oGetOrder.getId(), m_oRateInfo);
+			if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled())
+				return oCheckRemoveOrder;
+			
+			try { Thread.sleep(100); }
+			catch (InterruptedException e) { break; }
+			nTryCount--;
+		}
+
+		sendMessage(MessageLevel.ERROR, strMessage);
+		return oRemoveOrder;
+	}
+
+	protected Order addOrder(final OrderSide oOrderSide, final BigDecimal oVolume, final BigDecimal oPrice)
+	{
+		int nTryCount = 5;
+		Order oAddOrder = Order.NULL;
+		while (nTryCount > 0)
+		{
+			oAddOrder = getStockSource().addOrder(oOrderSide, m_oRateInfo, oVolume, oPrice);
+			if (!oAddOrder.isError())
+				return oAddOrder;
+			
+			try { Thread.sleep(100); }
+			catch (InterruptedException e) { break; }
+			nTryCount--;
 		}
 		
-		return Order.NULL;
+		sendMessage(MessageLevel.ERROR, "Can't create order\r\n" + oOrderSide + "/" + MathUtils.toCurrencyStringEx(oVolume) + "/" + MathUtils.toCurrencyString(oPrice) + "\r\n" + oAddOrder.getInfoShort());
+		return oAddOrder;
 	}
 	
 	protected BigDecimal calculateOrderVolume(final BigDecimal nTradeVolume, final BigDecimal nPrice)

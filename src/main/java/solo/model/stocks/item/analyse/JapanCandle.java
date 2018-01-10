@@ -54,8 +54,8 @@ public class JapanCandle extends BaseObject implements Serializable
 			m_nMax = nValue;
 	}
 	
-	public String getType()
+	public CandleType getCandleType()
 	{
-		return (m_nStart.compareTo(m_nEnd) > 0 ? "v" : m_nStart.compareTo(m_nEnd) < 0 ? "^" : "-");  
+		return (m_nEnd.compareTo(m_nStart) > 0 ? CandleType.GROW : (m_nEnd.compareTo(m_nStart) < 0 ? CandleType.FALL : CandleType.NONE));
 	}
 }

@@ -52,8 +52,6 @@ public class LoadRateInfoCommand extends BaseCommand implements ISystemCommand
 	
 	public StockRateStates loadStockRates(final IStockExchange oStockExchange) throws Exception
 	{
-		System.err.printf(Thread.currentThread().getName() +  " Load rates \r\n");
-		
 		final StockRateStates oStockRateStates = new StockRateStates();
 
 		final MainWorker oMainWorker = WorkerFactory.getMainWorker();
@@ -77,8 +75,6 @@ public class LoadRateInfoCommand extends BaseCommand implements ISystemCommand
 			WorkerFactory.getMainWorker().onException(e);
 		}
 		
-		System.err.printf(Thread.currentThread().getName() +  " Load rates complete \r\n");
-
 		return oStockRateStates;
 	}
 }
@@ -105,8 +101,6 @@ class LoadRateThread implements Runnable
 			final IStockSource oStockSource = oStockExchange.getStockSource();
 			final RateState oRateState = oStockSource.getRateState(m_oRateInfo);
 			m_oStockRateStates.addRate(oRateState);
-			System.err.printf(Thread.currentThread().getName() +  " Load rate " + m_oRateInfo + "\r\n");
-			
 		}
 		catch (final Exception e)
 		{
