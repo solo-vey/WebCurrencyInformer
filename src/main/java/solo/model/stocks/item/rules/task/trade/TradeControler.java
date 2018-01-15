@@ -16,7 +16,6 @@ import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
-import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.TaskType;
@@ -28,8 +27,7 @@ import solo.utils.MathUtils;
 
 public class TradeControler extends TaskBase implements ITradeControler
 {
-	protected static final double RESET_CRITICAL_PRICE_PERCENT = 0.999;
-	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.995;
+	protected static final double MIN_CRITICAL_PRICE_PERCENT = 0.998;
 
 	private static final long serialVersionUID = 2548242166461334806L;
 	
@@ -93,17 +91,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
 			int nTaskRuleID = getRuleID(oTaskTrade);
-			
-			String strQuickSell = StringUtils.EMPTY;
-			if (oTaskTrade.getTradeInfo().getTaskSide().equals(OrderSide.SELL))
-			{
-				final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimalRoundedUp(oTaskTrade.getTradeInfo().getCriticalPrice().doubleValue() * RESET_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
-				strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, nTaskRuleID, 
-						SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
-						SetTaskParameterCommand.VALUE_PARAMETER, MathUtils.toCurrencyString(nNewCriticalPrice).replace(",", StringUtils.EMPTY));
-			}
-		
-			strInfo += " -> " + oTaskTrade.getInfo(nTaskRuleID).replace("\r\n", "\r\n    ") + strQuickSell + "\r\n"; 
+			strInfo += " -> " + oTaskTrade.getInfo(nTaskRuleID).replace("\r\n", "\r\n    ") + "\r\n"; 
 		}
 
 		return strInfo +  

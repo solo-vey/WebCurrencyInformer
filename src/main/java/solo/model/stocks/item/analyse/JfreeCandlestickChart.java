@@ -29,9 +29,6 @@ public class JfreeCandlestickChart extends JPanel
 {
 	public static JFreeChart createChart(String chartTitle, List<JapanCandle> oHistory) 
 	{
-		/**
-		 * Creating candlestick subplot
-		 */
 		// Create OHLCSeriesCollection as a price dataset for candlestick chart
 		OHLCSeriesCollection candlestickDataset = new OHLCSeriesCollection();
 		OHLCSeries ohlcSeries = new OHLCSeries("Price");
@@ -48,9 +45,6 @@ public class JfreeCandlestickChart extends JPanel
 		XYPlot candlestickSubplot = new XYPlot(candlestickDataset, null, priceAxis, candlestickRenderer);
 		candlestickSubplot.setBackgroundPaint(Color.white);
 
-		/**
-		 * Creating volume subplot
-		 */
 		// creates TimeSeriesCollection as a volume dataset for volume chart
 /*		TimeSeriesCollection volumeDataset = new TimeSeriesCollection();
 		TimeSeries volumeSeries = new TimeSeries("Volume");
@@ -69,17 +63,13 @@ public class JfreeCandlestickChart extends JPanel
 		XYPlot volumeSubplot = new XYPlot(volumeDataset, null, volumeAxis, timeRenderer);
 		volumeSubplot.setBackgroundPaint(Color.white);*/
 
-		/**
-		 * Create chart main plot with two subplots (candlestickSubplot,
-		 * volumeSubplot) and one common dateAxis
-		 */
 		// Creating charts common dateAxis
 		DateAxis dateAxis = new DateAxis("Time");
 		dateAxis.setDateFormatOverride(new SimpleDateFormat("kk:mm"));
 		// reduce the default left/right margin from 0.05 to 0.02
 		dateAxis.setLowerMargin(0.02);
 		dateAxis.setUpperMargin(0.02);
-		// Create mainPlot
+
 		CombinedDomainXYPlot mainPlot = new CombinedDomainXYPlot(dateAxis);
 		mainPlot.setGap(10.0);
 		mainPlot.add(candlestickSubplot, 3);

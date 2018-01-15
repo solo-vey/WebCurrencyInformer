@@ -2,6 +2,8 @@ package solo.model.stocks.worker;
 
 import java.util.Date;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.CommandQueue;
@@ -54,9 +56,16 @@ public class BaseWorker extends Thread implements IWorker
 		}
 	}
 	
+	protected void onException(final String strMessage, final Exception e)
+	{
+		System.err.printf(Thread.currentThread().getName() + 
+				(StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
+				" Thread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
+	}
+	
 	protected void onException(final Exception e)
 	{
-		System.err.printf(Thread.currentThread().getName() +  " Thread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
+		onException(StringUtils.EMPTY, e);
 	}
 	
 	protected void doWork() throws Exception

@@ -54,7 +54,7 @@ public class BaseStockSource implements IStockSource
 		return new RateState(oRateInfo);
 	}
 	
-	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo)
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		return new StockUserInfo();
 	}

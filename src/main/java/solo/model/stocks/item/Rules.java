@@ -11,6 +11,7 @@ import java.util.Map.Entry;
 
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.worker.WorkerFactory;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class Rules
@@ -87,7 +88,7 @@ public class Rules
 		} 
 		catch (IOException e) 
 		{
-			System.err.printf("Save rules exception : " + e.getMessage());
+			WorkerFactory.getMainWorker().onException("Save rules exception", e);
 		}			
 	}
 
@@ -107,7 +108,7 @@ public class Rules
 		} 
 		catch (final Exception e) 
 		{
-			System.err.printf("Load rules exception : " + e.getMessage() + "\r\n");
+			WorkerFactory.getMainWorker().onException("Load rules exception", e);
 	    }			
 	}
 

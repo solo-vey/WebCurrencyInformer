@@ -14,14 +14,15 @@ import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
-import org.apache.http.client.HttpClient;
+import org.apache.http.client.config.RequestConfig;
+import org.apache.http.client.config.RequestConfig.Builder;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
-import org.apache.http.conn.params.ConnRoutePNames;
 import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -36,6 +37,7 @@ import ua.lz.ep.utils.ResourceUtils;
 @SuppressWarnings("deprecation")
 public class RequestUtils
 {
+	public final static int DEFAULT_TEMEOUT = 5;
     /** The Constant s_oLogger. */
     final static Logger s_oLogger = LoggerFactory.getLogger(RequestUtils.class);
 	
@@ -45,9 +47,9 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static String sendGet(final String strURL, final Boolean bIsUseProxy) throws Exception
+	public static String sendGet(final String strURL, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
-		return sendGet(strURL, new HashMap<String, String>(), bIsUseProxy);
+		return sendGet(strURL, new HashMap<String, String>(), bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -56,10 +58,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static String sendGet(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	public static String sendGet(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpGet oGet = makeGetQuery(strURL, aParameters);
-		return sendRequestAndReturnText(oGet, bIsUseProxy);
+		return sendRequestAndReturnText(oGet, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -68,9 +70,9 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static Map<String, Object> sendGetAndReturnMap(final String strURL, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendGetAndReturnMap(final String strURL, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
-		return sendGetAndReturnMap(strURL, new HashMap<String, String>(), bIsUseProxy);
+		return sendGetAndReturnMap(strURL, new HashMap<String, String>(), bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -79,10 +81,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, Object> sendGetAndReturnMap(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendGetAndReturnMap(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpGet oGet = makeGetQuery(strURL, aParameters);
-		return sendRequestAndReturnMap(oGet, bIsUseProxy);
+		return sendRequestAndReturnMap(oGet, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -91,9 +93,9 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static List<Object> sendGetAndReturnList(final String strURL, final Boolean bIsUseProxy) throws Exception
+	public static List<Object> sendGetAndReturnList(final String strURL, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
-		return sendGetAndReturnList(strURL, new HashMap<String, String>(), bIsUseProxy);
+		return sendGetAndReturnList(strURL, new HashMap<String, String>(), bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -102,10 +104,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static List<Object> sendGetAndReturnList(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	public static List<Object> sendGetAndReturnList(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpGet oGet = makeGetQuery(strURL, aParameters);
-		return sendRequestAndReturnList(oGet, bIsUseProxy);
+		return sendRequestAndReturnList(oGet, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -114,9 +116,9 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static <T extends Object> T sendGetAndReturnObject(final String strURL, final Boolean bIsUseProxy, final Class<T> oClass) throws Exception
+	public static <T extends Object> T sendGetAndReturnObject(final String strURL, final Boolean bIsUseProxy, final Class<T> oClass, final int nTimeOut) throws Exception
 	{
-		return sendGetAndReturnObject(strURL, new HashMap<String, String>(), bIsUseProxy, oClass);
+		return sendGetAndReturnObject(strURL, new HashMap<String, String>(), bIsUseProxy, oClass, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -125,10 +127,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static <T extends Object> T sendGetAndReturnObject(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final Class<T> oClass) throws Exception
+	public static <T extends Object> T sendGetAndReturnObject(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final Class<T> oClass, final int nTimeOut) throws Exception
 	{
 		final HttpGet oGet = makeGetQuery(strURL, aParameters);
-		return sendRequestAndReturnObject(oGet, bIsUseProxy, oClass);
+		return sendRequestAndReturnObject(oGet, bIsUseProxy, oClass, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -137,10 +139,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, aParameters, null);
-		return sendRequestAndReturnText(oPost, bIsUseProxy);
+		return sendRequestAndReturnText(oPost, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -149,10 +151,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	public static String sendPost(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, aParameters, aHeaders);
-		return sendRequestAndReturnText(oPost, bIsUseProxy);
+		return sendRequestAndReturnText(oPost, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -162,10 +164,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде строки 
 	 * @throws Exception */
-	public static String sendPost(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	public static String sendPost(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, strJsonParameters, aHeaders);
-		return sendRequestAndReturnText(oPost, bIsUseProxy);
+		return sendRequestAndReturnText(oPost, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -174,10 +176,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, aParameters, aHeaders);
-		return sendRequestAndReturnMap(oPost, bIsUseProxy);
+		return sendRequestAndReturnMap(oPost, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -186,10 +188,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendPostAndReturnJson(final String strURL, final Map<String, String> aParameters, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, aParameters, null);
-		return sendRequestAndReturnMap(oPost, bIsUseProxy);
+		return sendRequestAndReturnMap(oPost, bIsUseProxy, nTimeOut);
 	}
 	
 	/** Отправдяеи post запрос по указанному адресу
@@ -199,10 +201,10 @@ public class RequestUtils
 	 * @param bIsUseProxy Использовать прокси при выполнении запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static Map<String, Object> sendPostAndReturnJson(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy) throws Exception
+	public static Map<String, Object> sendPostAndReturnJson(final String strURL, String strJsonParameters, final Map<String, String> aHeaders, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final HttpPost oPost = makePostQuery(strURL, strJsonParameters, aHeaders);
-		return sendRequestAndReturnMap(oPost, bIsUseProxy);
+		return sendRequestAndReturnMap(oPost, bIsUseProxy, nTimeOut);
 	}
 
 	/** Формирование запроса на основании указанных параметров 
@@ -258,16 +260,16 @@ public class RequestUtils
 	 * @param oPost Запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	protected static Map<String, Object> sendRequestAndReturnMap(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
+	protected static Map<String, Object> sendRequestAndReturnMap(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		try
 		{	
-			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy);
+			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy, nTimeOut);
 			return JsonUtils.json2Map(strJson);
 		}
 		catch (final Exception e)
 		{
-            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -276,16 +278,16 @@ public class RequestUtils
 	 * @param oPost Запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	protected static List<Object> sendRequestAndReturnList(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
+	protected static List<Object> sendRequestAndReturnList(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		try
 		{	
-			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy);
+			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy, nTimeOut);
 			return JsonUtils.json2List(strJson);
 		}
 		catch (final Exception e)
 		{
-            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -294,16 +296,16 @@ public class RequestUtils
 	 * @param oPost Запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	protected static <T extends Object> T sendRequestAndReturnObject(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final Class<T> oClass) throws Exception
+	protected static <T extends Object> T sendRequestAndReturnObject(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final Class<T> oClass, final int nTimeOut) throws Exception
 	{
 		try
 		{	
-			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy);
+			final String strJson = sendRequestAndReturnText(oHttpUriRequest, bIsUseProxy, nTimeOut);
 			return JsonUtils.fromJson(strJson, oClass);
 		}
 		catch (final Exception e)
 		{
-            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -312,7 +314,7 @@ public class RequestUtils
 	 * @param oPost Запроса
 	 * @return Ответ сервера в виде json 
 	 * @throws Exception */
-	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy) throws Exception
+	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
 		int nTryCount = ResourceUtils.getIntFromResource("stock.request.try_count", oStockExchange.getStockProperties(), 1);
@@ -321,8 +323,8 @@ public class RequestUtils
 		{	
 			while (true)
 			{
-				final HttpClient oClient = new DefaultHttpClient();
-				setProxy(oClient, bIsUseProxy);
+				final RequestConfig oConfig = getConfig(nTimeOut, bIsUseProxy);
+				final CloseableHttpClient oClient = HttpClientBuilder.create().setDefaultRequestConfig(oConfig).build();	
 				final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
 				if (null == oResponse)
 					return null;
@@ -349,25 +351,29 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-            s_oLogger.error("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
 	
-	/** Устанавливаем прокси если нужно 
-	 * @param bIsUseProxy Использовать прокси при выполнении запроса */
-	public static void setProxy(final  HttpClient oClient, final Boolean bIsUseProxy)
+	public static RequestConfig getConfig(final int nTimeOut, final Boolean bIsUseProxy)
 	{
-		if (!bIsUseProxy)
-			return;
+		Builder oConfigBuilder = RequestConfig.custom()
+			.setConnectTimeout(nTimeOut * 1000)
+			.setConnectionRequestTimeout(nTimeOut * 1000)
+			.setSocketTimeout(nTimeOut * 1000);
 		
+		if (!bIsUseProxy)
+			return oConfigBuilder.build();
+
 		final String strProxyHost = ResourceUtils.getResource("proxy.host", CurrencyInformer.PROPERTIES_FILE_NAME);
 		final int nProxyPort = ResourceUtils.getIntFromResource("proxy.port", CurrencyInformer.PROPERTIES_FILE_NAME, 0);
 		
 		if (StringUtils.isBlank(strProxyHost) || 0 == nProxyPort)
-			return;
-		
+			return oConfigBuilder.build();
+
 		final HttpHost oProxy = new HttpHost(strProxyHost, nProxyPort);
-		oClient.getParams().setParameter(ConnRoutePNames.DEFAULT_PROXY, oProxy);
+		oConfigBuilder = oConfigBuilder.setProxy(oProxy); 
+		return oConfigBuilder.build();
 	}
 }

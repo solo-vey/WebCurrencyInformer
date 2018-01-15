@@ -2,6 +2,9 @@ package solo.model.stocks.item.rules.task.trade;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -165,7 +168,8 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	protected void addToHistory(final String strMessage)
 	{
-		m_strHistory += strMessage + "\r\n";
+		final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
+		m_strHistory += oDateFormat.format(new Date()) + " " + strMessage + "\r\n";
 	}
 	
 	protected void clearHistory()

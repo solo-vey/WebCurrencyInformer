@@ -12,6 +12,7 @@ import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
+import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
@@ -51,6 +52,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		m_oTradeInfo.setTradeSum(getParameterAsBigDecimal(TRADE_VOLUME));
 		m_oTradeInfo.setTaskSide(OrderSide.BUY);
+		getStockExchange().getRules().save();
 	}
 	
 	public void sendMessage(final String strMessage)
@@ -65,9 +67,19 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 
 				CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + " " : StringUtils.EMPTY);
+
+		String strQuickSell = StringUtils.EMPTY;
+		if (getTradeInfo().getTaskSide().equals(OrderSide.SELL))
+		{
+			final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimalRoundedUp(getTradeInfo().getCriticalPrice().doubleValue() * TradeControler.MIN_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
+			strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, nRuleID, 
+					SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
+					SetTaskParameterCommand.VALUE_PARAMETER, MathUtils.toCurrencyString(nNewCriticalPrice).replace(",", StringUtils.EMPTY)) + "\r\n";
+		}
+		
 		return getType() + "/" + (m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
 					m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
-					strGetRateCommand +   
+					strGetRateCommand + strQuickSell + 
 					CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
 					(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
 	}
@@ -85,6 +97,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				return;
 			
 			m_oTradeInfo.setOrder(createBuyOrder(oBuyPrice));
+			getStockExchange().getRules().save();
 			return;
 		}
 
@@ -95,17 +108,18 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				return;
 			
 			m_oTradeInfo.setOrder(createSellOrder(oSellPrice));
+			getStockExchange().getRules().save();
 			return;
 		}
 		
-		if (oGetOrder.getSide().equals(OrderSide.BUY))
+		if (OrderSide.BUY.equals(oGetOrder.getSide()))
 		{
 			final BigDecimal oBuyPrice = m_oTradeInfo.getBuyStrategy().getBuyPrice(oRateAnalysisResult);
 			setNewOrderPrice(oBuyPrice, oGetOrder);
 			return;
 		}
 
-		if (oGetOrder.getSide().equals(OrderSide.SELL))
+		if (OrderSide.SELL.equals(oGetOrder.getSide()))
 		{
 			BigDecimal oSellPrice = m_oTradeInfo.getSellStrategy().getSellPrice(oRateAnalysisResult);
 			oSellPrice = m_oTradeInfo.trimSellPrice(oSellPrice);
@@ -148,6 +162,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				m_oTradeInfo.addBuy(nDeltaSpendSum, TradeUtils.getWithoutCommision(nDeltaBoughtVolume));
 				m_oTradeInfo.setNeedBoughtVolume(oGetOrder.getVolume());
 			}
+			getStockExchange().getRules().save();
 			return oGetOrder;
 		}
 
@@ -165,6 +180,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				final BigDecimal nDeltaSellSum = nDeltaSellVolume.multiply(oGetOrder.getPrice());
 				m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nDeltaSellVolume);
 			}
+			getStockExchange().getRules().save();
 			return oGetOrder;
 		}
 		
@@ -182,8 +198,6 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		m_oTradeInfo.setTradeSum(oBuyOrder.getSum());
 		sendMessage(MessageLevel.DEBUG, "Create " + oBuyOrder.getInfo());
 		m_oTradeInfo.addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyString(oBuyOrder.getPrice()));
-		getStockExchange().getRules().save();
-		
 		return oBuyOrder;
 	}
 
@@ -198,8 +212,6 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		sendMessage(MessageLevel.DEBUG, "Create " + oSellOrder.getInfo() + "/" + m_oTradeInfo.getCriticalPriceString());
 		m_oTradeInfo.addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + m_oTradeInfo.getCriticalPriceString());
-		getStockExchange().getRules().save();
-		
 		return oSellOrder;
 	}
 	
@@ -218,6 +230,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final Order oRemoveOrder = removeOrder(oGetOrder);
 		if (oRemoveOrder.isDone())
 		{
+			m_oTradeInfo.setOrder(oRemoveOrder);
 			getStockExchange().getRules().save();
 			return;
 		}
@@ -231,18 +244,18 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			m_oTradeInfo.setNeedBoughtVolume(oAddOrder.getVolume());
 			m_oTradeInfo.setTradeSum(oAddOrder.getSum().add(m_oTradeInfo.getSpendSum()));
 		}
-		getStockExchange().getRules().save();
 
 		final String strMessage = "- " + oGetOrder.getInfoShort() + "\r\n+ " + oAddOrder.getInfo();
 		sendMessage(MessageLevel.TRACE, strMessage);
 
 		final String strHistory = oGetOrder.getSide() + " " + (oGetOrder.getPrice().compareTo(oNewPrice) < 0 ? "^ " : "v ") + MathUtils.toCurrencyString(oNewPrice) + "/" + MathUtils.toCurrencyStringEx(oNewVolume);
 		m_oTradeInfo.addToHistory(strHistory);
+		getStockExchange().getRules().save();
 	}
 
 	protected Order removeOrder(final Order oGetOrder)
 	{
-		int nTryCount = 5;
+		int nTryCount = 50;
 		final String strMessage = "Cannot delete order\r\n" + oGetOrder.getInfoShort();
 		Order oRemoveOrder = new Order(Order.ERROR, strMessage);
 		while (nTryCount > 0)
@@ -251,9 +264,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			if (oRemoveOrder.isCanceled())
 				return oRemoveOrder;
 
-			final Order oCheckRemoveOrder = getStockSource().getOrder(oGetOrder.getId(), m_oRateInfo);
-			if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled())
-				return oCheckRemoveOrder;
+			if (!oRemoveOrder.isException())
+			{
+				final Order oCheckRemoveOrder = getStockSource().getOrder(oGetOrder.getId(), m_oRateInfo);
+				if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled())
+					return oCheckRemoveOrder;
+			}
 			
 			try { Thread.sleep(100); }
 			catch (InterruptedException e) { break; }
@@ -266,12 +282,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 	protected Order addOrder(final OrderSide oOrderSide, final BigDecimal oVolume, final BigDecimal oPrice)
 	{
-		int nTryCount = 5;
+		int nTryCount = 50;
 		Order oAddOrder = Order.NULL;
 		while (nTryCount > 0)
 		{
 			oAddOrder = getStockSource().addOrder(oOrderSide, m_oRateInfo, oVolume, oPrice);
-			if (!oAddOrder.isError())
+			if (!oAddOrder.isException())
 				return oAddOrder;
 			
 			try { Thread.sleep(100); }
@@ -307,8 +323,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 				return;
 			}
 			
-			sendMessage(MessageLevel.ERROR, "Order " + oOrder.getState());
-			m_oTradeInfo.addToHistory("Order " + oOrder.getState());
+			sendMessage(MessageLevel.ERROR, "Order cancel. " + oOrder.getInfoShort());
+			m_oTradeInfo.addToHistory("Order cancel. " + oOrder.getInfoShort());
 			
 			supertaskDone(oOrder);
 			return;
@@ -341,6 +357,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		m_oTradeInfo.setOrder(Order.NULL);
 		m_oTradeInfo.setTaskSide(OrderSide.SELL);
+		getStockExchange().getRules().save();
 	}
 
 	protected void supertaskDone(final Order oOrder)
@@ -376,7 +393,10 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		{
 			final Order oGetOrder = getStockSource().getOrder(strValue, m_oRateInfo);
 			if (!oGetOrder.isNull() && !oGetOrder.isError() && !oGetOrder.isCanceled())
+			{
 				m_oTradeInfo.setOrder(oGetOrder);
+				getStockExchange().getRules().save();
+			}
 		}
 				
 		super.setParameter(strParameterName, strValue);

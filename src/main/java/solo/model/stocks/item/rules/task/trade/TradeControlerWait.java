@@ -6,11 +6,15 @@ import java.util.Date;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.analyse.Candlestick;
+import solo.model.stocks.item.analyse.CandlestickType;
+import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.utils.MathUtils;
 
 public class TradeControlerWait extends TradeControler
@@ -47,36 +51,39 @@ public class TradeControlerWait extends TradeControler
 		if (bIsBuyPrecent || aTaskTrades.size() < m_nMaxTrades)
 			return;
 		
-		final Calendar oCalendar = Calendar.getInstance();
-	    oCalendar.setTime(new Date());
-	    oCalendar.add(Calendar.MINUTE, -15);
-	    final Date oMaxDateCreate = oCalendar.getTime();			
-
 		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
 		final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
-	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oMaxDateCreate) && oOrder.getVolume().compareTo(nMinTradeVolume) > 0)
-	    {
-	    	final BigDecimal nCriticalPrice = oTaskTrade.getTradeInfo().getCriticalPrice();
-	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nCriticalPrice.doubleValue() * RESET_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
-	    	
-			final BigDecimal nAveragedBoughPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice();
-	    	final BigDecimal nMinCriticalPrice = MathUtils.getBigDecimal(nAveragedBoughPrice.doubleValue() * MIN_CRITICAL_PRICE_PERCENT, TradeUtils.getPricePrecision(m_oRateInfo));
-	    	
-	    	if (nNewCriticalPrice.compareTo(nMinCriticalPrice) > 0)
-	    	{
-	    		oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
-	    		sendMessage(getType() + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
-	    				"Reset critical price " + MathUtils.toCurrencyString(nNewCriticalPrice));
-	    	}
-	    }
+	    if (oOrder.getVolume().compareTo(nMinTradeVolume) < 0)
+	    	return;
+	    
+		final Date oMaxDateCreate = DateUtils.addMinutes(new Date(), -15); 
+	    if (null == oOrder.getCreated() || oOrder.getCreated().after(oMaxDateCreate))
+	    	return;
+		
+		final StockCandlestick oStockCandlestick = getStockExchange().getStockCandlestick();
+		final Candlestick oCandlestick = oStockCandlestick.get(m_oRateInfo);
+		final CandlestickType oCandlestickType = oCandlestick.getType();
+		if (!oCandlestickType.isCalm())
+			return;
+	    
+    	final BigDecimal nNewCriticalPrice = oCandlestick.getAverageMaxPrice(3);
+		final BigDecimal nAveragedBoughPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice();
+    	final BigDecimal nMinCriticalPrice = MathUtils.getBigDecimal(nAveragedBoughPrice.doubleValue() * 0.998, TradeUtils.getPricePrecision(m_oRateInfo));
+    	
+    	if (nNewCriticalPrice.compareTo(nMinCriticalPrice) > 0)
+    	{
+    		oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
+    		sendMessage(getType() + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
+    				"Reset critical price " + MathUtils.toCurrencyString(nNewCriticalPrice));
+    	}
 	}
 	
 	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult, List<ITradeTask> aTaskTrades)
 	{
-		if (null == m_oCreateAfterDate)
-			setNewCreateAfter(oStateAnalysisResult, aTaskTrades);
-		
-		if (null != m_oCreateAfterDate && m_oCreateAfterDate.after(new Date()))
+		final StockCandlestick oStockCandlestick = getStockExchange().getStockCandlestick();
+		final Candlestick oCandlestick = oStockCandlestick.get(m_oRateInfo);
+		final CandlestickType oCandlestickType = oCandlestick.getType();
+		if (oCandlestickType.isFall())
 			return;
 		
 		super.createNewTrade(oStateAnalysisResult, aTaskTrades);

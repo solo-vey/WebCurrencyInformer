@@ -76,7 +76,7 @@ public class TelegramTransport implements ITransport
 		final Map<String, String> aParameters = new HashMap<String, String>();
 		aParameters.put("chat_id", m_strUserID);
 		aParameters.put("text", strText);
-		return RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true);
+		return RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 	}
 	
     
@@ -121,7 +121,7 @@ public class TelegramTransport implements ITransport
 		aParameters.put("timeout", m_nGetUpdatesTimeout.toString());
 		aParameters.put("offset", m_nNextMessageID.toString());
 		aParameters.put("limit", "1");
-		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getUpdatesUrl(), aParameters, true);
+		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getUpdatesUrl(), aParameters, true, m_nGetUpdatesTimeout + 1);
 		final TelegramMessages oMessages = new TelegramMessages(oResult);
 		
 		if (oMessages.getMessages().size() == 0)

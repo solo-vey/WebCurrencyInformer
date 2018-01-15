@@ -73,6 +73,7 @@ class AnalyseRateThread implements Runnable
     {
 		try
 		{
+			Thread.currentThread().setName("Analyse rate " + m_oRateInfo);
 			WorkerFactory.registerMainWorkerThread(Thread.currentThread().getId(), m_oMainWorker);
 			final IStockExchange oStockExchange = m_oMainWorker.getStockExchange();
 			final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(m_oStockRateStates, m_oRateInfo, oStockExchange);

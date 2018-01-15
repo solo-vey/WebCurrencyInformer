@@ -11,8 +11,6 @@ import java.util.List;
 import org.apache.commons.lang.time.DateUtils;
 import org.jfree.chart.ChartUtilities;
 import org.jfree.chart.JFreeChart;
-import org.jfree.data.time.FixedMillisecond;
-
 import solo.CurrencyInformer;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
@@ -27,7 +25,7 @@ public class Candlestick implements Serializable
 	
 	final protected List<JapanCandle> m_oHistory = new LinkedList<JapanCandle>();
 	final protected Integer m_nCandleDurationMinutes;
-	final protected Integer m_nHistoryLength = 100;
+	final protected Integer m_nHistoryLength = 50;
 	final protected RateInfo m_oRateInfo;
 	final protected String m_strStockExchangeName;
 	
@@ -57,45 +55,33 @@ public class Candlestick implements Serializable
 		oCandle.setValue(oRateAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice());
 	}
 	
-	public BigDecimal getAverageMinPrice()
+	public BigDecimal getAverageMinPrice(int nStepCount)
 	{
 		BigDecimal nSumaryMinPrice = BigDecimal.ZERO;
-		int nStepCount = 1;
-		CandleType oCurrentCandleType = CandleType.NONE;
-        for(int nPos = 0; nPos < m_oHistory.size(); nPos++)
+		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+        for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
-        	if (oCurrentCandleType.equals(CandleType.FALL) && oCandle.getCandleType().equals(CandleType.GROW))
-        	{
-        		nSumaryMinPrice = nSumaryMinPrice.add(oCandle.getMin());
-        		nStepCount++;
-        	}
-        	oCurrentCandleType = oCandle.getCandleType(); 
+       		nSumaryMinPrice = nSumaryMinPrice.add(oCandle.getMin());
         }
         return MathUtils.getBigDecimal(nSumaryMinPrice.doubleValue() / nStepCount, TradeUtils.DEFAULT_PRICE_PRECISION);
 	}
 
-	public BigDecimal getAverageMaxPrice()
+	public BigDecimal getAverageMaxPrice(int nStepCount)
 	{
 		BigDecimal nSumaryMaxPrice = BigDecimal.ZERO;
-		int nStepCount = 1;
-		CandleType oCurrentCandleType = CandleType.NONE;
-        for(int nPos = 0; nPos < m_oHistory.size(); nPos++)
+		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+        for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
-        	if (oCurrentCandleType.equals(CandleType.GROW) && oCandle.getCandleType().equals(CandleType.FALL))
-        	{
-        		nSumaryMaxPrice = nSumaryMaxPrice.add(oCandle.getMax());
-        		nStepCount++;
-        	}
-        	oCurrentCandleType = oCandle.getCandleType(); 
+       		nSumaryMaxPrice = nSumaryMaxPrice.add(oCandle.getMax());
         }
         return MathUtils.getBigDecimal(nSumaryMaxPrice.doubleValue() / nStepCount, TradeUtils.DEFAULT_PRICE_PRECISION);
 	}
 	
 	public String makeChartImage() throws IOException
 	{
-		final JFreeChart oChart = JfreeCandlestickChart.createChart(m_oRateInfo.toString(), m_oHistory);
+		final JFreeChart oChart = JfreeCandlestickChart.createChart(m_oRateInfo.toString() + " - " + getType(), m_oHistory);
     	ChartUtilities.saveChartAsJPEG(new File(getFileName()), oChart, 480, 240);
     	return getFileName();
 	}
@@ -104,4 +90,199 @@ public class Candlestick implements Serializable
 	{
 		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_strStockExchangeName + "\\" + m_oRateInfo + ".jpeg";
 	}
+	
+	public List<String> getHistoryInfo()
+	{
+		final List<String> aResult = new LinkedList<String>();
+        for(int nPos = 0; nPos < m_oHistory.size() - 3; nPos++)
+        {
+        	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
+        	
+			final CandlestickType oType = getType(nPos);
+			aResult.add(0, oCandle.getDate().toString() + " -> " + oType + " - " + oCandle.getCandleType() + " - " + oCandle.toString());
+        }
+        
+        return aResult;
+	}
+
+	public CandlestickType getType()
+	{
+		return getType(0); 
+	}
+	
+	public CandlestickType getType(final int nStep)
+	{
+		if (m_oHistory.size() - nStep < 3)
+			return CandlestickType.UNKNOWN;
+
+       	final CandleType oCandleType3 = m_oHistory.get(m_oHistory.size() - nStep - 1).getCandleType();
+       	final CandleType oCandleType2 = m_oHistory.get(m_oHistory.size() - nStep - 2).getCandleType();
+       	final CandleType oCandleType1 = m_oHistory.get(m_oHistory.size() - nStep - 3).getCandleType();
+
+		//	Три белых солдата        	
+		if (isThreeWhite(oCandleType3, oCandleType2, oCandleType1))
+			return CandlestickType.THREE_WHITE;
+
+		//	Три черных ворона 
+		if (isThreeBlack(oCandleType3, oCandleType2, oCandleType1))
+			return CandlestickType.THREE_BLACK;
+
+		//	Утренняя звезда
+		if (isMorningStar(oCandleType3, oCandleType2, oCandleType1)) 
+			return CandlestickType.MORNING_STAR;
+
+		//	Вечерняя звезда
+		if (isEveningStar(oCandleType3, oCandleType2, oCandleType1)) 
+			return CandlestickType.EVENING_STAR;
+
+		//	Три внутри вверх
+		if (isBlackToWhite(oCandleType3, oCandleType2, oCandleType1)) 
+			return CandlestickType.BLACK_AND_TWO_WHITE;
+
+		//	Три внутри вниз
+		if (isWhiteToBlack(oCandleType3, oCandleType2, oCandleType1)) 
+			return CandlestickType.WHITE_AND_TWO_BLACK;
+
+		//	Бычье поглощение
+		if (isBullAbsorption(oCandleType3, oCandleType2)) 
+			return CandlestickType.BLACK_TO_WHITE;
+
+		//	Медвежье поглощение
+		if (isBearAbsorption(oCandleType3, oCandleType2)) 
+			return CandlestickType.WHITE_TO_BLACK;
+			
+		//	Пинцет днища
+		if (isBottomPliers(oCandleType3, oCandleType2)) 
+			return CandlestickType.BLACK_TO_WHITE;
+			
+		//	Вершины пинцета
+		if (isTopPliers(oCandleType3, oCandleType2)) 
+			return CandlestickType.WHITE_TO_BLACK;
+
+		if (isTopPliers(oCandleType3, oCandleType2)) 
+			return CandlestickType.WHITE_TO_BLACK;
+
+		//	Спокойно			
+		if (isCalm(oCandleType3, oCandleType2, oCandleType1))
+			return CandlestickType.CALM;
+			
+		if (oCandleType1.isGrowth() && oCandleType2.isGrowth())
+			return CandlestickType.GROWTH;
+
+		if (oCandleType1.isFall() && oCandleType2.isFall())
+			return CandlestickType.FALL;
+
+		if (oCandleType2.isGrowth() && oCandleType3.isGrowth())
+			return CandlestickType.GROWTH;
+
+		if (oCandleType2.isFall() && oCandleType3.isFall())
+			return CandlestickType.FALL;
+
+		if (oCandleType1.isGrowth() && oCandleType3.isGrowth())
+			return CandlestickType.GROWTH;
+
+		if (oCandleType1.isFall() && oCandleType3.isFall())
+			return CandlestickType.FALL;
+
+		if (oCandleType3.isGrowth())
+			return CandlestickType.START_GROWTH;
+
+		if (oCandleType3.isFall())
+			return CandlestickType.START_FALL;
+			
+		return CandlestickType.UNKNOWN;
+	}
+
+	boolean isCalm(CandleType oCandleType3, CandleType oCandleType2, CandleType oCandleType1)
+	{
+		if (oCandleType1.getTrendType().equals(TrendType.CALM) &&
+				oCandleType2.getTrendType().equals(TrendType.CALM) &&  
+				oCandleType3.getTrendType().equals(TrendType.CALM))
+			return true;	
+
+		if (oCandleType3.getTrendType().equals(TrendType.CALM) && 
+				oCandleType2.getTrendType().equals(TrendType.CALM))
+			return true;	
+
+		return false;
+	}
+
+	boolean isTopPliers(final CandleType oCandleType3, final CandleType oCandleType2)
+	{
+		if (oCandleType2.isGrowth(CandleGroupType.HAMMER) && oCandleType3.isFall(CandleGroupType.HAMMER))
+			return true;
+
+		if (oCandleType2.isGrowth(CandleGroupType.STANDARD) && oCandleType3.isFall(CandleGroupType.HAMMER))
+			return true;
+			
+		return false;	
+	}
+
+	boolean isBottomPliers(final CandleType oCandleType3, final CandleType oCandleType2)
+	{
+		if (oCandleType2.isFall(CandleGroupType.HAMMER) && oCandleType3.isGrowth(CandleGroupType.HAMMER))
+			return true;
+
+		if (oCandleType2.isFall(CandleGroupType.STANDARD) && oCandleType3.isGrowth(CandleGroupType.HAMMER))
+			return true;
+			
+		return false;	
+	}
+
+	boolean isBearAbsorption(final CandleType oCandleType3, final CandleType oCandleType2)
+	{
+		return oCandleType2.isGrowth(CandleGroupType.STANDARD) &&  
+				oCandleType3.isFall(CandleGroupType.STANDARD);
+	}
+
+	boolean isBullAbsorption(final CandleType oCandleType3, final CandleType oCandleType2)
+	{
+		return oCandleType2.isFall(CandleGroupType.STANDARD) &&  
+				oCandleType3.isGrowth(CandleGroupType.STANDARD);
+	}
+
+	boolean isWhiteToBlack(final CandleType oCandleType3, final CandleType oCandleType2, final CandleType oCandleType1)
+	{
+		return (oCandleType1.isGrowth(CandleGroupType.STANDARD) && 
+				oCandleType2.isFall(CandleGroupType.STANDARD) &&  
+				oCandleType3.isFall(CandleGroupType.STANDARD));
+	}
+
+	boolean isBlackToWhite(final CandleType oCandleType3, final CandleType oCandleType2, final CandleType oCandleType1)
+	{
+		return (oCandleType1.isFall(CandleGroupType.STANDARD) && 
+				oCandleType2.isGrowth(CandleGroupType.STANDARD) &&  
+				oCandleType3.isGrowth(CandleGroupType.STANDARD));
+	}
+
+	boolean isEveningStar(final CandleType oCandleType3, final CandleType oCandleType2, final CandleType oCandleType1)
+	{
+		return (oCandleType1.isGrowth(CandleGroupType.STANDARD) && 
+				(oCandleType2.isFall(CandleGroupType.HAMMER) || oCandleType2.isGrowth(CandleGroupType.HAMMER)) &&  
+				oCandleType3.isFall(CandleGroupType.STANDARD));
+	}
+
+	boolean isMorningStar(final CandleType oCandleType3, final CandleType oCandleType2, final CandleType oCandleType1)
+	{
+		return (oCandleType1.isFall(CandleGroupType.STANDARD) && 
+				(oCandleType2.isFall(CandleGroupType.DOJI) || oCandleType2.isFall(CandleGroupType.HAMMER)) &&  
+				oCandleType3.isGrowth(CandleGroupType.STANDARD));
+	}
+
+	boolean isThreeWhite(final CandleType oCandleType3, final CandleType oCandleType2, final CandleType oCandleType1)
+	{
+		return (oCandleType1.isGrowth(CandleGroupType.STANDARD) && 
+				oCandleType2.isGrowth(CandleGroupType.STANDARD) &&
+				oCandleType3.isGrowth(CandleGroupType.STANDARD));
+	}	
+
+	boolean isThreeBlack(final CandleType oCandleType3, final CandleType oCandleType2, final CandleType oCandleType1)
+	{
+		if (oCandleType1.isFall(CandleGroupType.STANDARD) && 
+				oCandleType2.isFall(CandleGroupType.STANDARD) &&
+				oCandleType3.isFall(CandleGroupType.STANDARD))
+			return true;
+			
+		return false;
+	}	
 }

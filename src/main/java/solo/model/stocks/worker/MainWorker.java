@@ -1,5 +1,7 @@
 package solo.model.stocks.worker;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.exchange.StockExchangeFactory;
 import solo.model.stocks.exchange.Stocks;
@@ -63,14 +65,20 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	
 	public void onException(final Exception e)
 	{
-		super.onException(e);
+		onException(StringUtils.EMPTY, e);
+	}
+	
+	public void onException(final String strMessage, final Exception e)
+	{
+		super.onException(strMessage, e);
 		
 		try
 		{
-			final String strMessage = CommonUtils.getExceptionMessage(e.getCause());			
+			final String strFullMessage = (StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
+										"Exception : " + CommonUtils.getExceptionMessage(e.getCause());			
 			if (MessageLevel.DEBUG.isLevelHigh(getStockExchange().getMessageLevel()))
-				m_oTransportWorker.getTransport().sendMessage("Exception : " + strMessage);
-			m_oLastErrors.addError(strMessage);
+				m_oTransportWorker.getTransport().sendMessage(strFullMessage);
+			m_oLastErrors.addError(strFullMessage);
 		}
 		catch (Exception eSend)
 		{

@@ -61,17 +61,17 @@ public class BtcTradeStockSource extends BaseStockSource
 		final RateState oRateState = super.getRateState(oRateInfo);
 		
 		final String strOrderBuyUrl = m_strBuyUrl.replace("#rate#", getRateIdentifier(oRateInfo));
-		final Map<String, Object> oBuyOrders = RequestUtils.sendGetAndReturnMap(strOrderBuyUrl, true);
+		final Map<String, Object> oBuyOrders = RequestUtils.sendGetAndReturnMap(strOrderBuyUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oBidsOrders = convert2Orders((List<Object>) oBuyOrders.get("list"));
 		oRateState.setBidsOrders(oBidsOrders);
 		
 		final String strOrderSellUrl = m_strSellUrl.replace("#rate#", getRateIdentifier(oRateInfo));
-		final Map<String, Object> oSellOrders = RequestUtils.sendGetAndReturnMap(strOrderSellUrl, true);
+		final Map<String, Object> oSellOrders = RequestUtils.sendGetAndReturnMap(strOrderSellUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oAsksOrders = convert2Orders((List<Object>) oSellOrders.get("list"));
 		oRateState.setAsksOrders(oAsksOrders);
 		
 		final String strDealsUrl = m_strDealsUrl.replace("#rate#", getRateIdentifier(oRateInfo));
-		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strDealsUrl, true);
+		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strDealsUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oTrades = convert2Orders(oInputTrades);
 		for(final Order oTradeOrder : oTrades)
 		{
@@ -120,7 +120,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		m_nOutOrderId = (int)(Math.random() * 1000000);
 	}
 	
-	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo)
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
 		authUser();
@@ -211,7 +211,7 @@ public class BtcTradeStockSource extends BaseStockSource
 			if (!"true".equals(oOrder.get("status").toString()))
 			{
 				final Object oDescription = oOrder.get("description"); 
-				return new Order("cancel", (null != oDescription ? oDescription.toString() : StringUtils.EMPTY));
+				return new Order(Order.CANCEL, (null != oDescription ? oDescription.toString() : StringUtils.EMPTY));
 			}
 			
 			final String strOrderId = oOrder.get("order_id").toString();
@@ -219,38 +219,37 @@ public class BtcTradeStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
 	
 	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
-		authUser();
-		super.getOrder(strOrderId, oRateInfo);
-		
-		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
-		setUserOrders(oUserInfo, oRateInfo);
-		Order oThisOrder = new Order();
-		for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
-		{
-			if (oOrder.getId().equalsIgnoreCase(strOrderId))
-			{
-				oThisOrder = oOrder;
-				break;
-			}
-		}
-		
 		try
 		{
+			authUser();
+			super.getOrder(strOrderId, oRateInfo);
+			
+			final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
+			setUserOrders(oUserInfo, oRateInfo);
+			Order oThisOrder = new Order();
+			for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
+			{
+				if (oOrder.getId().equalsIgnoreCase(strOrderId))
+				{
+					oThisOrder = oOrder;
+					break;
+				}
+			}
+			
 			final Map<String, Object> oTradeOrderInfo = sendPost(m_strOrderStatusUrl.replace("#id#", strOrderId), null);
 			addOrderTradeInfo(oThisOrder, oTradeOrderInfo);
+			return oThisOrder;
 		}
 		catch(final Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
-		
-		return oThisOrder;
 	}
 	
 	protected void addOrderTradeInfo(final Order oOrder, final Map<String, Object> oTradeOrderInfo)
@@ -298,7 +297,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 			
 		oOrder.setState(Order.CANCEL);	
@@ -320,7 +319,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		final Map<String, String> aHeaders = new HashMap<String, String>();
 		aHeaders.put("public-key", m_strPublicKey);
 		aHeaders.put("api-sign", signatureUrl(aParameters));
-		return RequestUtils.sendPostAndReturnJson(strUrl, aParameters, aHeaders, true);
+		return RequestUtils.sendPostAndReturnJson(strUrl, aParameters, aHeaders, true, RequestUtils.DEFAULT_TEMEOUT);
 	}
 
 	public String signatureUrl(final Map<String, String> aParameters) throws Exception

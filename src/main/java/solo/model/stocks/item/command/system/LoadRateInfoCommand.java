@@ -96,6 +96,7 @@ class LoadRateThread implements Runnable
     {
 		try
 		{
+			Thread.currentThread().setName("Load rate " + m_oRateInfo);
 			WorkerFactory.registerMainWorkerThread(Thread.currentThread().getId(), m_oMainWorker);
 			final IStockExchange oStockExchange = m_oMainWorker.getStockExchange();
 			final IStockSource oStockSource = oStockExchange.getStockSource();

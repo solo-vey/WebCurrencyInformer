@@ -49,13 +49,13 @@ public class ExmoStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	public RateState getRateState(final RateInfo oRateInfo) throws Exception
+	@Override public RateState getRateState(final RateInfo oRateInfo) throws Exception
 	{
 		final RateState oRateState = super.getRateState(oRateInfo);
 		
 		final String strMarket = getRateIdentifier(oRateInfo); 
 		final String strOrderBookUrl = m_strOrdersUrl.replace("#rate#", strMarket);
-		final Map<String, Object> oAllOrders = RequestUtils.sendGetAndReturnMap(strOrderBookUrl, true);
+		final Map<String, Object> oAllOrders = RequestUtils.sendGetAndReturnMap(strOrderBookUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final Map<String, Object> oRateOrders = (Map<String, Object>) oAllOrders.get(strMarket);
 		final List<Order> oAsksOrders = convert2Orders((List<Object>) oRateOrders.get("ask"));
 		final List<Order> oBidsOrders = convert2Orders((List<Object>) oRateOrders.get("bid"));
@@ -63,7 +63,7 @@ public class ExmoStockSource extends BaseStockSource
 		oRateState.setBidsOrders(oBidsOrders);
 		
 		final String strTradesUrl = m_strTradesUrl.replace("#rate#", strMarket);
-		final Map<String, Object> oTrades = RequestUtils.sendGetAndReturnMap(strTradesUrl, true);
+		final Map<String, Object> oTrades = RequestUtils.sendGetAndReturnMap(strTradesUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Object> oRateTrades = (List<Object>) oTrades.get(strMarket);
 		final List<Order> oTradeOrders = convert2Orders(oRateTrades);
 		oRateState.setTrades(oTradeOrders);
@@ -149,7 +149,7 @@ public class ExmoStockSource extends BaseStockSource
 		return oOrder;
 	}
 	
-	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo)
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
 		setUserMoney(oUserInfo);
@@ -158,73 +158,83 @@ public class ExmoStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	public void setUserMoney(final StockUserInfo oUserInfo)
+	public void setUserMoney(final StockUserInfo oUserInfo) throws Exception
 	{
-		try
-		{
-			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-			final String oUserInfoJson = oUserInfoRequest.Request("user_info", null);
-			final Map<String, Object> oUserInfoData = JsonUtils.json2Map(oUserInfoJson);
-			final Map<String, Object> oUserBalances = (Map<String, Object>) oUserInfoData.get("balances");
-			final Map<String, Object> oUserReserved = (Map<String, Object>) oUserInfoData.get("reserved");
+		final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+		final String oUserInfoJson = oUserInfoRequest.Request("user_info", null);
+		final Map<String, Object> oUserInfoData = JsonUtils.json2Map(oUserInfoJson);
+		final Map<String, Object> oUserBalances = (Map<String, Object>) oUserInfoData.get("balances");
+		final Map<String, Object> oUserReserved = (Map<String, Object>) oUserInfoData.get("reserved");
 
-			for(final Entry<String, Object> oCurrencyBalance : oUserBalances.entrySet())
-			{
-				final BigDecimal nBalance = MathUtils.fromString(oCurrencyBalance.getValue().toString());
-				if (nBalance.compareTo(BigDecimal.ZERO) == 0)
-					continue;
-				
-				final String strCurrency = oCurrencyBalance.getKey().toString();
-				final Currency oCurrency = Currency.valueOf(strCurrency.toUpperCase());
-				final BigDecimal nReserved = (oUserReserved.containsKey(strCurrency) ? MathUtils.fromString(oUserReserved.get(strCurrency).toString()) : BigDecimal.ZERO);
-				oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, nReserved)); 
-			}
+		for(final Entry<String, Object> oCurrencyBalance : oUserBalances.entrySet())
+		{
+			final BigDecimal nBalance = MathUtils.fromString(oCurrencyBalance.getValue().toString());
+			if (nBalance.compareTo(BigDecimal.ZERO) == 0)
+				continue;
+			
+			final String strCurrency = oCurrencyBalance.getKey().toString();
+			final Currency oCurrency = Currency.valueOf(strCurrency.toUpperCase());
+			final BigDecimal nReserved = (oUserReserved.containsKey(strCurrency) ? MathUtils.fromString(oUserReserved.get(strCurrency).toString()) : BigDecimal.ZERO);
+			oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, nReserved)); 
 		}
-		catch(final Exception e) {}
 	}
 
 	@SuppressWarnings("unchecked")
-	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo)
+	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo) throws Exception
 	{
-		try
+		final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+		final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
+		final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);
+		
+		for(final RateInfo oRateInfo : getRates())
 		{
-			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-			final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
-			final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);
+			final String strMarket = getRateIdentifier(oRateInfo);
+			final List<Object> oRateOrders = (List<Object>) oAllOrdersData.get(strMarket);
+			if (null == oRateOrders)
+				continue;
 			
-			for(final RateInfo oRateInfo : getRates())
+			for(final Object oOrderInfo : oRateOrders)
 			{
-				final String strMarket = getRateIdentifier(oRateInfo);
-				final List<Object> oRateOrders = (List<Object>) oAllOrdersData.get(strMarket);
-				if (null == oRateOrders)
-					continue;
-				
-				for(final Object oOrderInfo : oRateOrders)
-				{
-					final Order oOrder = convert2Order(oOrderInfo);
-					oOrder.setState("wait");
-					oUserInfo.addOrder(oRateInfo, oOrder); 
-				}
+				final Order oOrder = convert2Order(oOrderInfo);
+				oOrder.setState("wait");
+				oUserInfo.addOrder(oRateInfo, oOrder); 
 			}
 		}
-		catch(final Exception e) {}
 	}
 	
-	@SuppressWarnings("serial")
 	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
 		super.getOrder(strOrderId, oRateInfo);
 		
-		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
-		setUserOrders(oUserInfo, oRateInfo);
-		for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
+		int nTryCount = 50;
+		Order oGetOrder = new Order(Order.ERROR, "Can't read order id " + strOrderId);
+		while (nTryCount > 0)
 		{
-			if (oOrder.getId().equalsIgnoreCase(strOrderId))
-				return oOrder;
+			oGetOrder = getOrderInternal(strOrderId, oRateInfo);
+			if (!oGetOrder.isCanceled() && !oGetOrder.isException())
+				return oGetOrder;
+			
+			try { Thread.sleep(500); }
+			catch (InterruptedException e) { break; }
+			nTryCount -= (oGetOrder.isException() ? 1 : 5);
 		}
-
+		
+		return oGetOrder;
+	}
+	
+	@SuppressWarnings("serial")
+	protected Order getOrderInternal(final String strOrderId, final RateInfo oRateInfo)
+	{
 		try
 		{
+			final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
+			setUserOrders(oUserInfo, oRateInfo);
+			for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
+			{
+				if (oOrder.getId().equalsIgnoreCase(strOrderId))
+					return oOrder;
+			}
+
 			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
 			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
 				put("order_id", strOrderId);
@@ -241,7 +251,7 @@ public class ExmoStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
 	
@@ -280,7 +290,7 @@ public class ExmoStockSource extends BaseStockSource
 		catch(final Exception e)
 		{
 	        System.err.println("Can't add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice + "\r\n Exception : " + e.getMessage());
-			return new Order(Order.ERROR, e.getMessage());
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
 	
@@ -309,7 +319,7 @@ public class ExmoStockSource extends BaseStockSource
 		catch(final Exception e)
 		{
 	        System.err.println("Can't remove order: " + strOrderId);
-			return new Order(Order.ERROR, e.getMessage() + "\r\n Exception : " + e.getMessage());
+			return new Order(Order.EXCEPTION, e.getMessage() + "\r\n Exception : " + e.getMessage());
 		}
 	}
 }

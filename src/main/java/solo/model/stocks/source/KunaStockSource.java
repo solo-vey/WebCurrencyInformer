@@ -15,6 +15,7 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
@@ -46,14 +47,14 @@ public class KunaStockSource extends BaseStockSource
 		final RateState oRateState = super.getRateState(oRateInfo);
 		
 		final String strOrderBookUrl = m_strOrdersUrl.replace("#rate#", getRateIdentifier(oRateInfo));
-		final Map<String, Object> oAllOrders = RequestUtils.sendGetAndReturnMap(strOrderBookUrl, true);
+		final Map<String, Object> oAllOrders = RequestUtils.sendGetAndReturnMap(strOrderBookUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oAsksOrders = convert2Orders((List<Object>) oAllOrders.get("asks"));
 		final List<Order> oBidsOrders = convert2Orders((List<Object>) oAllOrders.get("bids"));
 		oRateState.setAsksOrders(oAsksOrders);
 		oRateState.setBidsOrders(oBidsOrders);
 		
 		final String strTradesUrl = m_strTradesUrl.replace("#rate#", getRateIdentifier(oRateInfo));
-		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strTradesUrl, true);
+		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strTradesUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oTrades = convert2Orders(oInputTrades);
 		oRateState.setTrades(oTrades);
 		
@@ -104,7 +105,7 @@ public class KunaStockSource extends BaseStockSource
 		m_nTimeDelta = null;
 	}
 	
-	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo)
+	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
 		setUserMoney(oUserInfo);
@@ -117,7 +118,7 @@ public class KunaStockSource extends BaseStockSource
 	{
 		try
 		{
-			final Map<String, Object> oMoneyInfo = RequestUtils.sendGetAndReturnMap(signatureUrl(m_strMoneyUrl, "GET"), true);
+			final Map<String, Object> oMoneyInfo = RequestUtils.sendGetAndReturnMap(signatureUrl(m_strMoneyUrl, "GET"), true, RequestUtils.DEFAULT_TEMEOUT);
 			
 			final List<Map<String, Object>> oAccounts = (List<Map<String, Object>>) oMoneyInfo.get("accounts");
 			for(final Map<String, Object> oAccount : oAccounts)
@@ -145,7 +146,7 @@ public class KunaStockSource extends BaseStockSource
 					continue;
 				
 				final String strMarket = getRateIdentifier(oRateInfo);
-				final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(m_strMyOrdersUrl.replace("#market#", strMarket), "GET"), true);
+				final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(m_strMyOrdersUrl.replace("#market#", strMarket), "GET"), true, RequestUtils.DEFAULT_TEMEOUT);
 				
 				for(final Object oOrderInfo : oOrdersInfo)
 				{
@@ -159,18 +160,25 @@ public class KunaStockSource extends BaseStockSource
 	
 	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
-		final StockUserInfo oUserInfo = getUserInfo(oRateInfo);
-		final List<Order> aOrders = oUserInfo.getOrders().get(oRateInfo);
-		if (null != aOrders)
+		try
 		{
-			for(final Order oOrder : aOrders)
+			final StockUserInfo oUserInfo = getUserInfo(oRateInfo);
+			final List<Order> aOrders = oUserInfo.getOrders().get(oRateInfo);
+			if (null != aOrders)
 			{
-				if (oOrder.getId().equalsIgnoreCase(strOrderId))
-					return oOrder;
+				for(final Order oOrder : aOrders)
+				{
+					if (oOrder.getId().equalsIgnoreCase(strOrderId))
+						return oOrder;
+				}
 			}
+			
+			return findOrderInTrades(strOrderId, oRateInfo);
 		}
-		
-		return findOrderInTrades(strOrderId, oRateInfo);
+		catch(final Exception e)
+		{
+			return new Order(Order.EXCEPTION, e.getMessage());
+		}
 	}
 
 	public List<Order> getTrades(final RateInfo oRateInfo, final int nPage, final int nCount)
@@ -180,11 +188,14 @@ public class KunaStockSource extends BaseStockSource
 		{
 			final String strMarket = getRateIdentifier(oRateInfo);
 			String strMyTradesUrl = m_strMyTradesUrl.replace("#limit#", (new Integer(nCount)).toString()).replace("#market#", strMarket);
-			final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(strMyTradesUrl, "GET"), true);
+			final List<Object> oOrdersInfo = RequestUtils.sendGetAndReturnList(signatureUrl(strMyTradesUrl, "GET"), true, RequestUtils.DEFAULT_TEMEOUT);
 			for(final Object oOrderInfo : oOrdersInfo)
 				aTrades.add(convert2Order(oOrderInfo));
 		}
-		catch (Exception e) { }
+		catch (Exception e) 
+		{
+			WorkerFactory.getMainWorker().onException("KunaStockSource.getTrades", e);
+		}
 		
 		return aTrades;
 	}
@@ -217,12 +228,13 @@ public class KunaStockSource extends BaseStockSource
 			aParameters.put("price", nPrice.toString());
 			final String strAddOrder = m_strAddOrderUrl.replace("#side#", oSide.toString().toLowerCase()).replace("#volume#", nVolume.toString())
 														.replace("#market#", getRateIdentifier(oRateInfo)).replace("#price#", nPrice.toString());
-			Map<String, Object> oOrderInfo = RequestUtils.sendPostAndReturnJson(signatureUrl(strAddOrder, "POST"), aParameters, true);
+			Map<String, Object> oOrderInfo = RequestUtils.sendPostAndReturnJson(signatureUrl(strAddOrder, "POST"), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 			return convert2Order(oOrderInfo);
 		}
 		catch (Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+			WorkerFactory.getMainWorker().onException("KunaStockSource.addOrder", e);
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
 	
@@ -234,12 +246,13 @@ public class KunaStockSource extends BaseStockSource
 		aParameters.put("id", strOrderId);
 		try
 		{
-			final Map<String, Object> oOrder = RequestUtils.sendPostAndReturnJson(signatureUrl(m_strRemoveOrderUrl.replace("#id#", strOrderId), "POST"), aParameters, true);
+			final Map<String, Object> oOrder = RequestUtils.sendPostAndReturnJson(signatureUrl(m_strRemoveOrderUrl.replace("#id#", strOrderId), "POST"), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 			return convert2Order(oOrder);
 		}
 		catch (Exception e)
 		{
-			return new Order(Order.ERROR, e.getMessage());
+			WorkerFactory.getMainWorker().onException("KunaStockSource.removeOrder", e);
+			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
 	
@@ -254,7 +267,7 @@ public class KunaStockSource extends BaseStockSource
 	{
 		if (null == m_nTimeDelta)
 		{
-			final Long nStockTime = Long.parseLong(RequestUtils.sendGet(m_strTimeUrl, true));
+			final Long nStockTime = Long.parseLong(RequestUtils.sendGet(m_strTimeUrl, true, RequestUtils.DEFAULT_TEMEOUT));
 			m_nTimeDelta = (new Date()).getTime() - nStockTime * 1000; 
 			return nStockTime.toString() + "123";
 		}

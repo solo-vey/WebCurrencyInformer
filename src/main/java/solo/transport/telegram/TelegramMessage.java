@@ -16,7 +16,7 @@ public class TelegramMessage implements ITransportMessage
 	public TelegramMessage(final Map<String, Object> oData)
 	{
     	m_oMessage = (Map<String, Object> )oData.get("message");
-   		m_strText = (null != m_oMessage ? m_oMessage.get("text").toString() : StringUtils.EMPTY);
+   		m_strText = (null != m_oMessage && null != m_oMessage.get("text") ? m_oMessage.get("text").toString() : StringUtils.EMPTY);
 		m_strID = oData.get("update_id").toString();
 	}
 	

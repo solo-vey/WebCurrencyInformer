@@ -23,13 +23,12 @@ import java.util.Map;
 
 public class Exmo 
 {
-    private static long _nonce;
+    private static Long _nonce;
     private String _key;
     private String _secret;
 
     public Exmo(String key, String secret) 
     {
-        _nonce = System.nanoTime();
         _key = key;
         _secret = secret;
     }
@@ -43,88 +42,92 @@ public class Exmo
         if (arguments == null)   // If the user provided no arguments, just create an empty argument array.
             arguments = new HashMap<String, String>();
 
-        arguments.put("nonce", "" + ++_nonce);  // Add the dummy nonce.
+        synchronized (this) 
+        {
+        	_nonce = System.nanoTime();
+        	arguments.put("nonce", "" + ++_nonce);  // Add the dummy nonce.
 
-        String postData = StringUtils.EMPTY;
+        	String postData = StringUtils.EMPTY;
 
-        for (Map.Entry<String, String> stringStringEntry : arguments.entrySet()) 
-        {
-            if (postData.length() > 0) 
-                postData += "&";
+        	for (Map.Entry<String, String> stringStringEntry : arguments.entrySet()) 
+        	{
+        		if (postData.length() > 0) 
+        			postData += "&";
 
-            postData += stringStringEntry.getKey() + "=" + stringStringEntry.getValue();
-        }
+        		postData += stringStringEntry.getKey() + "=" + stringStringEntry.getValue();
+        	}
 
-        // Create a new secret key
-        try 
-        {
-            key = new SecretKeySpec(_secret.getBytes("UTF-8"), "HmacSHA512");
-        } 
-        catch (UnsupportedEncodingException uee) 
-        {
-            System.err.println("Unsupported encoding exception: " + uee.toString());
-            return null;
-        }
+        	// Create a new secret key
+        	try 
+        	{
+        		key = new SecretKeySpec(_secret.getBytes("UTF-8"), "HmacSHA512");
+        	} 
+        	catch (UnsupportedEncodingException uee) 
+        	{
+        		System.err.println("Unsupported encoding exception: " + uee.toString());
+        		return null;
+        	}
 
-        // Create a new mac
-        try 
-        {
-            mac = Mac.getInstance("HmacSHA512");
-        } 
-        catch (NoSuchAlgorithmException nsae) 
-        {
-            System.err.println("No such algorithm exception: " + nsae.toString());
-            return null;
-        }
+	        // Create a new mac
+	        try 
+	        {
+	            mac = Mac.getInstance("HmacSHA512");
+	        } 
+	        catch (NoSuchAlgorithmException nsae) 
+	        {
+	            System.err.println("No such algorithm exception: " + nsae.toString());
+	            return null;
+	        }
+	
+	        // Init mac with key.
+	        try 
+	        {
+	            mac.init(key);
+	        } 
+	        catch (InvalidKeyException ike) 
+	        {
+	            System.err.println("Invalid key exception: " + ike.toString());
+	            return null;
+	        }
+	
+	
+	        // Encode the post data by the secret and encode the result as base64.
+	        try 
+	        {
+	            sign = Hex.encodeHexString(mac.doFinal(postData.getBytes("UTF-8")));
+	        } 
+	        catch (UnsupportedEncodingException uee) 
+	        {
+	            System.err.println("Unsupported encoding exception: " + uee.toString());
+	            return null;
+	        }
 
-        // Init mac with key.
-        try 
-        {
-            mac.init(key);
-        } 
-        catch (InvalidKeyException ike) 
-        {
-            System.err.println("Invalid key exception: " + ike.toString());
-            return null;
-        }
-
-
-        // Encode the post data by the secret and encode the result as base64.
-        try 
-        {
-            sign = Hex.encodeHexString(mac.doFinal(postData.getBytes("UTF-8")));
-        } 
-        catch (UnsupportedEncodingException uee) 
-        {
-            System.err.println("Unsupported encoding exception: " + uee.toString());
-            return null;
-        }
-
-        // Now do the actual request
-        MediaType form = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
-
-        final Proxy oProxy = getProxy();
-        final Builder oBuilder = new OkHttpClient.Builder();
-        if (null != oProxy)
-        	oBuilder.proxy(oProxy);
-        OkHttpClient client = oBuilder.build();
-        try 
-        {
-            RequestBody body = RequestBody.create(form, postData);
-            Request request = new Request.Builder()
-                    .url("https://api.exmo.com/v1/" + method)
-                    .addHeader("Key", _key)
-                    .addHeader("Sign", sign)
-                    .post(body)
-                    .build();
-            
-            Response response = client.newCall(request).execute();
-            return response.body().string();
-        } 
-        catch (IOException e) 
-        {
-            System.err.println("Request fail: " + e.toString());
-            return null;  // An error occured...
+	        // Now do the actual request
+	        MediaType form = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
+	
+	        final Proxy oProxy = getProxy();
+	        final Builder oBuilder = new OkHttpClient.Builder();
+	        if (null != oProxy)
+	        	oBuilder.proxy(oProxy);
+	        OkHttpClient client = oBuilder.build();
+	        try 
+	        {
+	            RequestBody body = RequestBody.create(form, postData);
+	            Request request = new Request.Builder()
+	                    .url("https://api.exmo.com/v1/" + method)
+	                    .addHeader("Key", _key)
+	                    .addHeader("Sign", sign)
+	                    .post(body)
+	                    .build();
+	            
+	            Response response = client.newCall(request).execute();
+	            return response.body().string();
+	        } 
+	        catch (IOException e) 
+	        {
+	            System.err.println("Request fail: " + e.toString());
+	            return null;  // An error occured...
+	        }
         }
     }
 	

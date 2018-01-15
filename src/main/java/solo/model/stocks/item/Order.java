@@ -20,6 +20,7 @@ public class Order extends BaseObject implements Serializable
 	public final static String CANCEL = "cancel";
 	public final static String DONE = "done";
 	public final static String ERROR = "error";
+	public final static String EXCEPTION = "exception";
 	public final static String NONE = "none";
 	public final static String WAIT = "wait";
 	
@@ -62,7 +63,12 @@ public class Order extends BaseObject implements Serializable
 	
 	public boolean isError()
 	{
-		return getState().equalsIgnoreCase(ERROR);
+		return getState().equalsIgnoreCase(ERROR) || isException();
+	}
+	
+	public boolean isException()
+	{
+		return getState().equalsIgnoreCase(EXCEPTION);
 	}
 	
 	public boolean isDone()
@@ -126,7 +132,7 @@ public class Order extends BaseObject implements Serializable
 		if (m_strState.equalsIgnoreCase("processing"))
 			m_strState = WAIT;
 		if (m_strState.equalsIgnoreCase("core_error"))
-			m_strState = ERROR;
+			m_strState = EXCEPTION;
 	}
 	
 	public BigDecimal getVolume()
