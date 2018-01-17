@@ -15,6 +15,7 @@ public class TransportFactory
 	
 	static
 	{
+		registerTransport(Stocks.Mock, 		MockTransport.class);
 		registerTransport(Stocks.Kuna, 		KunaTelegramTransport.class);
 		registerTransport(Stocks.BtcTrade,	BtcTradeTelegramTransport.class);
 		registerTransport(Stocks.Exmo, 		ExmoTelegramTransport.class);
