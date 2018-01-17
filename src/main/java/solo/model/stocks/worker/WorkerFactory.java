@@ -3,7 +3,11 @@ package solo.model.stocks.worker;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.exchange.Stocks;
+import solo.transport.MessageLevel;
+import solo.utils.CommonUtils;
 
 public class WorkerFactory
 {
@@ -27,5 +31,30 @@ public class WorkerFactory
 		(new MainWorker(Stocks.Exmo)).startWorker();
 		
 		s_oRootWorker.run();
+	}
+	
+	public static void onException(final String strMessage, final Exception e)
+	{
+		System.err.printf(Thread.currentThread().getName() + 
+				(StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
+				" Thread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
+		
+		try
+		{
+			final MainWorker oMainWorker = WorkerFactory.getMainWorker();
+			if (null == oMainWorker)
+				return;
+			
+			final String strFullMessage = (StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
+										"Exception : " + CommonUtils.getExceptionMessage(e.getCause());			
+			if (MessageLevel.DEBUG.isLevelHigh(oMainWorker.getStockExchange().getMessageLevel()))
+				oMainWorker.getTransport().sendMessage(strFullMessage);
+			oMainWorker.getLastErrors().addError(strFullMessage);
+		}
+		catch (Exception eSend)
+		{
+			System.err.printf("Send message exception : " + eSend + "\r\n");
+		}
+		
 	}
 }
