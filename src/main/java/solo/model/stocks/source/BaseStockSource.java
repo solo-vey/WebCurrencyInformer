@@ -12,6 +12,8 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
@@ -65,7 +67,6 @@ public class BaseStockSource implements IStockSource
 
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
-		
 		return new Order(Order.NONE, "Order is absent");
 	}
 
@@ -81,14 +82,22 @@ public class BaseStockSource implements IStockSource
 		oAsks = StrategyUtils.removeFakeOrders(oAsks, BigDecimal.ONE, oRateInfo); 
 		oBids = StrategyUtils.removeFakeOrders(oBids, BigDecimal.ONE, oRateInfo);
 		
-		final BigDecimal nMinPrice = StrategyUtils.getBestPrice(oBids);
-		final BigDecimal nMaxPrice = StrategyUtils.getBestPrice(oAsks);
+		final BigDecimal nMinPrice = MathUtils.getBigDecimal(StrategyUtils.getBestPrice(oBids).doubleValue() * 0.98, TradeUtils.getPricePrecision(oRateInfo));
+		final BigDecimal nMaxPrice = MathUtils.getBigDecimal(StrategyUtils.getBestPrice(oAsks).doubleValue() * 1.02, TradeUtils.getPricePrecision(oRateInfo));
 		
 		if (oSide.equals(OrderSide.SELL) && nPrice.compareTo(nMinPrice) < 0)
-			throw new Exception("Because price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "]");
+		{
+			final String strError = "Because price " + MathUtils.toCurrencyString(nPrice) + " is too small. Current [" + MathUtils.toCurrencyString(nMinPrice) + "(-2%)]";
+			WorkerFactory.getMainWorker().getLastErrors().addError(strError);
+			throw new Exception(strError);
+		}
 
 		if (oSide.equals(OrderSide.BUY) && nPrice.compareTo(nMaxPrice) > 0)
-			throw new Exception("Because price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "]");
+		{
+			final String strError = "Because price " + MathUtils.toCurrencyString(nPrice) + " is too big. Current [" + MathUtils.toCurrencyString(nMaxPrice) + "(+2%)]";
+			WorkerFactory.getMainWorker().getLastErrors().addError(strError);
+			throw new Exception(strError);
+		}
 	}
 
 	@Override public Order getOrder(String strOrderId, final RateInfo oRateInfo)

@@ -59,7 +59,7 @@ public class JapanCandle extends BaseObject implements Serializable
 	{
 		final BigDecimal nVerySmall = new BigDecimal(0.1);
 		final BigDecimal nSmall = new BigDecimal(0.35);
-		final BigDecimal nVerySmallLength = MathUtils.getBigDecimal(m_nMax.doubleValue() / 100 / 10, 8);
+		final BigDecimal nVerySmallLength = MathUtils.getBigDecimal(m_nMax.doubleValue() / 100 / 5, 8);
 		
 		final BigDecimal nLength = m_nMax.add(m_nMin.negate()); 
 		final BigDecimal nBodyMax = (m_nStart.compareTo(m_nEnd) > 0 ? m_nStart : m_nEnd);

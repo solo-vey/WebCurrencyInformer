@@ -14,6 +14,7 @@ public interface ITradeControler extends Serializable
 	
 	String getFullInfo();
 	TradesInfo getTradesInfo();
+	void tradeStart(final TaskTrade oTaskTrade);
 	void tradeDone(final TaskTrade oTaskTrade);
 	void buyDone(final TaskTrade oTaskTrade);
 	void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume); 
@@ -26,6 +27,7 @@ class NullTradeControler implements ITradeControler
 	
 	public String getFullInfo() { return StringUtils.EMPTY; }
 	public TradesInfo getTradesInfo() { return new TradesInfo(new RateInfo(Currency.UAH, Currency.UAH)); };
+	public void tradeStart(final TaskTrade oTaskTrade) {}
 	public void tradeDone(final TaskTrade oTaskTrade) {}
 	public void buyDone(final TaskTrade oTaskTrade) {}
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {} 

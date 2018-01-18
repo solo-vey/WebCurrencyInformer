@@ -194,7 +194,7 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e) 
 		{
-			WorkerFactory.getMainWorker().onException("KunaStockSource.getTrades", e);
+			WorkerFactory.onException("KunaStockSource.getTrades", e);
 		}
 		
 		return aTrades;
@@ -233,7 +233,7 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e)
 		{
-			WorkerFactory.getMainWorker().onException("KunaStockSource.addOrder", e);
+			WorkerFactory.onException("KunaStockSource.addOrder", e);
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
@@ -251,7 +251,7 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e)
 		{
-			WorkerFactory.getMainWorker().onException("KunaStockSource.removeOrder", e);
+			WorkerFactory.onException("KunaStockSource.removeOrder", e);
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}

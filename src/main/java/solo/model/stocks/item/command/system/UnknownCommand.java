@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -18,6 +19,6 @@ public class UnknownCommand extends BaseCommand implements ISystemCommand
 	{
 		super.execute();
 		final ICommand oCommand = new SendMessageCommand(getInfo());
-		getMainWorker().addCommand(oCommand);
+		WorkerFactory.getMainWorker().addCommand(oCommand);
 	}
 }

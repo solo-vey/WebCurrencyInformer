@@ -2,6 +2,7 @@ package solo.model.stocks.item.rules.task.trade;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -20,6 +21,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	final RateInfo m_oRateInfo;
 	protected ITradeControler m_oTradeControler = ITradeControler.NULL;
 	protected String m_strHistory = StringUtils.EMPTY;
+	protected Date m_oDateCreate = new Date();
 
 	protected Order m_oOrder = Order.NULL;
 
@@ -42,6 +44,12 @@ public class TradeInfo extends BaseObject implements Serializable
 		m_oRateInfo = oRateInfo;
 		m_oBuyStrategy = TradeUtils.getBuyStrategy(m_oRateInfo);
 		m_oSellStrategy = TradeUtils.getSellStrategy(m_oRateInfo);
+		addToHistory("Create trade");
+	}
+	
+	public RateInfo getRateInfo()
+	{
+		return m_oRateInfo;
 	}
 	
 	public BigDecimal getDelta()
@@ -98,17 +106,23 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public BigDecimal getCriticalPrice()
 	{
-		return m_nCriticalPrice;
+		return (null != m_nCriticalPrice ? m_nCriticalPrice : BigDecimal.ZERO);
+	}
+	
+	public BigDecimal getMinCriticalPrice()
+	{
+		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(getAveragedBoughPrice());
+		return m_nCriticalPrice.add(nTradeMargin.negate());
 	}
 	
 	public BigDecimal getCriticalVolume()
 	{
-		return m_nCriticalVolume;
+		return (null != m_nCriticalVolume ? m_nCriticalVolume : BigDecimal.ZERO);
 	}
 	
 	public String getCriticalPriceString()
 	{
-		return MathUtils.toCurrencyString(getCriticalPrice());
+		return MathUtils.toCurrencyStringEx2(getCriticalPrice());
 	}
 	
 	public String getHistory()
@@ -159,14 +173,14 @@ public class TradeInfo extends BaseObject implements Serializable
 	public void setNeedBoughtVolume(final BigDecimal nNeedBoughtVolume)
 	{
 		if (m_nNeedBoughtVolume.compareTo(nNeedBoughtVolume) != 0)
-			addToHistory("Set need buy volume : " + MathUtils.toCurrencyStringEx(nNeedBoughtVolume)); 
+			addToHistory("Set need buy volume : " + MathUtils.toCurrencyStringEx2(nNeedBoughtVolume)); 
 		m_nNeedBoughtVolume = nNeedBoughtVolume;
 	}
 	
 	public void setTradeSum(BigDecimal nTradeSum)
 	{
 		if (m_nTradeSum.compareTo(nTradeSum) != 0)
-			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx(nTradeSum)); 
+			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 
 		m_nTradeSum = nTradeSum;
 	}
 	
@@ -195,13 +209,13 @@ public class TradeInfo extends BaseObject implements Serializable
 	public void setCriticalPrice(BigDecimal nCriticalPrice)
 	{
 		m_nCriticalPrice = TradeUtils.getRoundedCriticalPrice(m_oRateInfo, nCriticalPrice);
-		addToHistory("Set critical price : " + MathUtils.toCurrencyString(nCriticalPrice)); 
+		addToHistory("Set critical price : " + MathUtils.toCurrencyStringEx2(nCriticalPrice)); 
 	}
 	
 	public void setCriticalVolume(BigDecimal nCriticalVolume)
 	{
 		m_nCriticalVolume = nCriticalVolume;
-		addToHistory("Set critical volume : " + MathUtils.toCurrencyStringEx(nCriticalVolume)); 
+		addToHistory("Set critical volume : " + MathUtils.toCurrencyStringEx2(nCriticalVolume)); 
 	}
 	
 	public void setHistory(String strHistory)
@@ -229,20 +243,19 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	protected void addToHistory(final String strMessage)
 	{
-		
 		m_strHistory += strMessage + "\r\n";
 	}
 	
-	protected void clearHistory()
-	{
-		m_strHistory = StringUtils.EMPTY;
-	}
-
 	public BigDecimal trimSellPrice(final BigDecimal oSellPrice)
 	{
 		return (oSellPrice.compareTo(getCriticalPrice()) < 0 ? getCriticalPrice() : oSellPrice);
 	}
 
+	public boolean isMoreCriticalPrice(final BigDecimal oSellPrice)
+	{
+		return (oSellPrice.compareTo(getCriticalPrice()) > 0);
+	}
+	
 	public void setTradeControler(final ITradeControler oTradeControler)
 	{
 		m_oTradeControler = oTradeControler;
@@ -255,8 +268,22 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public String getInfo()
 	{
-		return "Trade: " + MathUtils.toCurrencyString(getReceivedSum()) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(getDelta()) + "\r\n " + 
-				"Buy: " + MathUtils.toCurrencyString(getAveragedBoughPrice()) + "/" + MathUtils.toCurrencyStringEx(getBoughtVolume()) + "\r\n " +
-				"Sell: " + MathUtils.toCurrencyString(getAveragedSoldPrice()) + "/" + MathUtils.toCurrencyStringEx(getSoldVolume());
+		return "Trade: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "-" + MathUtils.toCurrencyStringEx2(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(getDelta()) + "\r\n " + 
+				"Buy: " + MathUtils.toCurrencyStringEx2(getAveragedBoughPrice()) + "/" + MathUtils.toCurrencyStringEx2(getBoughtVolume()) + "\r\n " +
+				"Sell: " + MathUtils.toCurrencyStringEx2(getAveragedSoldPrice()) + "/" + MathUtils.toCurrencyStringEx2(getSoldVolume());
+	}
+	
+	/** Строковое представление документа */
+	@Override public String toString()
+	{
+		String strResult = StringUtils.EMPTY;
+		strResult += m_oRateInfo + "\r\n";
+		
+		strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "\r\n";
+		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
+		strResult += "BoughtVolume: " + MathUtils.toCurrencyStringEx2(getBoughtVolume()) + "\r\n";
+		strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
+		strResult += m_strHistory;
+		return strResult;
 	}
 }

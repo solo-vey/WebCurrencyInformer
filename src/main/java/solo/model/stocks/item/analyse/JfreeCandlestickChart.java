@@ -1,12 +1,16 @@
 package solo.model.stocks.item.analyse;
 
 import java.awt.Color;
+import java.math.BigDecimal;
 import java.text.DecimalFormat;
 import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.List;
 
 import javax.swing.JPanel;
 
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang.time.DateUtils;
 import org.jfree.chart.JFreeChart;
 import org.jfree.chart.axis.DateAxis;
 import org.jfree.chart.axis.NumberAxis;
@@ -27,16 +31,17 @@ import org.jfree.data.time.ohlc.OHLCSeriesCollection;
 @SuppressWarnings("serial")
 public class JfreeCandlestickChart extends JPanel 
 {
-	public static JFreeChart createChart(String chartTitle, List<JapanCandle> oHistory) 
+	public static JFreeChart createChart(String chartTitle, List<JapanCandle> oHistory, final int nDurationMinutes) 
 	{
+    	final int nScale = getScale(oHistory);
 		// Create OHLCSeriesCollection as a price dataset for candlestick chart
 		OHLCSeriesCollection candlestickDataset = new OHLCSeriesCollection();
-		OHLCSeries ohlcSeries = new OHLCSeries("Price");
+		OHLCSeries ohlcSeries = new OHLCSeries("Price" + (nScale > 1 ? " (" + nScale + ")" : StringUtils.EMPTY));
 		candlestickDataset.addSeries(ohlcSeries);
-		createHighLowDataset(ohlcSeries, oHistory);
+		createHighLowDataset(ohlcSeries, oHistory, nDurationMinutes);
 		
 		// Create candlestick chart priceAxis
-		NumberAxis priceAxis = new NumberAxis("Price");
+		NumberAxis priceAxis = new NumberAxis("Price" + (nScale > 1 ? " (" + nScale + ")" : StringUtils.EMPTY));
 		priceAxis.setAutoRangeIncludesZero(false);
 		// Create candlestick chart renderer
 		CandlestickRenderer candlestickRenderer = new CandlestickRenderer(CandlestickRenderer.WIDTHMETHOD_AVERAGE,
@@ -82,12 +87,36 @@ public class JfreeCandlestickChart extends JPanel
 	}
 	
 	
-    public static void createHighLowDataset(OHLCSeries oOhlcSeries, List<JapanCandle> oHistory) 
+    public static void createHighLowDataset(OHLCSeries oOhlcSeries, List<JapanCandle> oHistory, int nDurationMinutes) 
     {
-        for(final JapanCandle oCandle : oHistory)
+    	if (oHistory.size() == 0)
+    		return;
+    	
+    	final int nScale = getScale(oHistory);
+    	final Date oMinDate = DateUtils.addMinutes(new Date(), -nDurationMinutes);
+        for(int nPos = oHistory.size() - 1; nPos > 0; nPos--)
         {
+        	final JapanCandle oCandle = oHistory.get(nPos);
+        	if (oCandle.getDate().before(oMinDate))
+        		break;
+        	
         	final FixedMillisecond oTime = new FixedMillisecond(oCandle.getDate().getTime());
-        	oOhlcSeries.add(oTime, oCandle.getStart().doubleValue(),oCandle.getMax().doubleValue(), oCandle.getMin().doubleValue(), oCandle.getEnd().doubleValue());
+        	oOhlcSeries.add(oTime, oCandle.getStart().doubleValue() * nScale, oCandle.getMax().doubleValue() * nScale, 
+        					oCandle.getMin().doubleValue() * nScale, oCandle.getEnd().doubleValue() * nScale);
         }
+    }
+
+    public static int getScale(final List<JapanCandle> oHistory) 
+    {
+    	if (oHistory.size() == 0)
+    		return 1;
+    	
+    	final JapanCandle oLastCandle = oHistory.get(oHistory.size() - 1);
+    	if (oLastCandle.getMin().compareTo(new BigDecimal(1)) < 0.001)
+    		return 1000 * 1000;
+    	else if (oLastCandle.getMin().compareTo(new BigDecimal(1)) < 1)
+    		return 1000;
+    	
+    	return 1;
     }
 }

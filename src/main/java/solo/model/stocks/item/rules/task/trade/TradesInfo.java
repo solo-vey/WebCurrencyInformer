@@ -5,6 +5,7 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,8 +22,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	protected RateInfo m_oRateInfo;
 	protected String m_strHistory = StringUtils.EMPTY;
-	
-	protected int m_nTradeCount = 0;
+	protected List<TradeInfo> m_aTradeHistory = new LinkedList<TradeInfo>();
 	
 	protected BigDecimal m_nSum = BigDecimal.ZERO;
 	protected BigDecimal m_nLockedSum = BigDecimal.ZERO;
@@ -130,7 +130,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public Integer getTradeCount()
 	{
-		return m_nTradeCount;
+		return m_aTradeHistory.size();
 	}
 	
 	public void addBuy(BigDecimal nSpendSum, BigDecimal nBuyVolume)
@@ -161,9 +161,17 @@ public class TradesInfo extends BaseObject implements Serializable
 		addToHistory("Sell : " + MathUtils.toCurrencyString(nReceivedSum) + " / " + MathUtils.toCurrencyStringEx(nSoldVolume)); 
 	}
 	
-	public void incTradeCount()
+	public void tradeStart(final TaskTrade oTaskTrade)
 	{
-		m_nTradeCount++;
+		m_aTradeHistory.add(oTaskTrade.getTradeInfo());
+	}
+	
+	public void buyDone(final TaskTrade oTaskTrade)
+	{
+	}
+	
+	public void tradeDone(final TaskTrade oTaskTrade)
+	{
 	}
 	
 	protected void addToHistory(final String strMessage)
@@ -204,8 +212,31 @@ public class TradesInfo extends BaseObject implements Serializable
 		final BigDecimal nReceiveAndSellSum = getReceivedSum().add(getSumToSell());
 		final BigDecimal nDelta = nReceiveAndSellSum.add(getSpendSum().negate());
 		return  "Count: " + getTradeCount() + "\r\n" + 
-				"Money: " + MathUtils.toCurrencyString(getSum()) + "/" + MathUtils.toCurrencyString(getLockedSum()) + "/" + MathUtils.toCurrencyString(getFreeSum()) + "/" + MathUtils.toCurrencyString(getSumToSell()) + "\r\n" + 
-				"Volume:" + MathUtils.toCurrencyStringEx(getVolume()) + "/" + MathUtils.toCurrencyStringEx(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx(getFreeVolume()) + "\r\n" + 
-				"Trades: " + MathUtils.toCurrencyString(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyString(getSpendSum()) + "=" + MathUtils.toCurrencyString(nDelta);
+				"Money: " + MathUtils.toCurrencyStringEx2(getSum()) + "/" + MathUtils.toCurrencyStringEx2(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx2(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx2(getSumToSell()) + "\r\n" + 
+				"Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n" + 
+				"Trades: " + MathUtils.toCurrencyStringEx2(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx2(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(nDelta);
+	}
+	
+	/** Строковое представление документа */
+	@Override public String toString()
+	{
+		String strResult = StringUtils.EMPTY;
+		strResult += m_oRateInfo + "\r\n";
+		
+		strResult += "Sum: " + MathUtils.toCurrencyStringEx2(getSum()) + "\r\n";
+		strResult += "LockedSum: " + MathUtils.toCurrencyStringEx2(getLockedSum()) + "\r\n";
+		strResult += "SumToSell: " + MathUtils.toCurrencyStringEx2(getSumToSell()) + "\r\n";
+		strResult += "Volume: " + MathUtils.toCurrencyStringEx2(getVolume()) + "\r\n";
+		strResult += "LockedVolume: " + MathUtils.toCurrencyStringEx2(getLockedVolume()) + "\r\n";
+		strResult += "BuySum: " + MathUtils.toCurrencyStringEx2(getBuySum()) + "\r\n";
+		strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "\r\n";
+		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
+		strResult += "BuyVolume: " + MathUtils.toCurrencyStringEx2(getBuyVolume()) + "\r\n";
+		strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
+		
+		for(final TradeInfo oTradeInfo : m_aTradeHistory)
+			strResult += "Trade: " + MathUtils.toCurrencyStringEx2(oTradeInfo.getReceivedSum()) + "-" + MathUtils.toCurrencyStringEx2(oTradeInfo.getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(oTradeInfo.getDelta()) + "\r\n";
+
+		return strResult;
 	}
 }

@@ -41,9 +41,9 @@ public class ExmoStockSource extends BaseStockSource
 //		registerRate(new RateInfo(Currency.ETH, Currency.EUR));
 
 		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
-		registerRate(new RateInfo(Currency.BTC, Currency.RUB));
+//		registerRate(new RateInfo(Currency.BTC, Currency.RUB));
 		
-//		registerRate(new RateInfo(Currency.WAVES, Currency.RUB));
+		registerRate(new RateInfo(Currency.WAVES, Currency.RUB));
 
 		registerRate(new RateInfo(Currency.USD, Currency.RUB));
 	}
@@ -169,12 +169,12 @@ public class ExmoStockSource extends BaseStockSource
 		for(final Entry<String, Object> oCurrencyBalance : oUserBalances.entrySet())
 		{
 			final BigDecimal nBalance = MathUtils.fromString(oCurrencyBalance.getValue().toString());
-			if (nBalance.compareTo(BigDecimal.ZERO) == 0)
+			final String strCurrency = oCurrencyBalance.getKey().toString();
+			final BigDecimal nReserved = (oUserReserved.containsKey(strCurrency) ? MathUtils.fromString(oUserReserved.get(strCurrency).toString()) : BigDecimal.ZERO);
+			if (nBalance.compareTo(BigDecimal.ZERO) == 0 && nReserved.compareTo(BigDecimal.ZERO) == 0)
 				continue;
 			
-			final String strCurrency = oCurrencyBalance.getKey().toString();
 			final Currency oCurrency = Currency.valueOf(strCurrency.toUpperCase());
-			final BigDecimal nReserved = (oUserReserved.containsKey(strCurrency) ? MathUtils.fromString(oUserReserved.get(strCurrency).toString()) : BigDecimal.ZERO);
 			oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, nReserved)); 
 		}
 	}
@@ -202,8 +202,10 @@ public class ExmoStockSource extends BaseStockSource
 		}
 	}
 	
-	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
+	@Override public Order getOrder(final String strOrderId, RateInfo oOriginalRateInfo)
 	{
+		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
+		
 		super.getOrder(strOrderId, oRateInfo);
 		
 		int nTryCount = 50;
@@ -212,7 +214,12 @@ public class ExmoStockSource extends BaseStockSource
 		{
 			oGetOrder = getOrderInternal(strOrderId, oRateInfo);
 			if (!oGetOrder.isCanceled() && !oGetOrder.isException())
-				return oGetOrder;
+			{
+				if (!oOriginalRateInfo.getIsReverse())
+					return oGetOrder;
+				
+				return TradeUtils.makeReveseOrder(oGetOrder);
+			}
 			
 			try { Thread.sleep(500); }
 			catch (InterruptedException e) { break; }
@@ -255,12 +262,19 @@ public class ExmoStockSource extends BaseStockSource
 		}
 	}
 	
-	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
+	@Override public Order addOrder(final OrderSide oOriginalSide, final RateInfo oOriginalRateInfo, BigDecimal nOriginalVolume, BigDecimal nOriginalPrice)
 	{
+        System.out.println("Add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice);
+
+		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
+		final OrderSide oSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalSide);
+		final BigDecimal nVolume = (oOriginalRateInfo.getIsReverse() ? nOriginalVolume.multiply(nOriginalPrice) : nOriginalVolume);
+		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION) : nOriginalPrice);
+        if (oOriginalRateInfo.getIsReverse())
+        	System.out.println("Add reverse order: " + oSide + " " + oOriginalRateInfo + " " + nVolume + " " + nPrice);
+
 		try
 		{
-	        System.out.println("Add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice);
-
 	        checkOrderParameters(oSide, oRateInfo, nPrice);
 			
 			super.addOrder(oSide, oRateInfo, nVolume, nPrice);
@@ -277,19 +291,20 @@ public class ExmoStockSource extends BaseStockSource
 			if ("true".equals(oOrderData.get("result").toString()))
 			{
 				final String strOrderId = oOrderData.get("order_id").toString(); 
-				final Order oOrder = getOrder(strOrderId, oRateInfo);
+				final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);
+				oOrder.setVolume(nVolume);
 
 				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
 				return oOrder;
 			}
 			
 			final String strError = (oOrderData.containsKey("error") ? oOrderData.get("error").toString() : "Unknown");
-	        System.err.println("Can't add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice + "\r\n Error : " + strError);
+	        System.err.println("Can't add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice + "\r\n Error : " + strError);
 			return new Order(Order.ERROR, strError);
 		}
 		catch(final Exception e)
 		{
-	        System.err.println("Can't add order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice + "\r\n Exception : " + e.getMessage());
+	        System.err.println("Can't add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice + "\r\n Exception : " + e.getMessage());
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}

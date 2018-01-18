@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -23,7 +24,7 @@ public class HistoryCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		String strMessage = StringUtils.EMPTY;
-		for(final String strCommand : getMainWorker().getHistory().getCommands())
+		for(final String strCommand : WorkerFactory.getMainWorker().getHistory().getCommands())
 		{
 			if (StringUtils.isBlank(m_strFind) || strCommand.toLowerCase().contains(m_strFind))
 				strMessage += "/"  + strCommand + "\r\n";
@@ -31,6 +32,6 @@ public class HistoryCommand extends BaseCommand implements IHistoryCommand
 		strMessage = (StringUtils.isNotBlank(strMessage) ? strMessage : "History is empty");
 
 		final ICommand oCommand = new SendMessageCommand(strMessage);
-		getMainWorker().addCommand(oCommand);
+		WorkerFactory.getMainWorker().addCommand(oCommand);
 	}
 }

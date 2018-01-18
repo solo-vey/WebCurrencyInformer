@@ -4,9 +4,12 @@ import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
 
+import solo.model.stocks.analyse.RateAnalysisResult;
+import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.rules.task.TaskBase;
@@ -16,14 +19,16 @@ import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class TradeUtils
 {
-	public static final int DEFAULT_VOLUME_PRECISION = 6;
-	public static final int DEFAULT_PRICE_PRECISION = 0;
+	public static final int DEFAULT_VOLUME_PRECISION = 8;
+	public static final int DEFAULT_PRICE_PRECISION = 8;
 
 	public static BigDecimal getStockCommision()
 	{
@@ -101,13 +106,21 @@ public class TradeUtils
 		return MathUtils.getBigDecimal(nVolume.doubleValue(), getVolumePrecision(oRateInfo));
 	}
 
-	public static BigDecimal getMinTradeVolume(final RateInfo oRateInfo)
+	public static BigDecimal getMinTradeVolume(final RateInfo oOriginalRateInfo)
 	{
+		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
 		final String strMinVolume = ResourceUtils.getResource("stock." + strMarket + ".min_volume", oStockExchange.getStockProperties(), "0.000001");
 		final BigDecimal nMinTradeVolume = MathUtils.getBigDecimal(Double.parseDouble(strMinVolume), TradeUtils.getVolumePrecision(oRateInfo));
-		return nMinTradeVolume;
+		
+		if (!oOriginalRateInfo.getIsReverse())
+			return nMinTradeVolume;
+		
+		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getHistory().getLastAnalysisResult();
+		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
+		final BigDecimal nSellPrice = oRateAnalysisResult.getAsksOrders().get(0).getPrice();
+		return nMinTradeVolume.multiply(nSellPrice);
 	}
 
 	public static IBuyStrategy getBuyStrategy(final RateInfo oRateInfo)
@@ -170,5 +183,48 @@ public class TradeUtils
 		
 		return null;
 	}
+
+	public static Order makeReveseOrder(final Order oOrder)
+	{
+		final Order oReverseOrder = new Order();
+		oReverseOrder.setCreated(oOrder.getCreated());
+		oReverseOrder.setId(oOrder.getId());
+		oReverseOrder.setState(oOrder.getState());
+		oReverseOrder.setVolume(oOrder.getSum());
+		oReverseOrder.setPrice(MathUtils.getBigDecimal(1.0 / oOrder.getPrice().doubleValue(), 16));
+		if (null != oOrder.getSide())
+			oReverseOrder.setSide(oOrder.getSide().equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL);
+
+		return oReverseOrder;
+	}
+	
+	public static Order removeOrder(final Order oGetOrder, final RateInfo oRateInfo)
+	{
+		final IStockSource oStockSource = WorkerFactory.getMainWorker().getStockExchange().getStockSource();
+		
+		int nTryCount = 50;
+		final String strMessage = "Cannot delete order\r\n" + oGetOrder.getInfoShort();
+		Order oRemoveOrder = new Order(Order.ERROR, strMessage);
+		while (nTryCount > 0)
+		{
+			oRemoveOrder = oStockSource.removeOrder(oGetOrder.getId());
+			if (oRemoveOrder.isCanceled())
+				return oRemoveOrder;
+
+			if (!oRemoveOrder.isException())
+			{
+				final Order oCheckRemoveOrder = oStockSource.getOrder(oGetOrder.getId(), oRateInfo);
+				if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled())
+					return oCheckRemoveOrder;
+			}
+			
+			try { Thread.sleep(100); }
+			catch (InterruptedException e) { break; }
+			nTryCount--;
+		}
+
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, strMessage);
+		return oRemoveOrder;
+	}		
 }
 

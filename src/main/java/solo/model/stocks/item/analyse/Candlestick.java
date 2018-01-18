@@ -14,6 +14,7 @@ import org.jfree.chart.JFreeChart;
 import solo.CurrencyInformer;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
@@ -22,12 +23,15 @@ import ua.lz.ep.utils.ResourceUtils;
 public class Candlestick implements Serializable
 {
 	private static final long serialVersionUID = 6106531883802992172L;
+
+	final static public int CANDLE_HISTORY_SIZE = 300;
 	
 	final protected List<JapanCandle> m_oHistory = new LinkedList<JapanCandle>();
 	final protected Integer m_nCandleDurationMinutes;
-	final protected Integer m_nHistoryLength = 50;
 	final protected RateInfo m_oRateInfo;
 	final protected String m_strStockExchangeName;
+	
+	protected Date m_oLastOrderDate = null;
 	
 	public Candlestick(final IStockExchange oStockExchange, final int nCandleDurationMinutes, final RateInfo oRateInfo)
 	{
@@ -45,14 +49,22 @@ public class Candlestick implements Serializable
 		final Date oLastCandleDate = DateUtils.addMinutes(oCandle.getDate(), m_nCandleDurationMinutes); 
 		if (oLastCandleDate.compareTo(new Date()) <= 0)
 		{
+			final BigDecimal nLastCandleEnd = oCandle.getEnd(); 
 			oCandle = new JapanCandle(); 
 			m_oHistory.add(oCandle);
+			oCandle.setValue(nLastCandleEnd);
 		}
 		
-		while (m_oHistory.size() >= m_nHistoryLength)
+		while (m_oHistory.size() >= CANDLE_HISTORY_SIZE)
 			m_oHistory.remove(0);
 		
-		oCandle.setValue(oRateAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice());
+		for(int nPos = oRateAnalysisResult.getTrades().size() - 1; nPos >= 0; nPos --)
+		{
+			final Order oOrder = oRateAnalysisResult.getTrades().get(nPos);
+			if (null == m_oLastOrderDate || m_oLastOrderDate.before(oOrder.getCreated()))
+				oCandle.setValue(oOrder.getPrice());
+		}
+		m_oLastOrderDate = oRateAnalysisResult.getTrades().get(0).getCreated();
 	}
 	
 	public BigDecimal getAverageMinPrice(int nStepCount)
@@ -79,9 +91,9 @@ public class Candlestick implements Serializable
         return MathUtils.getBigDecimal(nSumaryMaxPrice.doubleValue() / nStepCount, TradeUtils.DEFAULT_PRICE_PRECISION);
 	}
 	
-	public String makeChartImage() throws IOException
+	public String makeChartImage(final int nStepCount) throws IOException
 	{
-		final JFreeChart oChart = JfreeCandlestickChart.createChart(m_oRateInfo.toString() + " - " + getType(), m_oHistory);
+		final JFreeChart oChart = JfreeCandlestickChart.createChart(m_oRateInfo.toString() + " - " + getType(), m_oHistory, m_nCandleDurationMinutes * nStepCount);
     	ChartUtilities.saveChartAsJPEG(new File(getFileName()), oChart, 480, 240);
     	return getFileName();
 	}
@@ -110,8 +122,16 @@ public class Candlestick implements Serializable
 		return getType(0); 
 	}
 	
-	public CandlestickType getType(final int nStep)
+	public CandlestickType getType(int nStep)
 	{
+		if (nStep == 0)
+		{
+	       	final JapanCandle oLastCandle = m_oHistory.get(m_oHistory.size() - 1);
+	       	final Date oMinDateStartCandle = DateUtils.addSeconds(new Date(), -m_nCandleDurationMinutes * 60 / 3);
+	       	if (oLastCandle.getCandleType().getGroupType().equals(CandleGroupType.DOJI) && oLastCandle.m_oDate.before(oMinDateStartCandle))
+	       		nStep++;
+		}
+		
 		if (m_oHistory.size() - nStep < 3)
 			return CandlestickType.UNKNOWN;
 
@@ -166,7 +186,7 @@ public class Candlestick implements Serializable
 		if (isCalm(oCandleType3, oCandleType2, oCandleType1))
 			return CandlestickType.CALM;
 			
-		if (oCandleType1.isGrowth() && oCandleType2.isGrowth())
+		if (oCandleType1.isGrowth() && oCandleType2.isGrowth() && oCandleType3.isCalm())
 			return CandlestickType.GROWTH;
 
 		if (oCandleType1.isFall() && oCandleType2.isFall())
@@ -183,7 +203,16 @@ public class Candlestick implements Serializable
 
 		if (oCandleType1.isFall() && oCandleType3.isFall())
 			return CandlestickType.FALL;
+		
+		if (oCandleType1.isCalm() && oCandleType2.isFall() && oCandleType3.isCalm())
+			return CandlestickType.FALL;
 
+		if (oCandleType1.isCalm() && oCandleType2.isCalm() && oCandleType3.isFall())
+			return CandlestickType.FALL;
+
+		if (oCandleType1.isFall() && oCandleType2.isCalm() && oCandleType3.isCalm())
+			return CandlestickType.FALL;
+		
 		if (oCandleType3.isGrowth())
 			return CandlestickType.START_GROWTH;
 
@@ -201,7 +230,7 @@ public class Candlestick implements Serializable
 			return true;	
 
 		if (oCandleType3.getTrendType().equals(TrendType.CALM) && 
-				oCandleType2.getTrendType().equals(TrendType.CALM))
+				oCandleType2.getTrendType().equals(TrendType.CALM) && !oCandleType1.isFall())
 			return true;	
 
 		return false;

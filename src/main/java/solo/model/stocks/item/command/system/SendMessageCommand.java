@@ -3,6 +3,7 @@ package solo.model.stocks.item.command.system;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 public class SendMessageCommand extends BaseCommand implements ISystemCommand
 {
@@ -19,6 +20,6 @@ public class SendMessageCommand extends BaseCommand implements ISystemCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		getTransport().sendMessage(m_strMessage);
+		WorkerFactory.getTransport().sendMessage(m_strMessage);
 	}
 }

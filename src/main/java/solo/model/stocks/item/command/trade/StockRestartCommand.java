@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -19,7 +20,7 @@ public class StockRestartCommand extends BaseCommand implements IHistoryCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		getStockExchange().getStockSource().restart();
-		sendMessage("Stock restart complete");
+		WorkerFactory.getStockExchange().getStockSource().restart();
+		WorkerFactory.getMainWorker().sendMessage("Stock restart complete");
 	}
 }

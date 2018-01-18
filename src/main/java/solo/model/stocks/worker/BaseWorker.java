@@ -9,7 +9,6 @@ import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.CommandQueue;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.rule.GetRulesCommand;
-import solo.utils.CommonUtils;
 
 public class BaseWorker extends Thread implements IWorker
 {
@@ -51,21 +50,9 @@ public class BaseWorker extends Thread implements IWorker
 			}
 			catch (Exception e) 
 			{
-				onException(e);
+				WorkerFactory.onException(StringUtils.EMPTY, e);
 			}
 		}
-	}
-	
-	protected void onException(final String strMessage, final Exception e)
-	{
-		System.err.printf(Thread.currentThread().getName() + 
-				(StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
-				" Thread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
-	}
-	
-	protected void onException(final Exception e)
-	{
-		onException(StringUtils.EMPTY, e);
 	}
 	
 	protected void doWork() throws Exception

@@ -2,6 +2,7 @@ package solo.model.stocks.item.command.trade;
 
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -21,8 +22,8 @@ public class RemoveOrderCommand extends BaseCommand implements IHistoryCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		getStockExchange().getStockSource().removeOrder(m_strOrderId);
+		WorkerFactory.getStockExchange().getStockSource().removeOrder(m_strOrderId);
 		
-		sendMessage("Order " + m_strOrderId + " deleted. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
+		WorkerFactory.getMainWorker().sendMessage("Order " + m_strOrderId + " deleted. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
 	}
 }

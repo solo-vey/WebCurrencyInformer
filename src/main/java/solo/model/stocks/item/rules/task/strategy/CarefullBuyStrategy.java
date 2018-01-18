@@ -6,6 +6,7 @@ import java.util.List;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.rules.task.trade.TradeInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 public class CarefullBuyStrategy extends BaseStrategy implements IBuyStrategy
@@ -19,7 +20,7 @@ public class CarefullBuyStrategy extends BaseStrategy implements IBuyStrategy
 		return NAME;
 	}
 	
-	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult)
+	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult, final TradeInfo oTradeInfo)
 	{
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders(); 
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();

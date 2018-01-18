@@ -40,7 +40,7 @@ public class CheckRulesCommand extends BaseCommand implements ISystemCommand
 	{
 		super.execute();
 		
-		final IStockExchange oStockExchange = getStockExchange();
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		final List<Entry<Integer, IRule>> aCheckRulesInfo = new LinkedList<Entry<Integer, IRule>>();
 		for(final Entry<Integer, IRule> oRuleInfo : oStockExchange.getRules().getRules().entrySet())
 		{
@@ -71,7 +71,7 @@ public class CheckRulesCommand extends BaseCommand implements ISystemCommand
 		} 
 		catch (InterruptedException e) 
 		{
-			WorkerFactory.getMainWorker().onException(e);
+			WorkerFactory.onException("CheckRulesCommand.execute", e);
 		}
 		
 	}
@@ -102,7 +102,7 @@ class CheckRuleThread implements Runnable
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException(e);
+			WorkerFactory.onException("CheckRuleThread.run", e);
 		}
     }
 }

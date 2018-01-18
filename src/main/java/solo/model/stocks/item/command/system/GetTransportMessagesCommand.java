@@ -5,6 +5,7 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
 
@@ -27,7 +28,7 @@ public class GetTransportMessagesCommand extends BaseCommand implements ISystemC
 	public void execute() throws Exception
 	{
 		super.execute();
-		final ITransportMessages oMessages = getTransport().getMessages();
+		final ITransportMessages oMessages = WorkerFactory.getTransport().getMessages();
 		if (null == oMessages)
 			return;
 		
@@ -35,7 +36,7 @@ public class GetTransportMessagesCommand extends BaseCommand implements ISystemC
 		{
 			final String strCommandLine = oMessage.getText();
 			final ICommand oCommand = CommandFactory.getCommand(strCommandLine);
-			getMainWorker().addCommand(oCommand);
+			WorkerFactory.getMainWorker().addCommand(oCommand);
 		}
 	}
 }

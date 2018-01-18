@@ -6,6 +6,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.analyse.Candlestick;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -26,9 +27,9 @@ public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		
-		final IStockExchange oStockExchange = getStockExchange(); 
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange(); 
     	final Candlestick oCandlestick = oStockExchange.getStockCandlestick().get(m_oRateInfo);
-    	final String strFileName = oCandlestick.makeChartImage();
-    	getTransport().sendPhoto(new File(strFileName), null);
+    	final String strFileName = oCandlestick.makeChartImage(50);
+    	WorkerFactory.getTransport().sendPhoto(new File(strFileName), null);
 	}
 }

@@ -269,7 +269,7 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -287,7 +287,7 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -305,7 +305,7 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}
@@ -351,7 +351,7 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException("Error executing query [" + oHttpUriRequest + "]", e);
+			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
             throw e; 
 		}
 	}

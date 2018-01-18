@@ -11,8 +11,12 @@ public class StrategyFactory
 	static
 	{
 		addBuyStrategy(new QuickBuyStrategy());
+		addBuyStrategy(new QuickBuyExStrategy());
 		addBuyStrategy(new CarefullBuyStrategy());
+		addBuyStrategy(new NowBuyStrategy());
+		
 		addSellStrategy(new QuickSellStrategy());
+		addSellStrategy(new NowSellStrategy());
 	}
 	
 	static public void addBuyStrategy(final IBuyStrategy oBuyStrategy)

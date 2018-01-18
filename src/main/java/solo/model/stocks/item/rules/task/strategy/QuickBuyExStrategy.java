@@ -10,12 +10,11 @@ import solo.model.stocks.item.rules.task.trade.TradeInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
 
-public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
+public class QuickBuyExStrategy extends QuickBuyStrategy
 {
-	private static final long serialVersionUID = -4917816147504424168L;
+	private static final long serialVersionUID = -4917817147504424168L;
 	
-	public final static String NAME = "QuickBuy";
-	public final static double MAX_PRICE_DELTA = 0.0002;
+	public final static String NAME = "QuickBuyEx";
 	
 	public String getName()
 	{
@@ -33,7 +32,7 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		return nBestPrice;
 	}
 	
-	public BigDecimal getBestPrice(final RateAnalysisResult oRateAnalysisResult)
+	public BigDecimal getBestPrice(final RateAnalysisResult oRateAnalysisResult, final TradeInfo oTradeInfo)
 	{
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders(); 
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
@@ -47,26 +46,34 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		oAsks = StrategyUtils.removeMyOrders(oAsks, oMyOrders); 
 		oBids = StrategyUtils.removeMyOrders(oBids, oMyOrders);
 		oBids = StrategyUtils.removeFirstTooExpenciveBids(oAsks, oBids);
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (!isDeltaTooSmall(oAsks, oBids, oTradeInfo))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		oAsks = StrategyUtils.removeFakeOrders(oAsks, null, oRateAnalysisResult.getRateInfo()); 
 		oBids = StrategyUtils.removeFakeOrders(oBids, null, oRateAnalysisResult.getRateInfo());
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (!isDeltaTooSmall(oAsks, oBids, oTradeInfo))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		
 		oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks); 
 		oBids = StrategyUtils.removeTooExpenciveOrders(oBids);
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (!isDeltaTooSmall(oAsks, oBids, oTradeInfo))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		while(true)
 		{
 			oAsks = StrategyUtils.removeTopOrders(oAsks); 
 			oBids = StrategyUtils.removeTopOrders(oBids);
-			if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+			if (!isDeltaTooSmall(oAsks, oBids, oTradeInfo))
 				return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		}
+	}
+	
+	public static boolean isDeltaTooSmall(List<Order> oAsks, List<Order> oBids, final TradeInfo oTradeInfo)
+	{
+		final boolean bIsDeltaTooSmall = StrategyUtils.isDeltaTooSmall(oAsks, oBids);
+		final BigDecimal nBidPrice = StrategyUtils.getBestPrice(oBids);
+		final BigDecimal nVolume = MathUtils.getBigDecimal(oTradeInfo.getTradeSum().doubleValue() / nBidPrice.doubleValue(), TradeUtils.getVolumePrecision(oTradeInfo.getRateInfo()));
+		return nVolume.compareTo(oTradeInfo.getCriticalVolume()) < 0 || bIsDeltaTooSmall;
 	}
 
 }

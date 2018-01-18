@@ -6,20 +6,33 @@ import java.util.List;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.rules.task.trade.TradeInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.utils.MathUtils;
 
 public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 {
 	private static final long serialVersionUID = -8250348350757548857L;
 	
 	public final static String NAME = "QuickSell";
+	public final static double MAX_PRICE_DELTA = 0.0002;
 	
 	public String getName()
 	{
 		return NAME;
 	}
+
+	public BigDecimal getSellPrice(final RateAnalysisResult oRateAnalysisResult, final TradeInfo oTradeInfo)
+	{
+		final BigDecimal nBestPrice = getBestPrice(oRateAnalysisResult, oTradeInfo);
+		final BigDecimal nNowSellPrice = StrategyFactory.getSellStrategy(NowSellStrategy.NAME).getSellPrice(oRateAnalysisResult, oTradeInfo);
+		final BigDecimal nMinSellPrice = MathUtils.getBigDecimal(nBestPrice.doubleValue() * (1.0 - MAX_PRICE_DELTA), TradeUtils.DEFAULT_PRICE_PRECISION); 
+		if (nMinSellPrice.compareTo(nNowSellPrice) <= 0) 
+			return nNowSellPrice;
+		return oTradeInfo.trimSellPrice(nBestPrice);
+	}
 	
-	public BigDecimal getSellPrice(final RateAnalysisResult oRateAnalysisResult)
+	public BigDecimal getBestPrice(final RateAnalysisResult oRateAnalysisResult, final TradeInfo oTradeInfo)
 	{
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders();
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
@@ -40,6 +53,13 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 		if (StrategyUtils.isDeltaTooSmall(oAsks, oBids))
 			oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks);
 		
-		return StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);
+		BigDecimal nBestPrice = StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);
+		while (!oTradeInfo.isMoreCriticalPrice(nBestPrice))
+		{
+			oAsks = StrategyUtils.removeTopOrders(oAsks);
+			nBestPrice = StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);
+		}
+		
+		return nBestPrice;
 	}
 }

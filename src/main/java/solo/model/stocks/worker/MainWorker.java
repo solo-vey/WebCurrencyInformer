@@ -8,10 +8,10 @@ import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandHistory;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.base.LastErrors;
+import solo.model.stocks.item.command.system.SendMessageCommand;
 import solo.transport.ITransport;
 import solo.transport.MessageLevel;
 import solo.transport.TransportFactory;
-import solo.utils.CommonUtils;
 
 public class MainWorker extends BaseWorker implements IMainWorker
 {
@@ -63,26 +63,21 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		return m_oLastErrors;
 	}
 	
-	public void onException(final Exception e)
+	public void sendMessage(final String strMessage)
 	{
-		onException(StringUtils.EMPTY, e);
+		if (StringUtils.isBlank(strMessage))
+			return;
+		
+		final ICommand oCommand = new SendMessageCommand(strMessage);
+		addCommand(oCommand);
 	}
 	
-	public void onException(final String strMessage, final Exception e)
+	public void sendMessage(final MessageLevel oLevel, final String strMessage)
 	{
-		super.onException(strMessage, e);
-		
-		try
-		{
-			final String strFullMessage = (StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
-										"Exception : " + CommonUtils.getExceptionMessage(e.getCause());			
-			if (MessageLevel.DEBUG.isLevelHigh(getStockExchange().getMessageLevel()))
-				m_oTransportWorker.getTransport().sendMessage(strFullMessage);
-			m_oLastErrors.addError(strFullMessage);
-		}
-		catch (Exception eSend)
-		{
-			System.err.printf("Send message exception : " + eSend + "\r\n");
-		}
+		if (oLevel.equals(MessageLevel.ERROR))
+			getLastErrors().addError(strMessage);
+			
+		if (oLevel.isLevelHigh(getStockExchange().getMessageLevel()))
+			sendMessage(strMessage);
 	}
 }

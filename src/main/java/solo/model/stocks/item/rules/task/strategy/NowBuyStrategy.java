@@ -5,6 +5,7 @@ import java.util.List;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.rules.task.trade.TradeInfo;
 
 public class NowBuyStrategy extends BaseStrategy implements IBuyStrategy
 {
@@ -17,15 +18,15 @@ public class NowBuyStrategy extends BaseStrategy implements IBuyStrategy
 		return NAME;
 	}
 	
-	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult)
+	public BigDecimal getBuyPrice(final RateAnalysisResult oRateAnalysisResult, final TradeInfo oTradeInfo)
 	{
 		final List<Order> oAsks = oRateAnalysisResult.getAsksOrders();
 		BigDecimal nFullSumPrice = oAsks.get(0).getPrice();
-		BigDecimal nFullSum = BigDecimal.ZERO; // ???  *1.1
+		BigDecimal nFullVolume = oTradeInfo.getNeedBoughtVolume();
 		int nOrderPosition = 0;
-		while (nFullSum.compareTo(BigDecimal.ZERO) > 0 && nOrderPosition < oAsks.size())
+		while (nFullVolume.compareTo(BigDecimal.ZERO) > 0 && nOrderPosition < oAsks.size())
 		{
-			nFullSum = nFullSum.add(oAsks.get(nOrderPosition).getPrice().negate()); 
+			nFullVolume = nFullVolume.add(oAsks.get(nOrderPosition).getVolume().negate()); 
 			nFullSumPrice = oAsks.get(nOrderPosition).getPrice();
 			nOrderPosition++;
 		}

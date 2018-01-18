@@ -6,6 +6,7 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.ISystemCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -27,7 +28,7 @@ public class ManageStock extends BaseCommand implements ISystemCommand
 	{
 		super.execute();
 		
-		final IStockExchange oStockExchange = getStockExchange();
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
 		oStockExchange.getManager().manage(oStateAnalysisResult);
 	}

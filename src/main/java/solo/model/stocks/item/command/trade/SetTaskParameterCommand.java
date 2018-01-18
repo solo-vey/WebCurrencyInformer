@@ -9,6 +9,7 @@ import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
@@ -36,12 +37,12 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 	{
 		super.execute();
 		
-		final Rules oStockRules = getStockExchange().getRules();
+		final Rules oStockRules = WorkerFactory.getStockExchange().getRules();
 		final IRule oRule = oStockRules.getRules().get(m_nRuleID);
 		
 		if (null == oRule)
 		{
-			sendMessage("Rule [" + m_nRuleID + "] is absent");
+			WorkerFactory.getMainWorker().sendMessage("Rule [" + m_nRuleID + "] is absent");
 			return;
 		}
 
@@ -50,17 +51,17 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 		if (null != oTradeTask && oTradeTask instanceof HasParameters)
 		{
 			((HasParameters)oTradeTask).setParameter(m_strName, m_strValue);
-			sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
+			WorkerFactory.getMainWorker().sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
 					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
 		}
 		else
 		if (null != oTradeControler && oTradeControler instanceof HasParameters)
 		{
 			((HasParameters)oTradeControler).setParameter(m_strName, m_strValue);
-			sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
+			WorkerFactory.getMainWorker().sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
 					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
 		}
 		else
-			sendMessage(oRule.getInfo(m_nRuleID));
+			WorkerFactory.getMainWorker().sendMessage(oRule.getInfo(m_nRuleID));
 	}
 }

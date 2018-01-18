@@ -7,6 +7,7 @@ import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
@@ -31,12 +32,12 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		
-		final Rules oStockRules = getStockExchange().getRules();
+		final Rules oStockRules = WorkerFactory.getStockExchange().getRules();
 		final IRule oRule = oStockRules.getRules().get(m_nRuleID);
 		
 		if (null == oRule)
 		{
-			sendMessage("Rule [" + m_nRuleID + "] is absent");
+			WorkerFactory.getMainWorker().sendMessage("Rule [" + m_nRuleID + "] is absent");
 			return;
 		}
 		
@@ -45,18 +46,19 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 		if (null != oTradeTask)
 		{
 			if (m_bIsFull)
-				sendMessage(oTradeTask.getTradeInfo().toString());
+				WorkerFactory.getMainWorker().sendMessage(oTradeTask.getTradeInfo().toString());
 
-			sendMessage(oTradeTask.getTradeInfo().getInfo());
+			WorkerFactory.getMainWorker().sendMessage(oTradeTask.getTradeInfo().getInfo());
 		}
 		else
 		if (null != oTradeControler)
 		{
 			if (m_bIsFull)
-				sendMessage(oTradeControler.getTradesInfo().toString());
-			sendMessage(oTradeControler.getFullInfo());
+				WorkerFactory.getMainWorker().sendMessage(oTradeControler.getTradesInfo().toString());
+			
+			WorkerFactory.getMainWorker().sendMessage(oTradeControler.getFullInfo());
 		}
 		else
-			sendMessage(oRule.getInfo(m_nRuleID));
+			WorkerFactory.getMainWorker().sendMessage(oRule.getInfo(m_nRuleID));
 	}
 }

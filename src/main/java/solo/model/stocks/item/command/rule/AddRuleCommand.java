@@ -4,6 +4,7 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -29,8 +30,8 @@ public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		final IRule oRule = RulesFactory.getRule(m_strRuleInfo);
-		getStockExchange().getRules().addRule(oRule);
+		WorkerFactory.getStockExchange().getRules().addRule(oRule);
 		
-		sendMessage("Rule " + getInfo() + " add. " + BaseCommand.getCommand(GetRulesCommand.NAME));
+		WorkerFactory.getMainWorker().sendMessage("Rule " + getInfo() + " add. " + BaseCommand.getCommand(GetRulesCommand.NAME));
 	}
 }

@@ -10,12 +10,14 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.history.StocksHistory;
+import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.rule.CheckRulesCommand;
 import solo.model.stocks.item.command.trade.ManageStock;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
@@ -40,14 +42,14 @@ public class LoadRateInfoCommand extends BaseCommand implements ISystemCommand
 	{
 		super.execute();
 		
-		final IStockExchange oStockExchange = getStockExchange();
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		final StockRateStates oRateStates = loadStockRates(oStockExchange);
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getAnalysis().analyse(oRateStates, oStockExchange);
 		oStockExchange.getHistory().addToHistory(oStateAnalysisResult);
 		StocksHistory.addHistory(oStockExchange, oRateStates);
 		
-		getMainWorker().addCommand(new ManageStock());
-		getMainWorker().addCommand(new CheckRulesCommand());
+		WorkerFactory.getMainWorker().addCommand(new ManageStock());
+		WorkerFactory.getMainWorker().addCommand(new CheckRulesCommand());
 	}
 	
 	public StockRateStates loadStockRates(final IStockExchange oStockExchange) throws Exception
@@ -72,7 +74,7 @@ public class LoadRateInfoCommand extends BaseCommand implements ISystemCommand
 		} 
 		catch (InterruptedException e) 
 		{
-			WorkerFactory.getMainWorker().onException(e);
+			WorkerFactory.onException("LoadRateInfoCommand.run", e);
 		}
 		
 		return oStockRateStates;
@@ -102,10 +104,25 @@ class LoadRateThread implements Runnable
 			final IStockSource oStockSource = oStockExchange.getStockSource();
 			final RateState oRateState = oStockSource.getRateState(m_oRateInfo);
 			m_oStockRateStates.addRate(oRateState);
+			
+			final RateState oReverseRateState = makeReverseRateState(oRateState);
+			m_oStockRateStates.addRate(oReverseRateState);
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException(e);
+			WorkerFactory.onException("LoadRateThread.run", e);
 		}
     }
+
+	protected RateState makeReverseRateState(final RateState oRateState)
+	{
+		final RateState oReverseRateState = new RateState(RateInfo.getReverseRate(oRateState.getRateInfo()));
+		for(final Order oOrder : oRateState.getBidsOrders())
+			oReverseRateState.getAsksOrders().add(TradeUtils.makeReveseOrder(oOrder));
+		for(final Order oOrder : oRateState.getAsksOrders())
+			oReverseRateState.getBidsOrders().add(TradeUtils.makeReveseOrder(oOrder));
+		for(final Order oOrder : oRateState.getTrades())
+			oReverseRateState.getTrades().add(TradeUtils.makeReveseOrder(oOrder));
+		return oReverseRateState;
+	}
 }

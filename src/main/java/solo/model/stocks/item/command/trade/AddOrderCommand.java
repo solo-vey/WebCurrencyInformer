@@ -2,10 +2,12 @@ package solo.model.stocks.item.command.trade;
 
 import java.math.BigDecimal;
 
+import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
@@ -35,8 +37,11 @@ public class AddOrderCommand extends BaseCommand implements IHistoryCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		getStockExchange().getStockSource().addOrder(m_oSide, m_oRateInfo, m_nVolume, m_nPrice);
+		final Order oOrder = WorkerFactory.getStockExchange().getStockSource().addOrder(m_oSide, m_oRateInfo, m_nVolume, m_nPrice);
 		
-		sendMessage("Order " + m_oSide + "/" + m_oRateInfo + "/" + m_nPrice + "/" + m_nVolume + " add. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
+		if (oOrder.isNull())
+			WorkerFactory.getMainWorker().sendMessage("Can't add order. " + oOrder.getInfo() + " " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
+		else
+			WorkerFactory.getMainWorker().sendMessage("Order " + oOrder.getInfo() + " add. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
 	}
 }

@@ -10,6 +10,7 @@ import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -26,7 +27,7 @@ public class GetRulesCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		String strMessage = StringUtils.EMPTY;
-		for(final Entry<Integer, IRule> oRuleInfo : getStockExchange().getRules().getRules().entrySet())
+		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
 			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRuleInfo.getValue());
 			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
@@ -40,6 +41,6 @@ public class GetRulesCommand extends BaseCommand implements IHistoryCommand
 		else 
 			strMessage += "No rules";
 			
-		sendMessage(strMessage);
+		WorkerFactory.getMainWorker().sendMessage(strMessage);
 	}
 }

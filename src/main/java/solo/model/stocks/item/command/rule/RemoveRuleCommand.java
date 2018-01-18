@@ -1,6 +1,7 @@
 package solo.model.stocks.item.command.rule;
 
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды */
 public class RemoveRuleCommand extends BaseCommand
@@ -33,12 +34,12 @@ public class RemoveRuleCommand extends BaseCommand
 		super.execute();
 		
 		if (m_nRuleID.equals(Integer.MIN_VALUE))
-			sendMessage("Bad rule identifier [" + m_nRuleID + "]" + BaseCommand.getCommand(GetRulesCommand.NAME));
+			WorkerFactory.getMainWorker().sendMessage("Bad rule identifier [" + m_nRuleID + "]" + BaseCommand.getCommand(GetRulesCommand.NAME));
 		else
 		{
-			getStockExchange().getRules().removeRule(m_nRuleID);
+			WorkerFactory.getStockExchange().getRules().removeRule(m_nRuleID);
 			if (!m_bIsSilent)
-				sendMessage("Rule " + m_nRuleID + " deleted. " + BaseCommand.getCommand(GetRulesCommand.NAME));
+				WorkerFactory.getMainWorker().sendMessage("Rule " + m_nRuleID + " deleted. " + BaseCommand.getCommand(GetRulesCommand.NAME));
 		}
 	}
 }

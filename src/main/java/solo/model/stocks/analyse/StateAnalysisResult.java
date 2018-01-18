@@ -39,7 +39,7 @@ public class StateAnalysisResult extends BaseObject
 		} 
 		catch (InterruptedException e) 
 		{
-			WorkerFactory.getMainWorker().onException(e);
+			WorkerFactory.onException("StateAnalysisResult.execute", e);
 		}
 	}
 	
@@ -76,13 +76,19 @@ class AnalyseRateThread implements Runnable
 			Thread.currentThread().setName("Analyse rate " + m_oRateInfo);
 			WorkerFactory.registerMainWorkerThread(Thread.currentThread().getId(), m_oMainWorker);
 			final IStockExchange oStockExchange = m_oMainWorker.getStockExchange();
+			
 			final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(m_oStockRateStates, m_oRateInfo, oStockExchange);
 			m_oRatesAnalysisResult.put(m_oRateInfo, oRateAnalysisResult);
 			oStockExchange.getStockCandlestick().addRateInfo(m_oRateInfo, oRateAnalysisResult);
+			
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
+			final RateAnalysisResult oReverseRateAnalysisResult = new RateAnalysisResult(m_oStockRateStates, oReverseRateInfo, oStockExchange);
+			m_oRatesAnalysisResult.put(oReverseRateInfo, oReverseRateAnalysisResult);
+			oStockExchange.getStockCandlestick().addRateInfo(oReverseRateInfo, oReverseRateAnalysisResult);
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.getMainWorker().onException(e);
+			WorkerFactory.onException("AnalyseRateThread.run", e);
 		}
     }
 }

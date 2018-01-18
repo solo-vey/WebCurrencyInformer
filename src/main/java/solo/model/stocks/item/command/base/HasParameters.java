@@ -12,14 +12,8 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.currency.Currency;
 import solo.model.stocks.BaseObject;
-import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.command.system.SendMessageCommand;
-import solo.model.stocks.source.IStockSource;
-import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
-import solo.transport.ITransport;
-import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
@@ -107,7 +101,12 @@ abstract public class HasParameters extends BaseObject
 		}
 		final String strCurrencyTo = strValue.toUpperCase().substring(oCurrencyFrom.toString().toUpperCase().length());
 		final Currency oCurrencyTo = (StringUtils.isNotBlank(strCurrencyTo) ? Currency.valueOf(strCurrencyTo.toUpperCase()) : Currency.UAH);
-		return new RateInfo(oCurrencyFrom, oCurrencyTo); 
+		
+		final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
+		if (WorkerFactory.getStockSource().getRates().contains(oRateInfo))
+			return oRateInfo;
+
+		return new RateInfo(oCurrencyFrom, oCurrencyTo, true); 
 	}
 	
 	public Date getParameterAsDate(final String strParameterName)
@@ -140,43 +139,5 @@ abstract public class HasParameters extends BaseObject
 		catch (final Exception e) {}
 		
 		return null;
-	}
-	
-	public static MainWorker getMainWorker()
-	{
-		return WorkerFactory.getMainWorker();
-	}
-	
-	public static ITransport getTransport()
-	{
-		return WorkerFactory.getMainWorker().getTransport();
-	}
-	
-	public static IStockExchange getStockExchange()
-	{
-		return WorkerFactory.getMainWorker().getStockExchange();
-	}
-	
-	public static IStockSource getStockSource()
-	{
-		return getStockExchange().getStockSource();
-	}
-	
-	public void sendMessage(final String strMessage)
-	{
-		if (StringUtils.isBlank(strMessage))
-			return;
-		
-		final ICommand oCommand = new SendMessageCommand(strMessage);
-		getMainWorker().addCommand(oCommand);
-	}
-	
-	public void sendMessage(final MessageLevel oLevel, final String strMessage)
-	{
-		if (oLevel.equals(MessageLevel.ERROR))
-			getMainWorker().getLastErrors().addError(strMessage);
-			
-		if (oLevel.isLevelHigh(getStockExchange().getMessageLevel()))
-			sendMessage(strMessage);
 	}
 }

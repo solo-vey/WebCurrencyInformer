@@ -5,7 +5,10 @@ import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.exchange.Stocks;
+import solo.model.stocks.source.IStockSource;
+import solo.transport.ITransport;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
 
@@ -13,10 +16,25 @@ public class WorkerFactory
 {
 	protected static IWorker s_oRootWorker = new BaseWorker();
 	protected static Map<Long, MainWorker> s_oThreadToWorkers = new HashMap<Long, MainWorker>();
-	
-	static public MainWorker getMainWorker()
+
+	public static MainWorker getMainWorker()
 	{
 		return s_oThreadToWorkers.get(Thread.currentThread().getId());
+	}
+	
+	public static ITransport getTransport()
+	{
+		return getMainWorker().getTransport();
+	}
+	
+	public static IStockExchange getStockExchange()
+	{
+		return getMainWorker().getStockExchange();
+	}
+	
+	public static IStockSource getStockSource()
+	{
+		return getStockExchange().getStockSource();
 	}
 	
 	static public void registerMainWorkerThread(final Long nThreadID, final MainWorker oWorker)

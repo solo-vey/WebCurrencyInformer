@@ -8,6 +8,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.IHistoryCommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды */
 public class RemoveAllRulesCommand extends BaseCommand implements IHistoryCommand
@@ -23,10 +24,10 @@ public class RemoveAllRulesCommand extends BaseCommand implements IHistoryComman
 	{
 		super.execute();
 
-		final IStockExchange oStockExchange = getStockExchange();
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		for(final Entry<Integer, IRule> oRuleInfo : oStockExchange.getRules().getRules().entrySet())
 			oStockExchange.getRules().removeRule(oRuleInfo.getKey());
 	
-		sendMessage("All rules deleted");
+		WorkerFactory.getMainWorker().sendMessage("All rules deleted");
 	}
 }

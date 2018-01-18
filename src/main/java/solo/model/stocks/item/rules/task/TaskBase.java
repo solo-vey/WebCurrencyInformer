@@ -22,7 +22,7 @@ public class TaskBase extends HasParameters implements IRule
 {
 	private static final long serialVersionUID = -6534375856366736570L;
 	
-	final protected RateInfo m_oRateInfo;
+	protected RateInfo m_oRateInfo;
 	
 	public TaskBase(final RateInfo oRateInfo, final String strCommandLine)
 	{

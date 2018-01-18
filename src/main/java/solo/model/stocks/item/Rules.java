@@ -88,7 +88,7 @@ public class Rules
 		} 
 		catch (IOException e) 
 		{
-			WorkerFactory.getMainWorker().onException("Save rules exception", e);
+			WorkerFactory.onException("Save rules exception", e);
 		}			
 	}
 
@@ -108,7 +108,7 @@ public class Rules
 		} 
 		catch (final Exception e) 
 		{
-			WorkerFactory.getMainWorker().onException("Load rules exception", e);
+			WorkerFactory.onException("Load rules exception", e);
 	    }			
 	}
 

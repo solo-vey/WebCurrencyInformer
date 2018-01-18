@@ -4,6 +4,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.ICommand;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
@@ -23,7 +24,7 @@ public class LastErrorsCommand extends BaseCommand implements IHistoryCommand
 	{
 		super.execute();
 		String strMessage = StringUtils.EMPTY;
-		for(final String strError : getMainWorker().getLastErrors().getErrors())
+		for(final String strError : WorkerFactory.getMainWorker().getLastErrors().getErrors())
 		{
 			if (StringUtils.isBlank(m_strFind) || strError.toLowerCase().contains(m_strFind))
 				strMessage += strError + "\r\n------------\r\n";
@@ -31,6 +32,6 @@ public class LastErrorsCommand extends BaseCommand implements IHistoryCommand
 		strMessage = (StringUtils.isNotBlank(strMessage) ? strMessage : "No errors");
 
 		final ICommand oCommand = new SendMessageCommand(strMessage);
-		getMainWorker().addCommand(oCommand);
+		WorkerFactory.getMainWorker().addCommand(oCommand);
 	}
 }

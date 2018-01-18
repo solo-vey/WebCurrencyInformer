@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.CommandGroup;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
@@ -54,6 +55,6 @@ public class HelpCommand extends BaseCommand implements IHistoryCommand
 		else
 			strMessage = CommandFactory.getCommand(m_strCommandInfo).getHelp();
 
-		sendMessage(strMessage);
+		WorkerFactory.getMainWorker().sendMessage(strMessage);
 	}
 }
