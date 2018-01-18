@@ -28,6 +28,7 @@ import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.TaskType;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickBuyExStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
@@ -260,6 +261,12 @@ public class TradeControler extends TaskBase implements ITradeControler
 			if (null != getBuyStrategy())
 				oTaskTrade.getTradeInfo().setBuyStrategy(getBuyStrategy());
 			
+			if (m_oRateInfo.getIsReverse())
+			{
+				m_oBuyStrategy = StrategyFactory.getBuyStrategy(QuickBuyExStrategy.NAME);
+				oTaskTrade.getTradeInfo().setCriticalVolume(BigDecimal.ZERO);
+			}
+			
 			oTaskTrade.setTradeControler(this);
 			oTaskTrade.starTask();
 			WorkerFactory.getStockExchange().getRules().addRule(oTaskTrade);
@@ -273,27 +280,47 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	protected void changeReverseRateTrade(final List<ITradeTask> aTaskTrades)
 	{
-		BigDecimal nOrderSellVolume = BigDecimal.ZERO; 
-		final Date oMaxDateCreate = DateUtils.addMinutes(new Date(), -5); 
-		for(final ITradeTask oTaskTrade : aTaskTrades)
-		{
-			final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
-			if (!OrderSide.SELL.equals(oOrder.getSide()))
-				return;
-		    if (null == oOrder.getCreated() || oOrder.getCreated().after(oMaxDateCreate))
-		    	return;
-			
-			nOrderSellVolume = nOrderSellVolume.add(oOrder.getVolume());
-		}
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
-		if (nOrderSellVolume.compareTo(nMinTradeVolume) < 0)
-			return;
-		
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(m_oRateInfo);
 		final CandlestickType oCandlestickType = oCandlestick.getType();
-		if (!oCandlestickType.equals(CandlestickType.WHITE_AND_TWO_BLACK) && !oCandlestickType.equals(CandlestickType.THREE_BLACK))
-			return;
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+		BigDecimal nOrderSellVolume = BigDecimal.ZERO; 
+
+		boolean bIsNeedReverse = false;
+		if (oCandlestickType.equals(CandlestickType.WHITE_AND_TWO_BLACK) || oCandlestickType.equals(CandlestickType.THREE_BLACK))
+		{
+			final Date oMaxDateCreate = DateUtils.addMinutes(new Date(), -5); 
+			for(final ITradeTask oTaskTrade : aTaskTrades)
+			{
+				final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
+				if (!OrderSide.SELL.equals(oOrder.getSide()))
+					return;
+				if (null == oOrder.getCreated() || oOrder.getCreated().after(oMaxDateCreate))
+					continue;
+			
+				nOrderSellVolume = nOrderSellVolume.add(oOrder.getVolume());
+			}
+			bIsNeedReverse = (nOrderSellVolume.compareTo(nMinTradeVolume) > 0);
+		}
+		else
+		if (oCandlestickType.isFall())
+		{
+			final Date oMaxDateCreate = DateUtils.addMinutes(new Date(), -15); 
+			for(final ITradeTask oTaskTrade : aTaskTrades)
+			{
+				final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
+				if (!OrderSide.SELL.equals(oOrder.getSide()))
+					return;
+				if (null == oOrder.getCreated() || oOrder.getCreated().after(oMaxDateCreate))
+					continue;
+			
+				nOrderSellVolume = nOrderSellVolume.add(oOrder.getVolume());
+			}
+			bIsNeedReverse = (nOrderSellVolume.compareTo(nMinTradeVolume) > 0);
+		}
+		
+		if (!bIsNeedReverse)
+			return;		
 
 		/*for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
@@ -309,7 +336,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 		
 		m_oRateInfo = RateInfo.getReverseRate(m_oRateInfo);
 		getAllTradesInfo().get(m_oRateInfo).addSell(nOrderSellVolume, BigDecimal.ZERO);
-		m_oTradesInfo = getAllTradesInfo().get(m_oRateInfo);*/
+		m_oTradesInfo = getAllTradesInfo().get(m_oRateInfo);
+		
+		m_oBuyStrategy = null;*/
 		
 		m_strCurrentState = "Reverse trade !!! ";
 	}

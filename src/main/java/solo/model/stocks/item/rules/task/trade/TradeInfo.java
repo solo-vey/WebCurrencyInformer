@@ -243,7 +243,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	protected void addToHistory(final String strMessage)
 	{
-		//System.out.println("Trade "  + m_oRateInfo + ". " + strMessage);
+		System.out.println("Trade "  + m_oRateInfo + ". " + strMessage);
 		m_strHistory += strMessage + "\r\n";
 	}
 	

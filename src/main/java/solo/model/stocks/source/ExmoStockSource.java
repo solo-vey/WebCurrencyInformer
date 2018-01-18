@@ -229,7 +229,7 @@ public class ExmoStockSource extends BaseStockSource
 		return oGetOrder;
 	}
 	
-	@SuppressWarnings("serial")
+	@SuppressWarnings({"serial", "unchecked"})
 	protected Order getOrderInternal(final String strOrderId, final RateInfo oRateInfo)
 	{
 		try
@@ -252,7 +252,31 @@ public class ExmoStockSource extends BaseStockSource
 				return new Order(strOrderId, Order.CANCEL, oOrderData.get("error").toString());
 
 			final Order oOrder = convert2Order(oOrderData);
-			oOrder.setState(Order.DONE);
+			
+			final Object oTrades = oOrderData.get("trades");
+			BigDecimal nTradeSum = BigDecimal.ZERO; 
+			if (oTrades instanceof List<?>)
+			{
+				final List<Object> oListTrades = (List<Object>)oTrades; 
+				for(final Object oTrade : oListTrades)
+				{
+					if (oTrade instanceof Map<?, ?>)
+					{
+						final Map<String, Object> oTradeMap = (Map<String, Object>)oTrade;
+						final BigDecimal nSum = MathUtils.fromString(oTradeMap.get("amount").toString());
+						nTradeSum = nTradeSum.add(nSum);
+					}
+				}
+			}
+			
+			BigDecimal nOrderSum = BigDecimal.ZERO;
+			if (null != oOrderData.get("in_amount") && oOrder.getSide().equals(OrderSide.SELL))
+				nOrderSum = MathUtils.fromString(oOrderData.get("in_amount").toString());
+			else
+			if (null != oOrderData.get("out_amount") && oOrder.getSide().equals(OrderSide.BUY))
+				nOrderSum = MathUtils.fromString(oOrderData.get("out_amount").toString());
+			
+			oOrder.setState(nOrderSum.compareTo(nTradeSum) == 0 ? Order.DONE : Order.WAIT);
 			oOrder.setId(strOrderId);
 			return oOrder;
 		}
@@ -261,7 +285,7 @@ public class ExmoStockSource extends BaseStockSource
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
-	
+
 	@Override public Order addOrder(final OrderSide oOriginalSide, final RateInfo oOriginalRateInfo, BigDecimal nOriginalVolume, BigDecimal nOriginalPrice)
 	{
         System.out.println("Add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice);
