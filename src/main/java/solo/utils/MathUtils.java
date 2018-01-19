@@ -52,7 +52,7 @@ public class MathUtils
 		if (oValue.compareTo(BigDecimal.ZERO) == 0)
 			return "0";
 
-		if (oValue.doubleValue() > 1 || oValue.doubleValue() < 0)
+		if (oValue.doubleValue() >= 1 || oValue.doubleValue() <= 0)
 			return toCurrencyString(oValue);
 		
 		final DecimalFormat oDecimalFormat = new DecimalFormat("#.00000000");
@@ -64,7 +64,7 @@ public class MathUtils
 		if (null == oValue)
 			return "NaN";
 
-		if (oValue.doubleValue() > 1 || oValue.doubleValue() < 0)
+		if (oValue.doubleValue() >= 1 || oValue.doubleValue() <= 0)
 			return toCurrencyString(oValue);
 
 		if (oValue.compareTo(BigDecimal.ZERO) == 0)

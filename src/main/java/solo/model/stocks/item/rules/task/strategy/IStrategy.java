@@ -1,6 +1,8 @@
 package solo.model.stocks.item.rules.task.strategy;
 
-public interface IStrategy
+import java.io.Serializable;
+
+public interface IStrategy extends Serializable
 {
 	String getName();
 }

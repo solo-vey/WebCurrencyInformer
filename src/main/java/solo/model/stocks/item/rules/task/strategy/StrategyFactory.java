@@ -3,7 +3,9 @@ package solo.model.stocks.item.rules.task.strategy;
 import java.util.HashMap;
 import java.util.Map;
 
+import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ReverseTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 
 public class StrategyFactory
@@ -23,6 +25,8 @@ public class StrategyFactory
 		addSellStrategy(new NowSellStrategy());
 		
 		addTradeStrategy(new SimpleTradeStrategy());
+		addTradeStrategy(new DropSellTradeStrategy());
+		addTradeStrategy(new ReverseTradeStrategy());
 	}
 	
 	static public void addBuyStrategy(final IBuyStrategy oBuyStrategy)

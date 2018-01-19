@@ -122,6 +122,14 @@ public class TradeUtils
 		final BigDecimal nSellPrice = oRateAnalysisResult.getAsksOrders().get(0).getPrice();
 		return nMinTradeVolume.multiply(nSellPrice);
 	}
+	
+	public static BigDecimal getMinTradeSum(final RateInfo oRateInfo)
+	{
+		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getHistory().getLastAnalysisResult();
+		final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
+		final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(oRateInfo).getBidsOrders().get(0).getPrice();
+		return oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01));
+	}
 
 	public static IBuyStrategy getBuyStrategy(final RateInfo oRateInfo)
 	{

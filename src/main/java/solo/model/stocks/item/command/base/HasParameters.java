@@ -13,6 +13,8 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.currency.Currency;
 import solo.model.stocks.BaseObject;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
@@ -87,6 +89,24 @@ abstract public class HasParameters extends BaseObject
 		return Integer.MIN_VALUE;
 	}
 	
+	public Integer getParameterAsInt(final String strParameterName, final Integer nDefault)
+	{
+		final String strValue = getParameter(strParameterName);
+		if (StringUtils.isNotBlank(strValue))
+			return Integer.valueOf(strValue);
+		
+		return nDefault;
+	}
+	
+	public ITradeStrategy getParameterAsTradeStrategy(final String strParameterName, final ITradeStrategy oDefaultTradeStrategy)
+	{
+		final String strValue = getParameter(strParameterName);
+		if (StringUtils.isNotBlank(strValue))
+			return StrategyFactory.getTradeStrategy(strValue);
+		
+		return oDefaultTradeStrategy;
+	}
+
 	public RateInfo getParameterAsRateInfo(final String strParameterName)
 	{
 		final String strValue = getParameter(strParameterName);

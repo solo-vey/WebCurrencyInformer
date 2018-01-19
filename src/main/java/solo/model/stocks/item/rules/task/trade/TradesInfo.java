@@ -136,7 +136,10 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public String getCurrentState()
 	{
-		return (null == m_strCurrentState ? StringUtils.EMPTY : m_strCurrentState);
+		if (StringUtils.isBlank(m_strCurrentState))
+			return StringUtils.EMPTY;
+		
+		return "State [" + m_strCurrentState + "]";
 	}
 	
 	public void addBuy(BigDecimal nSpendSum, BigDecimal nBuyVolume)
@@ -225,7 +228,8 @@ public class TradesInfo extends BaseObject implements Serializable
 		return  "Count: " + getTradeCount() + "\r\n" + 
 				"Money: " + MathUtils.toCurrencyStringEx2(getSum()) + "/" + MathUtils.toCurrencyStringEx2(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx2(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx2(getSumToSell()) + "\r\n" + 
 				"Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n" + 
-				"Trades: " + MathUtils.toCurrencyStringEx2(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx2(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(nDelta);
+				"Trades: " + MathUtils.toCurrencyStringEx2(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx2(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(nDelta) + "\r\n" + 
+				getCurrentState();
 	}
 	
 	/** Строковое представление документа */
