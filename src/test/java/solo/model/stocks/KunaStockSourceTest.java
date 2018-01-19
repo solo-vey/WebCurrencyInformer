@@ -55,4 +55,26 @@ public class KunaStockSourceTest
         writer.close();
         reader.close();
     }
+    
+    @Test public void test2() throws Exception
+    {
+    	BufferedReader reader = new BufferedReader(new FileReader ("c:\\_2\\_3\\userevents1.txt"));
+    	FileWriter writer = new FileWriter("c:\\_2\\_3\\userevents2.txt"); 
+
+    	String strLine = StringUtils.EMPTY;
+        while((strLine = reader.readLine()) != null) 
+        {
+        	final String[] strParts = strLine.split("\t");
+        	final String strLigaID = strParts[0];
+        	final String strEvent = strParts[1];
+        	
+        	final String[] aEventParts = strEvent.split("\\/");
+        	for (int nPos = 2; nPos < aEventParts.length; nPos++)
+        		writer.write(aEventParts[nPos] + "\t");
+        	writer.write("\r\n");
+        	
+        }
+        writer.close();
+        reader.close();
+    }
 }

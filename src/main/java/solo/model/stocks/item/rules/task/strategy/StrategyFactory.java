@@ -3,10 +3,14 @@ package solo.model.stocks.item.rules.task.strategy;
 import java.util.HashMap;
 import java.util.Map;
 
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
+
 public class StrategyFactory
 {
 	protected static Map<String, IBuyStrategy> s_oBuyStrategies = new HashMap<String, IBuyStrategy>();
 	protected static Map<String, ISellStrategy> s_oSellStrategies = new HashMap<String, ISellStrategy>();
+	protected static Map<String, ITradeStrategy> s_oTradeStrategies = new HashMap<String, ITradeStrategy>();
 	
 	static
 	{
@@ -17,6 +21,8 @@ public class StrategyFactory
 		
 		addSellStrategy(new QuickSellStrategy());
 		addSellStrategy(new NowSellStrategy());
+		
+		addTradeStrategy(new SimpleTradeStrategy());
 	}
 	
 	static public void addBuyStrategy(final IBuyStrategy oBuyStrategy)
@@ -28,6 +34,11 @@ public class StrategyFactory
 	{
 		s_oSellStrategies.put(oSellStrategy.getName().toLowerCase(), oSellStrategy);
 	}
+	
+	static public void addTradeStrategy(final ITradeStrategy oTradeStrategy)
+	{
+		s_oTradeStrategies.put(oTradeStrategy.getName().toLowerCase(), oTradeStrategy);
+	}
 
 	static public IBuyStrategy getBuyStrategy(final String strStrategyName)
 	{
@@ -37,5 +48,10 @@ public class StrategyFactory
 	static public ISellStrategy getSellStrategy(final String strStrategyName)
 	{
 		return s_oSellStrategies.get(strStrategyName.toLowerCase());
+	}
+	
+	static public ITradeStrategy getTradeStrategy(final String strStrategyName)
+	{
+		return s_oTradeStrategies.get(strStrategyName.toLowerCase());
 	}
 }

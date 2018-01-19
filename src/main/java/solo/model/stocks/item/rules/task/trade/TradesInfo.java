@@ -22,6 +22,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	protected RateInfo m_oRateInfo;
 	protected String m_strHistory = StringUtils.EMPTY;
+	protected String m_strCurrentState = StringUtils.EMPTY;
 	protected List<TradeInfo> m_aTradeHistory = new LinkedList<TradeInfo>();
 	
 	protected BigDecimal m_nSum = BigDecimal.ZERO;
@@ -133,6 +134,11 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_aTradeHistory.size();
 	}
 	
+	public String getCurrentState()
+	{
+		return (null == m_strCurrentState ? StringUtils.EMPTY : m_strCurrentState);
+	}
+	
 	public void addBuy(BigDecimal nSpendSum, BigDecimal nBuyVolume)
 	{
 		if (nSpendSum.compareTo(BigDecimal.ZERO) == 0 && nBuyVolume.compareTo(BigDecimal.ZERO) == 0)
@@ -183,6 +189,11 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected void clearHistory()
 	{
 		m_strHistory = StringUtils.EMPTY;
+	}
+	
+	public void setCurrentState(final String strCurrentState)
+	{
+		m_strCurrentState = strCurrentState;
 	}
 	
 	public void updateOrderInfo(final List<ITradeTask> aTaskTrades)

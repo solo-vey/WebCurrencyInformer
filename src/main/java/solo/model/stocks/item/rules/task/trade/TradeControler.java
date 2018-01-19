@@ -30,6 +30,8 @@ import solo.model.stocks.item.rules.task.TaskType;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyExStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
@@ -46,6 +48,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	protected Map<RateInfo, TradesInfo> m_oAllTradesInfo = new HashMap<RateInfo, TradesInfo>();
 	protected TradesInfo m_oTradesInfo;
 	protected IBuyStrategy m_oBuyStrategy = null;
+	protected ITradeStrategy m_oTradeStrategy = null;
 	protected String m_strCurrentState = StringUtils.EMPTY;
 
 	public TradeControler(RateInfo oRateInfo, String strCommandLine)
@@ -66,10 +69,15 @@ public class TradeControler extends TaskBase implements ITradeControler
 		getTradesInfo().setSum(nTradeSum, m_nMaxTrades);
 	}
 	
+	public RateInfo getRateInfo()
+	{
+		return getTradesInfo().getRateInfo();
+	}
+	
 	public String getFullInfo()
 	{ 
 		int nRuleID = getRuleID(this);
-		String strInfo = m_oRateInfo.toString().toUpperCase();
+		String strInfo = getRateInfo().toString().toUpperCase();
 		strInfo += " / buyStrategy [" + (null != getBuyStrategy() ? getBuyStrategy().getName() : "Default") + "]";
 		strInfo += " / tradeCount [" + m_nMaxTrades + "]\r\n";
 		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
@@ -79,6 +87,13 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public IBuyStrategy getBuyStrategy()
 	{
 		return m_oBuyStrategy;
+	}
+	
+	public ITradeStrategy getTradeStrategy()
+	{
+		if (null == m_oTradeStrategy)
+			m_oTradeStrategy = StrategyFactory.getTradeStrategy(SimpleTradeStrategy.NAME);
+		return m_oTradeStrategy;
 	}
 	
 	@Override public String getType()
@@ -98,9 +113,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 		if (null == m_oAllTradesInfo || m_oAllTradesInfo.size() == 0)
 		{
 			m_oAllTradesInfo = new HashMap<RateInfo, TradesInfo>();
-			m_oAllTradesInfo.put(m_oRateInfo, new TradesInfo(m_oRateInfo));
+			m_oAllTradesInfo.put(getRateInfo(), new TradesInfo(getRateInfo()));
 			
-			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(getRateInfo());
 			m_oAllTradesInfo.put(oReverseRateInfo, new TradesInfo(oReverseRateInfo));
 		}
 		return m_oAllTradesInfo;   
@@ -109,7 +124,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public String getInfo(final Integer nRuleID)
 	{
 		String strInfo = getType() + 
-				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
+				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo()) + 
 				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, StringUtils.EMPTY) + 
 				"\r\n";   
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
@@ -184,7 +199,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		if (bIsBuyPrecent || aTaskTrades.size() < m_nMaxTrades)
 			return;
 		
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(getRateInfo());
 		final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
 	    if (oOrder.getVolume().compareTo(nMinTradeVolume) < 0)
 	    	return;
@@ -194,7 +209,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	    	return;
 		
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
-		final Candlestick oCandlestick = oStockCandlestick.get(m_oRateInfo);
+		final Candlestick oCandlestick = oStockCandlestick.get(getRateInfo());
 		final CandlestickType oCandlestickType = oCandlestick.getType();
 		if (!oCandlestickType.isCalm())
 			return;
@@ -212,7 +227,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	protected void createNewTrade(final StateAnalysisResult oStateAnalysisResult, List<ITradeTask> aTaskTrades)
 	{
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
-		final Candlestick oCandlestick = oStockCandlestick.get(m_oRateInfo);
+		final Candlestick oCandlestick = oStockCandlestick.get(getRateInfo());
 		final CandlestickType oCandlestickType = oCandlestick.getType();
 		if (oCandlestickType.isFall())
 		{
@@ -222,8 +237,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 		
 		try
 		{
-			final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
-			final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo).getBidsOrders().get(0).getPrice();
+			final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(getRateInfo());
+			final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(getRateInfo()).getBidsOrders().get(0).getPrice();
 			final BigDecimal oMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01)); 
 
 			final BigDecimal nTotalSum = m_oTradesInfo.getSum().add(m_oTradesInfo.getSumToSell());
@@ -233,8 +248,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 				return;
 			}
 				
-			BigDecimal nBuySum = MathUtils.getRoundedBigDecimal(nTotalSum.doubleValue() / m_nMaxTrades, TradeUtils.getVolumePrecision(m_oRateInfo));
-			final CurrencyAmount oCurrencyAmount = WorkerFactory.getStockSource().getUserInfo(m_oRateInfo).getMoney().get(m_oRateInfo.getCurrencyTo());
+			BigDecimal nBuySum = MathUtils.getRoundedBigDecimal(nTotalSum.doubleValue() / m_nMaxTrades, TradeUtils.getVolumePrecision(getRateInfo()));
+			final CurrencyAmount oCurrencyAmount = WorkerFactory.getStockSource().getUserInfo(getRateInfo()).getMoney().get(getRateInfo().getCurrencyTo());
 			if (null != oCurrencyAmount && oCurrencyAmount.getBalance().compareTo(nBuySum) < 0)
 				nBuySum = oCurrencyAmount.getBalance();
 
@@ -249,7 +264,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 
 			}
 			
-			final String strRuleInfo = "task" + "_" + m_oRateInfo + "_" + TaskType.TRADE.toString().toLowerCase() + "_" + nBuySum;
+			final String strRuleInfo = "task" + "_" + getRateInfo() + "_" + TaskType.TRADE.toString().toLowerCase() + "_" + nBuySum;
 			final TaskFactory oTask = (TaskFactory) RulesFactory.getRule(strRuleInfo);
 			final TaskTrade oTaskTrade = ((TaskTrade)oTask.getTaskBase());
 			
@@ -261,7 +276,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			if (null != getBuyStrategy())
 				oTaskTrade.getTradeInfo().setBuyStrategy(getBuyStrategy());
 			
-			if (m_oRateInfo.getIsReverse())
+			if (getRateInfo().getIsReverse())
 			{
 				m_oBuyStrategy = StrategyFactory.getBuyStrategy(QuickBuyExStrategy.NAME);
 				oTaskTrade.getTradeInfo().setCriticalVolume(BigDecimal.ZERO);
@@ -281,9 +296,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 	protected void changeReverseRateTrade(final List<ITradeTask> aTaskTrades)
 	{
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
-		final Candlestick oCandlestick = oStockCandlestick.get(m_oRateInfo);
+		final Candlestick oCandlestick = oStockCandlestick.get(getRateInfo());
 		final CandlestickType oCandlestickType = oCandlestick.getType();
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(getRateInfo());
 		BigDecimal nOrderSellVolume = BigDecimal.ZERO; 
 
 		boolean bIsNeedReverse = false;
@@ -325,18 +340,18 @@ public class TradeControler extends TaskBase implements ITradeControler
 		/*for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
 			final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
-			TradeUtils.removeOrder(oOrder, m_oRateInfo);
+			TradeUtils.removeOrder(oOrder, getRateInfo());
 			oTaskTrade.setTradeControler(ITradeControler.NULL);
 			tradeDone((TaskTrade)oTaskTrade);
 			WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);
 		}
 		
 		m_oTradesInfo.addSell(BigDecimal.ZERO, nOrderSellVolume);
-		getAllTradesInfo().put(m_oRateInfo, m_oTradesInfo);
+		getAllTradesInfo().put(getRateInfo(), m_oTradesInfo);
 		
-		m_oRateInfo = RateInfo.getReverseRate(m_oRateInfo);
-		getAllTradesInfo().get(m_oRateInfo).addSell(nOrderSellVolume, BigDecimal.ZERO);
-		m_oTradesInfo = getAllTradesInfo().get(m_oRateInfo);
+		getRateInfo() = RateInfo.getReverseRate(getRateInfo());
+		getAllTradesInfo().get(getRateInfo()).addSell(nOrderSellVolume, BigDecimal.ZERO);
+		m_oTradesInfo = getAllTradesInfo().get(getRateInfo());
 		
 		m_oBuyStrategy = null;*/
 		
@@ -368,14 +383,14 @@ public class TradeControler extends TaskBase implements ITradeControler
 		m_oTradesInfo.updateOrderInfo(aTaskTrades);
 		
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getType() + 
-				" " + m_oRateInfo.toString() + "\r\n" + getTradesInfo().getInfo());
+				" " + getRateInfo().toString() + "\r\n" + getTradesInfo().getInfo());
 	}	
 
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
 	{
 		getTradesInfo().addBuy(nSpendSum, nBuyVolume);
 		if (nSpendSum.compareTo(BigDecimal.ZERO) != 0 || nBuyVolume.compareTo(BigDecimal.ZERO) != 0)
-			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, m_oRateInfo.toString() +  " Buy : " + MathUtils.toCurrencyString(nSpendSum) + 
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getRateInfo().toString() +  " Buy : " + MathUtils.toCurrencyString(nSpendSum) + 
 					" / " + MathUtils.toCurrencyStringEx(nBuyVolume));
 	}
 	
@@ -383,7 +398,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		getTradesInfo().addSell(nReceivedSum, nSoldVolume);
 		if (nReceivedSum.compareTo(BigDecimal.ZERO) != 0 || nSoldVolume.compareTo(BigDecimal.ZERO) != 0)
-			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, m_oRateInfo.toString() +  " Sell : " + MathUtils.toCurrencyString(nReceivedSum) + 
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getRateInfo().toString() +  " Sell : " + MathUtils.toCurrencyString(nReceivedSum) + 
 					" / " + MathUtils.toCurrencyStringEx(nSoldVolume));
 	}
 	
@@ -404,7 +419,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	/** Строковое представление документа */
 	@Override public String toString()
 	{
-		return  m_oRateInfo + "\r\n" + getTradesInfo().getInfo() + 
+		return  getRateInfo() + "\r\n" + getTradesInfo().getInfo() + 
 			(StringUtils.isNotBlank(m_strCurrentState) ? "\r\nState : [" + m_strCurrentState + "]" : StringUtils.EMPTY);
 	}
 }
