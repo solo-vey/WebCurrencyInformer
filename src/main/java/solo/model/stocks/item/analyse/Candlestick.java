@@ -135,9 +135,13 @@ public class Candlestick implements Serializable
 		if (m_oHistory.size() - nStep < 3)
 			return CandlestickType.UNKNOWN;
 
-       	final CandleType oCandleType3 = m_oHistory.get(m_oHistory.size() - nStep - 1).getCandleType();
-       	final CandleType oCandleType2 = m_oHistory.get(m_oHistory.size() - nStep - 2).getCandleType();
-       	final CandleType oCandleType1 = m_oHistory.get(m_oHistory.size() - nStep - 3).getCandleType();
+       	final JapanCandle oCandle3 = m_oHistory.get(m_oHistory.size() - nStep - 1);
+       	final JapanCandle oCandle2 = m_oHistory.get(m_oHistory.size() - nStep - 2);
+       	final JapanCandle oCandle1 = m_oHistory.get(m_oHistory.size() - nStep - 3);
+
+       	final CandleType oCandleType3 = oCandle3.getCandleType();
+       	final CandleType oCandleType2 = oCandle2.getCandleType();
+       	final CandleType oCandleType1 = oCandle1.getCandleType();
 
 		//	Три белых солдата        	
 		if (isThreeWhite(oCandleType3, oCandleType2, oCandleType1))
@@ -165,11 +169,21 @@ public class Candlestick implements Serializable
 
 		//	Бычье поглощение
 		if (isBullAbsorption(oCandleType3, oCandleType2)) 
-			return CandlestickType.BLACK_TO_WHITE;
+		{
+			if (oCandle2.getMax().compareTo(oCandle3.getMax()) < 0)
+				return CandlestickType.BLACK_TO_WHITE;
+			
+			return CandlestickType.CALM;
+		}
 
 		//	Медвежье поглощение
 		if (isBearAbsorption(oCandleType3, oCandleType2)) 
-			return CandlestickType.WHITE_TO_BLACK;
+		{
+			if (oCandle2.getMin().compareTo(oCandle3.getMin()) >= 0)
+				return CandlestickType.WHITE_TO_BLACK;
+			
+			return CandlestickType.CALM;
+		}
 			
 		//	Пинцет днища
 		if (isBottomPliers(oCandleType3, oCandleType2)) 

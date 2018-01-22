@@ -123,7 +123,7 @@ public class CommandFactory
 
 		final int nParameterCount = aParameters.length / 2;
 		for(int nPos = 0; nPos < nParameterCount; nPos++)
-			strCommand = strCommand.replace(aParameters[nPos * 2].toString(), aParameters[nPos * 2 + 1].toString());
+			strCommand = strCommand.replace(aParameters[nPos * 2].toString(), (null != aParameters[nPos * 2 + 1] ? aParameters[nPos * 2 + 1].toString() : StringUtils.EMPTY));
 		return strCommand;
 	}
 	

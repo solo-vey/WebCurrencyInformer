@@ -5,7 +5,6 @@ import java.math.BigDecimal;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -21,9 +20,10 @@ public class TradesInfo extends BaseObject implements Serializable
 	private static final long serialVersionUID = -7601846839785106296L;
 	
 	protected RateInfo m_oRateInfo;
-	protected String m_strHistory = StringUtils.EMPTY;
+	protected Integer m_nRuleID;
+	protected TradeHistory m_oHistory;
+	protected int m_nTradeCount = 0;
 	protected String m_strCurrentState = StringUtils.EMPTY;
-	protected List<TradeInfo> m_aTradeHistory = new LinkedList<TradeInfo>();
 	
 	protected BigDecimal m_nSum = BigDecimal.ZERO;
 	protected BigDecimal m_nLockedSum = BigDecimal.ZERO;
@@ -31,6 +31,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nLockedVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nBuySum = BigDecimal.ZERO;
+	protected BigDecimal m_nLossSum = BigDecimal.ZERO;
 
 	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
 	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
@@ -58,9 +59,20 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_nReceivedSum.add(m_nSpendSum.negate());
 	}
 	
-	public String getHistory()
+	public Integer getRuleID()
 	{
-		return m_strHistory;
+		if (null == m_nRuleID)
+			m_nRuleID = (int)(Math.random() * 100000);
+		
+		return m_nRuleID;
+	}
+	
+	public TradeHistory getHistory()
+	{
+		if (null == m_oHistory)
+			m_oHistory = new TradeHistory(getRuleID(), "controler_" + m_oRateInfo);
+		
+		return m_oHistory;
 	}
 	
 	public BigDecimal getSpendSum()
@@ -104,6 +116,13 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_nBuySum;
 	}
 	
+	public BigDecimal getLossSum()
+	{
+		if (null == m_nLossSum)
+			m_nLossSum = BigDecimal.ZERO;
+		return m_nLossSum;
+	}
+	
 	public BigDecimal getSoldVolume()
 	{
 		return m_nSoldVolume;
@@ -131,7 +150,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public Integer getTradeCount()
 	{
-		return m_aTradeHistory.size();
+		return m_nTradeCount;
 	}
 	
 	public String getCurrentState()
@@ -170,9 +189,15 @@ public class TradesInfo extends BaseObject implements Serializable
 		addToHistory("Sell : " + MathUtils.toCurrencyString(nReceivedSum) + " / " + MathUtils.toCurrencyStringEx(nSoldVolume)); 
 	}
 	
+	public void setLossSum(final BigDecimal nLossSum)
+	{
+		m_nLossSum = nLossSum;
+		
+		addToHistory("Set loss sum : " + MathUtils.toCurrencyString(nLossSum)); 
+	}
+	
 	public void tradeStart(final TaskTrade oTaskTrade)
 	{
-		m_aTradeHistory.add(oTaskTrade.getTradeInfo());
 	}
 	
 	public void buyDone(final TaskTrade oTaskTrade)
@@ -181,17 +206,15 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public void tradeDone(final TaskTrade oTaskTrade)
 	{
+		final BigDecimal nTradeDelta = oTaskTrade.getTradeInfo().getFullDelta();
+		if (nTradeDelta.compareTo(BigDecimal.ZERO) < 0)
+			setLossSum(nTradeDelta.negate());
 	}
 	
 	protected void addToHistory(final String strMessage)
 	{
 		final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
-		m_strHistory += oDateFormat.format(new Date()) + " " + strMessage + "\r\n";
-	}
-	
-	protected void clearHistory()
-	{
-		m_strHistory = StringUtils.EMPTY;
+		getHistory().addToHistory(oDateFormat.format(new Date()) + " " + strMessage);
 	}
 	
 	public void setCurrentState(final String strCurrentState)
@@ -248,10 +271,8 @@ public class TradesInfo extends BaseObject implements Serializable
 		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
 		strResult += "BuyVolume: " + MathUtils.toCurrencyStringEx2(getBuyVolume()) + "\r\n";
 		strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
+		strResult += "LossSum:" + MathUtils.toCurrencyStringEx2(getLossSum()) + "\r\n";
 		
-		for(final TradeInfo oTradeInfo : m_aTradeHistory)
-			strResult += "Trade: " + MathUtils.toCurrencyStringEx2(oTradeInfo.getReceivedSum()) + "-" + MathUtils.toCurrencyStringEx2(oTradeInfo.getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(oTradeInfo.getDelta()) + "\r\n";
-
 		return strResult;
 	}
 }

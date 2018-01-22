@@ -272,7 +272,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final String strMessage = "- " + oGetOrder.getInfoShort() + "\r\n+ " + oAddOrder.getInfo();
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, strMessage);
 
-		final String strHistory = oGetOrder.getSide() + " " + (oGetOrder.getPrice().compareTo(oNewPrice) < 0 ? "^ " : "v ") + MathUtils.toCurrencyString(oNewPrice) + "/" + MathUtils.toCurrencyStringEx(oNewVolume);
+		final String strHistory = oGetOrder.getSide() + " " + (oGetOrder.getPrice().compareTo(oNewPrice) < 0 ? "^ " : "v ") + MathUtils.toCurrencyStringEx2(oNewPrice) + "/" + MathUtils.toCurrencyStringEx2(oNewVolume);
 		m_oTradeInfo.addToHistory(strHistory);
 		WorkerFactory.getStockExchange().getRules().save();
 	}
@@ -369,12 +369,11 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getInfo(null) + " is executed");
 		
-		final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(m_oTradeInfo.getAveragedBoughPrice(), BigDecimal.ZERO);
-		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(m_oTradeInfo.getAveragedBoughPrice());
-		m_oTradeInfo.setCriticalPrice(m_oTradeInfo.getAveragedBoughPrice().add(nTradeCommision).add(nTradeMargin));
+		m_oTradeInfo.setCriticalPrice(m_oTradeInfo.calculateCriticalPrice());
 		final String strMessage = "Set critical price " + m_oTradeInfo.getCriticalPriceString() + 
-									"/" + MathUtils.toCurrencyString(nTradeCommision.multiply(new BigDecimal(2))) + 
-									"/" + MathUtils.toCurrencyString(nTradeMargin);
+									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(m_oTradeInfo.getAveragedBoughPrice(), m_oTradeInfo.getAveragedBoughPrice())) + 
+									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getMarginValue(m_oTradeInfo.getAveragedBoughPrice())) + 
+									"/" + MathUtils.toCurrencyStringEx2(m_oTradeInfo.getPriviousLossSum());
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, strMessage);
 		m_oTradeInfo.addToHistory(strMessage);
 		getTradeControler().buyDone(this);

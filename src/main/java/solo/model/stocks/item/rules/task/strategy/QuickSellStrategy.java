@@ -57,6 +57,8 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 		while (!oTradeInfo.isMoreCriticalPrice(nBestPrice))
 		{
 			oAsks = StrategyUtils.removeTopOrders(oAsks);
+			if (oAsks.size() == 0)
+				break;
 			nBestPrice = StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);
 		}
 		

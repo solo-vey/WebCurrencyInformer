@@ -52,19 +52,25 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final CandlestickType oCandlestickType = oCandlestick.getType();
 		if (!oCandlestickType.isFall())
 			return false;
+		
+		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
+		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
+			return false;
 
 		final BigDecimal nFreeSum = oTradeControler.getTradesInfo().getFreeSum();
-		final BigDecimal nFreeSumAndOrderSum = nFreeSum.add(oOrder.getSum());
+		final BigDecimal nFreeSumAndOrderSum = nFreeSum.add(oGetOrder.getSum());
 		final BigDecimal oMinTradeSum = TradeUtils.getMinTradeSum(oRateInfo); 
 		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
 		
-		if (oOrder.getVolume().compareTo(nMinTradeVolume) > 0 || nFreeSumAndOrderSum.compareTo(oMinTradeSum) > 0)
-		{
-			TradeUtils.removeOrder(oOrder, oTaskTrade.getTradeInfo().getRateInfo());
-			return true;
-		}
+		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0 && nFreeSumAndOrderSum.compareTo(oMinTradeSum) < 0)
+			return false;
 		
-		return false;
+		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
+		if (oRemoveOrder.isDone())
+			return false;
+		
+		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. Remove order [" + oGetOrder.getId() + "] [" + oGetOrder + "]. " + oCandlestickType);
+		return true;
 	}
 
 	protected void resetCriticalPriceForSellOrder(final ITradeTask oTaskTrade, final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
@@ -73,12 +79,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		if (!OrderSide.SELL.equals(oOrder.getSide()))
 			return;
 
-		final int nMaxTrades = oTradeControler.getMaxTrades();
 		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
-		final boolean bIsBuyPrecent = getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
-		if (bIsBuyPrecent || aTaskTrades.size() < nMaxTrades)
-			return;
-		
 		final RateInfo oRateInfo = oTradesInfo.getRateInfo();
 		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
 		if (oOrder.getVolume().compareTo(nMinTradeVolume) < 0)
@@ -87,36 +88,55 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
 		final CandlestickType oCandlestickType = oCandlestick.getType();
-		if (!oCandlestickType.isCalm())
-			return;
-	
+		
 		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -15); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oFithteenMinutesDateCreate))
 	    {
-	    	final BigDecimal nNewCriticalPrice = oCandlestick.getAverageMaxPrice(3);
-			final BigDecimal nMinCriticalPrice = oTaskTrade.getTradeInfo().getMinCriticalPrice();
-	    	if (nNewCriticalPrice.compareTo(nMinCriticalPrice) > 0)
-	    	{
-	    		oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
-	    		WorkerFactory.getMainWorker().sendMessage(oRateInfo + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
-	    				"Reset after 15 minutes critical price " + MathUtils.toCurrencyString(nNewCriticalPrice));
+	    	final BigDecimal nLostPriceAddition = MathUtils.getBigDecimal(oTaskTrade.getTradeInfo().getPriviousLossSum().doubleValue() / oTaskTrade.getTradeInfo().getBoughtVolume().doubleValue(), TradeUtils.getPricePrecision(oRateInfo));
+	    	final BigDecimal nTotalBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice().add(nLostPriceAddition); 
+	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.85, TradeUtils.getPricePrecision(oRateInfo));
+	    	final BigDecimal nRoundedCriticalPrice = TradeUtils.getRoundedCriticalPrice(oRateInfo, nNewCriticalPrice);
+	    	if (nRoundedCriticalPrice.compareTo(oTaskTrade.getTradeInfo().getCriticalPrice()) == 0)
 	    		return;
-	    	}
+		
+	    	final String strMessage = oRateInfo + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
+	    			"Drop after 15 minutes critical price " + MathUtils.toCurrencyString(nNewCriticalPrice) + ". Trand " + oCandlestickType;
+	    	oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice, strMessage);
+			WorkerFactory.getMainWorker().sendMessage(strMessage); 
+			return;
 	    }
-	    
-		final Date oHourDateCreate = DateUtils.addMinutes(new Date(), -60); 
-	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHourDateCreate))
+		
+		if (oCandlestickType.equals(CandlestickType.BLACK_AND_TWO_WHITE) || oCandlestickType.equals(CandlestickType.THREE_WHITE))
+		{
+			final BigDecimal nNewCriticalPrice = TradeUtils.getRoundedCriticalPrice(oRateInfo, oTaskTrade.getTradeInfo().calculateCriticalPrice());
+			final BigDecimal nRoundedCriticalPrice = TradeUtils.getRoundedCriticalPrice(oRateInfo, nNewCriticalPrice);
+			if (nRoundedCriticalPrice.compareTo(oTaskTrade.getTradeInfo().getCriticalPrice()) == 0)
+				return;
+			
+			final String strMessage = oRateInfo + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
+					"Restore critical price " + MathUtils.toCurrencyString(nNewCriticalPrice) + ". Trand " + oCandlestickType;
+			oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice, strMessage);
+			WorkerFactory.getMainWorker().sendMessage(strMessage); 
+			return;
+		}
+
+	    if (null != oOrder.getCreated() && oOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    {
-	    	final BigDecimal nNewCriticalPrice = oCandlestick.getAverageMaxPrice(3);
-			final BigDecimal nMinCriticalPrice = MathUtils.getBigDecimal(oOrder.getPrice().doubleValue() * 0.9, TradeUtils.DEFAULT_PRICE_PRECISION);
-	    	if (nNewCriticalPrice.compareTo(nMinCriticalPrice) > 0)
-	    	{
-	    		oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice);
-	    		WorkerFactory.getMainWorker().sendMessage(oRateInfo + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
-	    				"Reset after hour critical price " + MathUtils.toCurrencyString(nNewCriticalPrice));
+	    	final BigDecimal nBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice(); 
+	    	final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(nBougthPrice, BigDecimal.ZERO);
+	    	final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nBougthPrice);
+	    	final BigDecimal nCommisionAndMargin = nTradeMargin.add(nTradeCommision);
+	    	final BigDecimal nNewCriticalPrice = nBougthPrice.add(nCommisionAndMargin);
+	    	final BigDecimal nRoundedCriticalPrice = TradeUtils.getRoundedCriticalPrice(oRateInfo, nNewCriticalPrice);
+	    	if (nRoundedCriticalPrice.compareTo(oTaskTrade.getTradeInfo().getCriticalPrice()) == 0)
 	    		return;
-	    	}
+		
+	    	final String strMessage = oRateInfo + "\r\n" + oTaskTrade.getInfo(null) + "\r\n" +
+	    			"Set less 15 minutes critical price " + MathUtils.toCurrencyString(nNewCriticalPrice);
+	    	oTaskTrade.getTradeInfo().setCriticalPrice(nNewCriticalPrice, strMessage);
+			WorkerFactory.getMainWorker().sendMessage(strMessage); 
+			return;
 	    }
-	    
+		
 	}
 }

@@ -208,12 +208,12 @@ public class ExmoStockSource extends BaseStockSource
 		
 		super.getOrder(strOrderId, oRateInfo);
 		
-		int nTryCount = 50;
+		int nTryCount = 25;
 		Order oGetOrder = new Order(Order.ERROR, "Can't read order id " + strOrderId);
 		while (nTryCount > 0)
 		{
 			oGetOrder = getOrderInternal(strOrderId, oRateInfo);
-			if (!oGetOrder.isCanceled() && !oGetOrder.isException())
+			if (!oGetOrder.isCanceled() && !oGetOrder.isDone() && !oGetOrder.isException())
 			{
 				if (!oOriginalRateInfo.getIsReverse())
 					return oGetOrder;
@@ -221,7 +221,7 @@ public class ExmoStockSource extends BaseStockSource
 				return TradeUtils.makeReveseOrder(oGetOrder);
 			}
 			
-			try { Thread.sleep(500); }
+			try { Thread.sleep(250); }
 			catch (InterruptedException e) { break; }
 			nTryCount -= (oGetOrder.isException() ? 1 : 5);
 		}
@@ -278,6 +278,7 @@ public class ExmoStockSource extends BaseStockSource
 			
 			oOrder.setState(nOrderSum.compareTo(nTradeSum) == 0 ? Order.DONE : Order.WAIT);
 			oOrder.setId(strOrderId);
+
 			return oOrder;
 		}
 		catch(final Exception e)

@@ -235,6 +235,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 				final BigDecimal nNeedSellVolume = m_oTradesInfo.getFreeVolume();
 				oTaskTrade.getTradeInfo().addBuy(BigDecimal.ZERO, nNeedSellVolume);
 			}
+			oTaskTrade.getTradeInfo().setPriviousLossSum(getTradesInfo().getLossSum());
 			
 			getTradeStrategy().startNewTrade(oTaskTrade, this);
 			oTaskTrade.setTradeControler(this);

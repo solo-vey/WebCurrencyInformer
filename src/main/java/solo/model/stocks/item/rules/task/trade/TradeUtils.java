@@ -98,7 +98,7 @@ public class TradeUtils
 	
 	public static BigDecimal getRoundedCriticalPrice(final RateInfo oRateInfo, final BigDecimal nPrice)
 	{
-		return MathUtils.getBigDecimalRoundedUp(nPrice.doubleValue(), getPricePrecision(oRateInfo));
+		return MathUtils.getBigDecimal(nPrice.doubleValue(), getPricePrecision(oRateInfo));
 	}
 	
 	public static BigDecimal getRoundedVolume(final RateInfo oRateInfo, final BigDecimal nVolume)

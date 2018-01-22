@@ -1,9 +1,12 @@
 package solo.model.stocks;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -21,26 +24,36 @@ public class KunaStockSourceTest
     
     @Test public void test() throws Exception
     {
-    	final String strID = "20171228";
+    	final List<File> aFiles = new LinkedList<File>();
+    	final File oFolder = new File("c:\\_2\\_3\\product\\product\\");
+    	for (final File oFileEntry : oFolder.listFiles()) 
+    	{
+            if (oFileEntry.isDirectory())
+                continue;
+            aFiles.add(oFileEntry);
+        }
     	
-    	BufferedReader reader = new BufferedReader(new FileReader ("c:\\_2\\_3\\product\\product\\monitoring.log-" + strID));
-    	FileWriter writer = new FileWriter("c:\\_2\\_3\\product\\product\\userevents.txt-" + strID); 
+		/*FileWriter writer = new FileWriter("c:\\_2\\_3\\product\\product\\result\\userevents.txt"); 
+    	for(final File oFile : aFiles)
+    	{
+    		BufferedReader reader = new BufferedReader(new FileReader (oFile));
+
+    		String strLine = StringUtils.EMPTY;
+    		while((strLine = reader.readLine()) != null) 
+    		{
+    			if (!strLine.contains("userevent"))
+    				continue;
+    			writer.write(strLine + "\r\n");
+        	
+    		}
+    		reader.close();
+    	}
+     	writer.close();
+   
+     	BufferedReader reader = new BufferedReader(new FileReader ("c:\\_2\\_3\\product\\product\\result\\userevents.txt"));
+    	writer = new FileWriter("c:\\_2\\_3\\product\\product\\result\\userevents.txt1"); 
 
     	String strLine = StringUtils.EMPTY;
-        while((strLine = reader.readLine()) != null) 
-        {
-        	if (!strLine.contains("userevent"))
-        		continue;
-        	writer.write(strLine + "\r\n");
-        	
-        }
-        writer.close();
-        reader.close();
-    
-    	reader = new BufferedReader(new FileReader ("c:\\_2\\_3\\product\\product\\userevents.txt-" + strID));
-    	writer = new FileWriter("c:\\_2\\_3\\product\\product\\userevents.txt1-" + strID); 
-
-    	strLine = StringUtils.EMPTY;
         while((strLine = reader.readLine()) != null) 
         {
         	final String[] strParts = strLine.split("\\|");
@@ -54,12 +67,12 @@ public class KunaStockSourceTest
         	
         }
         writer.close();
-        reader.close();
+        reader.close();*/
     
-    	reader = new BufferedReader(new FileReader ("c:\\_2\\_3\\product\\product\\userevents.txt1-" + strID));
-    	writer = new FileWriter("c:\\_2\\_3\\product\\product\\userevents.txt2-" + strID); 
+    	BufferedReader reader = new BufferedReader(new FileReader ("c:\\_2\\_3\\product\\product\\result\\userevents.txt1"));
+    	FileWriter writer = new FileWriter("c:\\_2\\_3\\product\\product\\result\\userevents.txt2"); 
 
-    	strLine = StringUtils.EMPTY;
+    	String strLine = StringUtils.EMPTY;
     	final Map<String, Map<String, Integer>> aUserEventCount = new HashMap<String, Map<String, Integer>>();
     	final Map<String, Boolean> aAllEvents = new HashMap<String, Boolean>();
         while((strLine = reader.readLine()) != null) 
@@ -94,7 +107,7 @@ public class KunaStockSourceTest
         for (final String strEvent : aAllEvents.keySet())
         	strLastEvent = strEvent;
         
-        writer.write("User\tisBot\t");
+        writer.write("User\tisBot\tisAnonym\t");
         for (final String strEvent : aAllEvents.keySet())
     		writer.write(strEvent + (strEvent.equalsIgnoreCase(strLastEvent) ? StringUtils.EMPTY : "\t"));
         writer.write("\r\n");
@@ -108,6 +121,7 @@ public class KunaStockSourceTest
         	writer.write(oUserInfo.getKey() + "\t");
         	writer.write((oUserInfo.getKey().startsWith("order.test@") || 
         			oUserInfo.getKey().startsWith("test1803@bonita") || oUserInfo.getKey().startsWith("test03049@bonita") ? "1" : "0") + "\t");
+        	writer.write((oUserInfo.getKey().contains("@") ? "0" : "1") + "\t");
         	
         	
         	for (final String strEvent : aAllEvents.keySet())
