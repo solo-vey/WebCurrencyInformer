@@ -55,8 +55,8 @@ public class MathUtils
 		if (oValue.doubleValue() >= 1 || oValue.doubleValue() <= 0)
 			return toCurrencyString(oValue);
 		
-		final DecimalFormat oDecimalFormat = new DecimalFormat("#.00000000");
-		return "0" + oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
+		final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
+		return oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
 	}
 	
 	public static String toCurrencyStringEx2(final BigDecimal oValue)
@@ -64,7 +64,7 @@ public class MathUtils
 		if (null == oValue)
 			return "NaN";
 
-		if (oValue.doubleValue() >= 1 || oValue.doubleValue() <= 0)
+		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= 0)
 			return toCurrencyString(oValue);
 
 		if (oValue.compareTo(BigDecimal.ZERO) == 0)
@@ -72,17 +72,17 @@ public class MathUtils
 		
 		if (oValue.doubleValue() > 0.001)
 		{
-			final DecimalFormat oDecimalFormat = new DecimalFormat("#.00000000");
-			return "0" + oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
+			final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
+			return oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
 		}
 
 		if (oValue.doubleValue() > 0.000001)
 		{
-			final DecimalFormat oDecimalFormat = new DecimalFormat("#.00000000");
-			return "0" + oDecimalFormat.format(oValue.doubleValue() * 1000).replace(",", ".").trim() + "(-3)";
+			final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
+			return oDecimalFormat.format(oValue.doubleValue() * 1000).replace(",", ".").trim() + "(-3)";
 		}
 
-		final DecimalFormat oDecimalFormat = new DecimalFormat("#.00000000");
-		return "0" + oDecimalFormat.format(oValue.doubleValue() * 1000000).replace(",", ".").trim() + "(-6)";
+		final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
+		return oDecimalFormat.format(oValue.doubleValue() * 1000000).replace(",", ".").trim() + "(-6)";
 	}
 }

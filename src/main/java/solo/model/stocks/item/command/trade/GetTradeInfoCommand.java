@@ -3,7 +3,6 @@ package solo.model.stocks.item.command.trade;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -12,7 +11,7 @@ import solo.utils.CommonUtils;
 
 /** Формат комманды 
  */
-public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
+public class GetTradeInfoCommand extends BaseCommand
 {
 	final static public String NAME = "getTradeInfo";
 	final static public String RULE_ID_PARAMETER = "#ruleID#";

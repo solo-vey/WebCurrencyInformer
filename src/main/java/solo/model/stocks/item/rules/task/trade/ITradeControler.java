@@ -26,7 +26,7 @@ class NullTradeControler implements ITradeControler
 	private static final long serialVersionUID = 1648163916052411734L;
 	
 	public String getFullInfo() { return StringUtils.EMPTY; }
-	public TradesInfo getTradesInfo() { return new TradesInfo(new RateInfo(Currency.UAH, Currency.UAH)); };
+	public TradesInfo getTradesInfo() { return new TradesInfo(new RateInfo(Currency.UAH, Currency.UAH), -1); };
 	public void tradeStart(final TaskTrade oTaskTrade) {}
 	public void tradeDone(final TaskTrade oTaskTrade) {}
 	public void buyDone(final TaskTrade oTaskTrade) {}

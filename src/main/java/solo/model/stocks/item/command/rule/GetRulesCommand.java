@@ -6,7 +6,6 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -14,7 +13,7 @@ import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
-public class GetRulesCommand extends BaseCommand implements IHistoryCommand
+public class GetRulesCommand extends BaseCommand
 {
 	final static public String NAME = "getRules";
 	

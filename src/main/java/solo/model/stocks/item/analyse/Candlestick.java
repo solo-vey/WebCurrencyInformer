@@ -94,7 +94,7 @@ public class Candlestick implements Serializable
 	public String makeChartImage(final int nStepCount) throws IOException
 	{
 		final JFreeChart oChart = JfreeCandlestickChart.createChart(m_oRateInfo.toString() + " - " + getType(), m_oHistory, m_nCandleDurationMinutes * nStepCount);
-    	ChartUtilities.saveChartAsJPEG(new File(getFileName()), oChart, 480, 240);
+    	ChartUtilities.saveChartAsJPEG(new File(getFileName()), oChart, 480, 320);
     	return getFileName();
 	}
 
@@ -111,7 +111,10 @@ public class Candlestick implements Serializable
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
         	
 			final CandlestickType oType = getType(nPos);
-			aResult.add(0, oCandle.getDate().toString() + " -> " + oType + " - " + oCandle.getCandleType() + " - " + oCandle.toString());
+			final boolean bIsLongFall = oType.equals(CandlestickType.THREE_BLACK) || oType.equals(CandlestickType.TWO_BLACK) || oType.equals(CandlestickType.WHITE_AND_TWO_BLACK);
+			final boolean bIsLongGrowth = oType.equals(CandlestickType.THREE_WHITE) || oType.equals(CandlestickType.TWO_WHITE) || oType.equals(CandlestickType.BLACK_AND_TWO_WHITE);
+			final String strLongType = (bIsLongFall ? "LongFall" : bIsLongGrowth ? "LongGrowth" : "LongCalm");
+			aResult.add(0, oCandle.getDate().toString() + " -> " + strLongType + " - " + oType + " - " + oCandle.getCandleType() + " - " + oCandle.toString());
         }
         
         return aResult;
@@ -120,6 +123,16 @@ public class Candlestick implements Serializable
 	public CandlestickType getType()
 	{
 		return getType(0); 
+	}
+	
+	public boolean isLongFall()
+	{
+		return getType().equals(CandlestickType.THREE_BLACK) || getType().equals(CandlestickType.TWO_BLACK) || getType().equals(CandlestickType.WHITE_AND_TWO_BLACK);
+	}
+	
+	public boolean isLongGrowth()
+	{
+		return getType().equals(CandlestickType.THREE_WHITE) || getType().equals(CandlestickType.TWO_WHITE) || getType().equals(CandlestickType.BLACK_AND_TWO_WHITE);
 	}
 	
 	public CandlestickType getType(int nStep)
@@ -200,23 +213,23 @@ public class Candlestick implements Serializable
 		if (isCalm(oCandleType3, oCandleType2, oCandleType1))
 			return CandlestickType.CALM;
 			
-		if (oCandleType1.isGrowth() && oCandleType2.isGrowth() && oCandleType3.isCalm())
-			return CandlestickType.GROWTH;
+		if (oCandleType1.isGrowth() && oCandleType2.isGrowth() && oCandleType3.isCalm() && oCandle2.getMax().compareTo(oCandle1.getMax()) > 0)
+			return CandlestickType.TWO_WHITE;
 
-		if (oCandleType1.isFall() && oCandleType2.isFall())
-			return CandlestickType.FALL;
+		if (oCandleType1.isFall() && oCandleType2.isFall() && oCandle2.getMin().compareTo(oCandle1.getMin()) < 0)
+			return CandlestickType.TWO_BLACK;
 
 		if (oCandleType2.isGrowth() && oCandleType3.isGrowth())
-			return CandlestickType.GROWTH;
+			return CandlestickType.TWO_WHITE;
 
 		if (oCandleType2.isFall() && oCandleType3.isFall())
-			return CandlestickType.FALL;
+			return CandlestickType.TWO_BLACK;
 
 		if (oCandleType1.isGrowth() && oCandleType3.isGrowth())
-			return CandlestickType.GROWTH;
+			return CandlestickType.TWO_WHITE;
 
 		if (oCandleType1.isFall() && oCandleType3.isFall())
-			return CandlestickType.FALL;
+			return CandlestickType.TWO_BLACK;
 		
 		if (oCandleType1.isCalm() && oCandleType2.isFall() && oCandleType3.isCalm())
 			return CandlestickType.FALL;

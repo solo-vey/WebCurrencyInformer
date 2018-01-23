@@ -4,7 +4,6 @@ import java.util.List;
 
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.analyse.Candlestick;
-import solo.model.stocks.item.analyse.CandlestickType;
 import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
@@ -41,11 +40,10 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
-		final CandlestickType oCandlestickType = oCandlestick.getType();
-		if (!oCandlestickType.isFall())
+		if (!oCandlestick.isLongFall())
 			return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
 		
-		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestickType);
+		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
 		return false;
 	}
 	

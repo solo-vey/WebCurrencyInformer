@@ -1,6 +1,9 @@
 package solo.model.stocks.item.command.system;
 
 import java.io.File;
+
+import solo.model.stocks.analyse.RateAnalysisResult;
+import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.analyse.Candlestick;
@@ -29,7 +32,12 @@ public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange(); 
     	final Candlestick oCandlestick = oStockExchange.getStockCandlestick().get(m_oRateInfo);
-    	final String strFileName = oCandlestick.makeChartImage(50);
-    	WorkerFactory.getTransport().sendPhoto(new File(strFileName), null);
+    	final String strFileName = oCandlestick.makeChartImage(25);
+    	
+    	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
+    	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
+    	final String strMessage = GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
+    	
+    	WorkerFactory.getTransport().sendPhoto(new File(strFileName), strMessage);
 	}
 }

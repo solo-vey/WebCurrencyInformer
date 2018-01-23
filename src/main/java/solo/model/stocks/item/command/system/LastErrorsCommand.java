@@ -8,7 +8,7 @@ import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
  */
-public class LastErrorsCommand extends BaseCommand implements IHistoryCommand
+public class LastErrorsCommand extends BaseCommand
 {
 	final static public String NAME = "lastErrors";
 	

@@ -10,6 +10,7 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
@@ -44,16 +45,13 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
     	{
 			final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
 			strMessage += getRateData(oRateInfo, oAnalysisResult);
-			
-			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
-			final RateAnalysisResult oReverseAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oReverseRateInfo);
-			strMessage += getRateData(oReverseRateInfo, oReverseAnalysisResult);
+			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo);
     	}
 		
     	WorkerFactory.getMainWorker().sendMessage(strMessage);
 	}
 
-	protected String getRateData(final RateInfo oRateInfo, final RateAnalysisResult oAnalysisResult)
+	public static String getRateData(final RateInfo oRateInfo, final RateAnalysisResult oAnalysisResult)
 	{
 		if (null == oAnalysisResult)
 			return StringUtils.EMPTY;

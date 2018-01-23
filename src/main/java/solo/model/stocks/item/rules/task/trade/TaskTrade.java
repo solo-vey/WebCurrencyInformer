@@ -13,6 +13,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
+import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
@@ -39,7 +40,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	public TaskTrade(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate) throws Exception
 	{
 		super(oRateInfo, strCommandLine, strTemplate);
-		m_oTradeInfo = new TradeInfo(oRateInfo);
+		m_oTradeInfo = new TradeInfo(oRateInfo, -1);
 		m_oTradeInfo.setTradeSum(getParameterAsBigDecimal(TRADE_VOLUME));
 		m_oTradeInfo.setTaskSide(OrderSide.BUY);
 	}
@@ -77,7 +78,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		{
 			strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, nRuleID, 
 					SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
-					SetTaskParameterCommand.VALUE_PARAMETER, MathUtils.toCurrencyString(getTradeInfo().getMinCriticalPrice()).replace(",", StringUtils.EMPTY)) + "\r\n";
+					SetTaskParameterCommand.VALUE_PARAMETER, getTradeInfo().getCriticalPriceString()) + 
+					" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
+					"\r\n";
 		}
 		
 		if (StringUtils.isNotBlank(m_strCurrentState))
@@ -210,7 +213,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		m_oTradeInfo.setNeedBoughtVolume(oBuyOrder.getVolume());
 		m_oTradeInfo.setTradeSum(oBuyOrder.getSum());
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oBuyOrder.getInfo());
-		m_oTradeInfo.addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyString(oBuyOrder.getPrice()));
+		m_oTradeInfo.addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyStringEx2(oBuyOrder.getPrice()));
 		return oBuyOrder;
 	}
 
@@ -224,7 +227,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return oSellOrder;
 
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oSellOrder.getInfo() + "/" + m_oTradeInfo.getCriticalPriceString());
-		m_oTradeInfo.addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyString(oSellOrder.getPrice()) + "/" + m_oTradeInfo.getCriticalPriceString());
+		m_oTradeInfo.addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyStringEx2(oSellOrder.getPrice()) + "/" + m_oTradeInfo.getCriticalPriceString());
 		return oSellOrder;
 	}
 	
@@ -271,9 +274,6 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 		final String strMessage = "- " + oGetOrder.getInfoShort() + "\r\n+ " + oAddOrder.getInfo();
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, strMessage);
-
-		final String strHistory = oGetOrder.getSide() + " " + (oGetOrder.getPrice().compareTo(oNewPrice) < 0 ? "^ " : "v ") + MathUtils.toCurrencyStringEx2(oNewPrice) + "/" + MathUtils.toCurrencyStringEx2(oNewVolume);
-		m_oTradeInfo.addToHistory(strHistory);
 		WorkerFactory.getStockExchange().getRules().save();
 	}
 
@@ -320,7 +320,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			nTryCount--;
 		}
 		
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, "Can't create order\r\n" + oOrderSide + "/" + MathUtils.toCurrencyStringEx(oVolume) + "/" + MathUtils.toCurrencyString(oPrice) + "\r\n" + oAddOrder.getInfoShort());
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, "Can't create order\r\n" + oOrderSide + "/" + MathUtils.toCurrencyStringEx2(oVolume) + "/" + MathUtils.toCurrencyStringEx2(oPrice) + "\r\n" + oAddOrder.getInfoShort());
 		m_strCurrentState = "addOrder - " + oAddOrder;
 		return oAddOrder;
 	}

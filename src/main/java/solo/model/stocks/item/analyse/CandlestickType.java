@@ -10,6 +10,10 @@ public enum CandlestickType
 	
 	THREE_WHITE(TrendType.GROWTH),
 	THREE_BLACK(TrendType.FALL),
+	
+	TWO_WHITE(TrendType.GROWTH),
+	TWO_BLACK(TrendType.FALL),
+	
 	MORNING_STAR(TrendType.GROWTH),
 	EVENING_STAR(TrendType.FALL),
 	BLACK_AND_TWO_WHITE(TrendType.GROWTH),

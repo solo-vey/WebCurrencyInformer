@@ -39,9 +39,10 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO;
 	
-	public TradesInfo(final RateInfo oRateInfo)
+	public TradesInfo(final RateInfo oRateInfo, final int nRuleID)
 	{
 		m_oRateInfo = oRateInfo;
+		m_nRuleID = nRuleID;
 	}
 	
 	public RateInfo getRateInfo()
@@ -206,6 +207,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public void tradeDone(final TaskTrade oTaskTrade)
 	{
+		m_nTradeCount++;
 		final BigDecimal nTradeDelta = oTaskTrade.getTradeInfo().getFullDelta();
 		if (nTradeDelta.compareTo(BigDecimal.ZERO) < 0)
 			setLossSum(nTradeDelta.negate());

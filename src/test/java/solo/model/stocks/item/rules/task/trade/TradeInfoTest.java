@@ -13,7 +13,7 @@ public class TradeInfoTest extends BaseTest
     @Test public void testMinCriticalPrice() throws Exception
     {
     	//	Arrange
-    	final TradeInfo oTradeInfo = new TradeInfo(RateInfo.ETH_UAH);
+    	final TradeInfo oTradeInfo = new TradeInfo(RateInfo.ETH_UAH, 0);
     	oTradeInfo.addBuy(new BigDecimal(1000), new BigDecimal(0.1));
     	oTradeInfo.setCriticalPrice(new BigDecimal(10020));
     	

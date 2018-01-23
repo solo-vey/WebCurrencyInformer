@@ -8,8 +8,6 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
-import java.nio.file.attribute.FileAttribute;
-
 import org.apache.commons.lang.StringUtils;
 
 import solo.CurrencyInformer;
@@ -46,10 +44,7 @@ public class TradeHistory implements Serializable
 			}
 		    Files.write(Paths.get(getFileName()), (strMessage + "\r\n").getBytes(), StandardOpenOption.APPEND);
 		}
-		catch (IOException e) 
-		{
-			int i = 1;
-		}
+		catch (IOException e) {}
 	}
 	
 	public String getFileName()

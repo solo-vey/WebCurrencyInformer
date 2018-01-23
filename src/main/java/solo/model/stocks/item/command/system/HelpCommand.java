@@ -13,7 +13,7 @@ import solo.utils.CommonUtils;
 
 /** Формат комманды 
  */
-public class HelpCommand extends BaseCommand implements IHistoryCommand
+public class HelpCommand extends BaseCommand
 {
 	final static public String NAME = "help";
 	final static public String COMMAND_PARAMETER = "#command#";

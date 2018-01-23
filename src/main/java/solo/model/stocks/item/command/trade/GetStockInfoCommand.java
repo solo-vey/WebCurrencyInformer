@@ -13,14 +13,13 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 
 /** Формат комманды 
  */
-public class GetStockInfoCommand extends BaseCommand implements IHistoryCommand
+public class GetStockInfoCommand extends BaseCommand
 {
 	final static public String NAME = "getInfo";
 	final static public String RATE_PARAMETER = "#rate#";
