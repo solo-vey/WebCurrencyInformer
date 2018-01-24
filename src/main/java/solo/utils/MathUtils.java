@@ -3,10 +3,6 @@ package solo.utils;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
-import java.text.NumberFormat;
-import java.util.Locale;
-
-import org.apache.commons.lang.StringUtils;
 
 public class MathUtils
 {
@@ -38,10 +34,8 @@ public class MathUtils
 		if (null == oValue)
 			return "NaN";
 
-		if (oValue.doubleValue() >= 0)
-			return NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
-		else
-			return "-" + NumberFormat.getCurrencyInstance(Locale.US).format(oValue).replace("$", StringUtils.EMPTY).trim();
+		final DecimalFormat oDecimalFormat = new DecimalFormat("#,###.########");
+		return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, (char)0x20).trim();
 	}
 	
 	public static String toCurrencyStringEx(final BigDecimal oValue)

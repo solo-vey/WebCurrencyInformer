@@ -74,6 +74,11 @@ public class Rules
 		return m_oRules;
 	}
 	
+	public int getNextRuleID()
+	{
+		return m_nLastRuleID;
+	}
+	
 	public void save()
 	{
 		final String strStockEventsFileName = getFileName();

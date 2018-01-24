@@ -243,8 +243,6 @@ public class TradeControler extends TaskBase implements ITradeControler
 			oTaskTrade.setTradeControler(this);
 			oTaskTrade.starTask();
 			WorkerFactory.getStockExchange().getRules().addRule(oTaskTrade);
-			final int nTradeRuleID = WorkerFactory.getStockExchange().getRules().getRuleID(oTaskTrade);
-			oTaskTrade.getTradeInfo().setRuleID(nTradeRuleID);
 		}
 		catch(final Exception e) 
 		{

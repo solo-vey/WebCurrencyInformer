@@ -6,8 +6,6 @@ import java.util.List;
 
 import junit.framework.Assert;
 
-import org.jfree.chart.ChartUtilities;
-import org.jfree.chart.JFreeChart;
 import org.junit.Test;
 
 import solo.BaseTest;

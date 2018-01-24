@@ -78,9 +78,6 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public Integer getRuleID()
 	{
-		if (null == m_nRuleID)
-			m_nRuleID = (int)(Math.random() * 100000);
-		
 		return m_nRuleID;
 	}
 	
@@ -220,16 +217,16 @@ public class TradeInfo extends BaseObject implements Serializable
 			m_oOrder.setCreated(oOrderDateCreate);
 	}
 	
-	public void setNeedBoughtVolume(final BigDecimal nNeedBoughtVolume)
+	public void setNeedBoughtVolume(final BigDecimal nNeedBoughtVolume, final boolean bWriteToHistory)
 	{
-		if (m_nNeedBoughtVolume.compareTo(nNeedBoughtVolume) != 0)
+		if (bWriteToHistory && m_nNeedBoughtVolume.compareTo(nNeedBoughtVolume) != 0)
 			addToHistory("Set need buy volume : " + MathUtils.toCurrencyStringEx2(nNeedBoughtVolume)); 
 		m_nNeedBoughtVolume = nNeedBoughtVolume;
 	}
 	
-	public void setTradeSum(BigDecimal nTradeSum)
+	public void setTradeSum(BigDecimal nTradeSum, final boolean bWriteToHistory)
 	{
-		if (m_nTradeSum.compareTo(nTradeSum) != 0)
+		if (bWriteToHistory && m_nTradeSum.compareTo(nTradeSum) != 0)
 			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 
 		m_nTradeSum = nTradeSum;
 	}
@@ -242,7 +239,7 @@ public class TradeInfo extends BaseObject implements Serializable
 		m_nSpendSum = m_nSpendSum.add(nSpendSum);
 		m_nBoughtVolume = m_nBoughtVolume.add(nBuyVolume);
 		getTradeControler().addBuy(nSpendSum, nBuyVolume);
-		addToHistory("Buy : " + MathUtils.toCurrencyStringEx2(nSpendSum) + " / " + MathUtils.toCurrencyStringEx2(nBuyVolume)); 
+		addToHistory("Buy : " + MathUtils.toCurrencyStringEx2(getAveragedBoughPrice()) + " / " + MathUtils.toCurrencyStringEx2(nBuyVolume) + " / " + MathUtils.toCurrencyStringEx2(nSpendSum)); 
 	}
 	
 	public void addSell(BigDecimal nReceivedSum, BigDecimal nSellVolume)
@@ -253,7 +250,7 @@ public class TradeInfo extends BaseObject implements Serializable
 		m_nReceivedSum = m_nReceivedSum.add(nReceivedSum);
 		m_nSoldVolume = m_nSoldVolume.add(nSellVolume);
 		getTradeControler().addSell(nReceivedSum, nSellVolume);
-		addToHistory("Sell: " + MathUtils.toCurrencyStringEx2(nReceivedSum) + " / " + MathUtils.toCurrencyStringEx2(nSellVolume)); 
+		addToHistory("Sell: " + MathUtils.toCurrencyStringEx2(getAveragedSoldPrice()) + " / " + MathUtils.toCurrencyStringEx2(nSellVolume) + " / " + MathUtils.toCurrencyStringEx2(nReceivedSum)); 
 	}
 
 	public void setCriticalPrice(BigDecimal nCriticalPrice)
@@ -318,11 +315,6 @@ public class TradeInfo extends BaseObject implements Serializable
 	public void setTradeControler(final ITradeControler oTradeControler)
 	{
 		m_oTradeControler = oTradeControler;
-	}
-	
-	public void setRuleID(final int nRuleID)
-	{
-		m_nRuleID = nRuleID;
 	}
 	
 	public ITradeControler getTradeControler()

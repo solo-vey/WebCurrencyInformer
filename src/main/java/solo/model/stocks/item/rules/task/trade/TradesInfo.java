@@ -172,8 +172,6 @@ public class TradesInfo extends BaseObject implements Serializable
 
 		m_nBuyVolume = m_nBuyVolume.add(nBuyVolume);
 		m_nVolume = m_nVolume.add(nBuyVolume);
-		
-		addToHistory("Buy : " + MathUtils.toCurrencyString(nSpendSum) + " / " + MathUtils.toCurrencyStringEx(nBuyVolume)); 
 	}
 	
 	public void addSell(BigDecimal nReceivedSum, BigDecimal nSoldVolume)
@@ -186,8 +184,6 @@ public class TradesInfo extends BaseObject implements Serializable
 
 		m_nSoldVolume = m_nSoldVolume.add(nSoldVolume);
 		m_nVolume = m_nVolume.add(nSoldVolume.negate());
-		
-		addToHistory("Sell : " + MathUtils.toCurrencyString(nReceivedSum) + " / " + MathUtils.toCurrencyStringEx(nSoldVolume)); 
 	}
 	
 	public void setLossSum(final BigDecimal nLossSum)
@@ -211,6 +207,8 @@ public class TradesInfo extends BaseObject implements Serializable
 		final BigDecimal nTradeDelta = oTaskTrade.getTradeInfo().getFullDelta();
 		if (nTradeDelta.compareTo(BigDecimal.ZERO) < 0)
 			setLossSum(nTradeDelta.negate());
+		
+		addToHistory(oTaskTrade.getTradeInfo().getInfo()); 
 	}
 	
 	protected void addToHistory(final String strMessage)

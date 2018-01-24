@@ -8,6 +8,10 @@ import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import org.apache.commons.lang.StringUtils;
 
 import solo.CurrencyInformer;
@@ -32,7 +36,11 @@ public class TradeHistory implements Serializable
 	public void addToHistory(final String strMessage)
 	{
 		m_strHistory += strMessage + "\r\n";
-		
+		addToLog(strMessage);
+	}
+	
+	public void addToLog(final String strMessage)
+	{
 		try 
 		{
 			final Path oPath = Paths.get(getFileName());
@@ -42,10 +50,12 @@ public class TradeHistory implements Serializable
 					Files.createDirectory(oPath.getParent());
 				Files.createFile(oPath);
 			}
-		    Files.write(Paths.get(getFileName()), (strMessage + "\r\n").getBytes(), StandardOpenOption.APPEND);
+			
+			final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
+		    Files.write(Paths.get(getFileName()), (oDateFormat.format(new Date()) + "\t" + strMessage + "\r\n").getBytes(), StandardOpenOption.APPEND);
 		}
 		catch (IOException e) {}
-	}
+	}	
 	
 	public String getFileName()
 	{

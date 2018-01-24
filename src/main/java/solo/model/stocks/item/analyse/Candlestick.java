@@ -127,12 +127,16 @@ public class Candlestick implements Serializable
 	
 	public boolean isLongFall()
 	{
-		return getType().equals(CandlestickType.THREE_BLACK) || getType().equals(CandlestickType.TWO_BLACK) || getType().equals(CandlestickType.WHITE_AND_TWO_BLACK);
+		return getType().equals(CandlestickType.THREE_BLACK) || 
+				getType().equals(CandlestickType.TWO_BLACK) || 
+				getType().equals(CandlestickType.WHITE_AND_TWO_BLACK);
 	}
 	
 	public boolean isLongGrowth()
 	{
-		return getType().equals(CandlestickType.THREE_WHITE) || getType().equals(CandlestickType.TWO_WHITE) || getType().equals(CandlestickType.BLACK_AND_TWO_WHITE);
+		return getType().equals(CandlestickType.THREE_WHITE) || 
+				getType().equals(CandlestickType.TWO_WHITE) || 
+				getType().equals(CandlestickType.BLACK_AND_TWO_WHITE);
 	}
 	
 	public CandlestickType getType(int nStep)

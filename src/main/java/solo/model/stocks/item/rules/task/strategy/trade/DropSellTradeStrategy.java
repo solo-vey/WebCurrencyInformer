@@ -71,7 +71,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		if (oRemoveOrder.isDone())
 			return false;
 		
-		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. Remove order [" + oGetOrder.getId() + "] [" + oGetOrder + "]. " + oCandlestick.getType());
+		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "]. " + oCandlestick.getType());
 		return true;
 	}
 
@@ -129,11 +129,13 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
 		
-		final String strMessage = oRateInfo + "\r\n" + oTaskTrade.getTradeInfo().getOrder().getInfoShort() + "\r\n" +
-				strType + MathUtils.toCurrencyStringEx2(nCriticalPrice) + ". Trand " + oCandlestick.getType() + 
+		final String strShortMessage = strType + MathUtils.toCurrencyStringEx2(nCriticalPrice) + ". Trand " + oCandlestick.getType() + " " + 
+				oTaskTrade.getTradeInfo().getOrder().getInfoShort();
+		
+		final String strMessage = oRateInfo + "\r\n" + strShortMessage + 
     			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, oRateInfo) + 
     			" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oTaskTrade.getTradeInfo().getRuleID(), GetTradeInfoCommand.FULL_PARAMETER, "true");
-		oTaskTrade.getTradeInfo().setCriticalPrice(nCriticalPrice, strMessage);
+		oTaskTrade.getTradeInfo().setCriticalPrice(nCriticalPrice, strShortMessage);
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, strMessage); 
 	}
 }
