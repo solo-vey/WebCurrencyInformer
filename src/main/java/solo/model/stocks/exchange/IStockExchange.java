@@ -2,7 +2,7 @@ package solo.model.stocks.exchange;
 
 import solo.model.currency.Currency;
 import solo.model.stocks.analyse.IStateAnalysis;
-import solo.model.stocks.history.StockRateStatesLocalHistory;
+import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockCurrencyVolume;
 import solo.model.stocks.item.analyse.StockCandlestick;
@@ -18,7 +18,7 @@ public interface IStockExchange
 	StockCandlestick getStockCandlestick();
 	StockCurrencyVolume getStockCurrencyVolume(final Currency oCurrency);
 	Rules getRules();
-	StockRateStatesLocalHistory getHistory();
+	StateAnalysisResult getLastAnalysisResult();
 	IStateAnalysis getAnalysis();
 	MessageLevel getMessageLevel();
 	void setParameter(String strName, String strValue);

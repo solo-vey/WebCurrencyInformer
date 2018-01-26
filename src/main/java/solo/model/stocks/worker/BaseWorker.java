@@ -1,7 +1,6 @@
 package solo.model.stocks.worker;
 
 import java.util.Date;
-
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.exchange.Stocks;
@@ -14,7 +13,7 @@ public class BaseWorker extends Thread implements IWorker
 {
 	final protected CommandQueue m_oCommandQueue = new CommandQueue();
 	
-	protected boolean m_bIsManualStopped = false;
+	protected boolean m_bIsManualStopped = true;
 	final protected int m_nTimeOut;
 	final protected Stocks m_oStock;
 	
@@ -41,18 +40,27 @@ public class BaseWorker extends Thread implements IWorker
 	
 	public void run()
 	{
+		System.out.println(Thread.currentThread().getName() +  " Start");
+		
 		while (!m_bIsManualStopped)
 		{
 			try
 			{
 				doWork();
-				Thread.sleep(m_nTimeOut);
+				Thread.sleep(getTimeOut());
 			}
 			catch (Exception e) 
 			{
 				WorkerFactory.onException(StringUtils.EMPTY, e);
 			}
 		}
+		
+		System.out.println(Thread.currentThread().getName() +  " Stoped");
+	}
+
+	int getTimeOut()
+	{
+		return m_nTimeOut;
 	}
 	
 	protected void doWork() throws Exception
@@ -76,6 +84,7 @@ public class BaseWorker extends Thread implements IWorker
 	
 	public void startWorker()
 	{
+		m_bIsManualStopped = false;
 		start();
 	}
 	

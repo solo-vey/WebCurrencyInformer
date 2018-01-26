@@ -12,6 +12,7 @@ import java.util.concurrent.TimeUnit;
 import solo.model.stocks.BaseObject;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
 import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
@@ -19,6 +20,22 @@ import solo.model.stocks.worker.WorkerFactory;
 public class StateAnalysisResult extends BaseObject
 {
 	final protected Map<RateInfo, RateAnalysisResult> m_oRatesAnalysisResult = Collections.synchronizedMap(new HashMap<RateInfo, RateAnalysisResult>());
+	
+	public StateAnalysisResult()
+	{
+	}
+	
+	public void analyse(final RateState oRateState, final IStockExchange oStockExchange, final RateInfo oRateInfo) throws Exception
+	{
+		final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(oRateState, oRateInfo, oStockExchange);
+		m_oRatesAnalysisResult.put(oRateInfo, oRateAnalysisResult);
+		oStockExchange.getStockCandlestick().addRateInfo(oRateInfo, oRateAnalysisResult);
+		
+		/*final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
+		final RateAnalysisResult oReverseRateAnalysisResult = new RateAnalysisResult(oRateState, oReverseRateInfo, oStockExchange);
+		m_oRatesAnalysisResult.put(oReverseRateInfo, oReverseRateAnalysisResult);
+		oStockExchange.getStockCandlestick().addRateInfo(oReverseRateInfo, oReverseRateAnalysisResult);*/
+	}
 	
 	public StateAnalysisResult(final StockRateStates oStockRateStates, final IStockExchange oStockExchange) throws Exception
 	{
@@ -80,11 +97,11 @@ class AnalyseRateThread implements Runnable
 			final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(m_oStockRateStates, m_oRateInfo, oStockExchange);
 			m_oRatesAnalysisResult.put(m_oRateInfo, oRateAnalysisResult);
 			oStockExchange.getStockCandlestick().addRateInfo(m_oRateInfo, oRateAnalysisResult);
-			
+			/*
 			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
 			final RateAnalysisResult oReverseRateAnalysisResult = new RateAnalysisResult(m_oStockRateStates, oReverseRateInfo, oStockExchange);
 			m_oRatesAnalysisResult.put(oReverseRateInfo, oReverseRateAnalysisResult);
-			oStockExchange.getStockCandlestick().addRateInfo(oReverseRateInfo, oReverseRateAnalysisResult);
+			oStockExchange.getStockCandlestick().addRateInfo(oReverseRateInfo, oReverseRateAnalysisResult);*/
 		}
 		catch (final Exception e)
 		{

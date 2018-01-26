@@ -44,6 +44,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		m_oTradeInfo = new TradeInfo(oRateInfo, WorkerFactory.getStockExchange().getRules().getNextRuleID());
 		m_oTradeInfo.setTradeSum(getParameterAsBigDecimal(TRADE_VOLUME), true);
 		m_oTradeInfo.setTaskSide(OrderSide.BUY);
+		m_oTradeInfo.setTaskSide(OrderSide.BUY);
 	}
 
 	@Override public String getType()
@@ -278,7 +279,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		WorkerFactory.getStockExchange().getRules().save();
 		
 		String strLogMessage = oAddOrder.getInfoShort(); 
-		final RateAnalysisResult oAnalysisResult = WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(m_oRateInfo);
+		final RateAnalysisResult oAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(m_oRateInfo);
 		final List<Order> oOrders = (oGetOrder.getSide().equals(OrderSide.BUY) ? oAnalysisResult.getBidsOrders() : oAnalysisResult.getAsksOrders());
 		final List<Order> oTrades = oAnalysisResult.getTrades();
 		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice());
@@ -349,7 +350,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		
 		if (oGetOrder.isCanceled())
 		{
-			WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, "Order cancel. " + oGetOrder.getInfoShort());
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Order cancel. " + oGetOrder.getInfoShort());
 			m_oTradeInfo.addToHistory("Order cancel. " + oGetOrder.getInfoShort());
 			
 			if (m_oTradeInfo.getTaskSide().equals(OrderSide.BUY))

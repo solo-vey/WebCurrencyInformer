@@ -17,7 +17,7 @@ import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.command.trade.StockRestartCommand;
 import solo.model.stocks.item.command.rule.AddRuleCommand;
-import solo.model.stocks.item.command.rule.CheckRulesCommand;
+import solo.model.stocks.item.command.rule.CheckRateRulesCommand;
 import solo.model.stocks.item.command.rule.GetRulesCommand;
 import solo.model.stocks.item.command.rule.RemoveAllRulesCommand;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
@@ -27,9 +27,10 @@ import solo.model.stocks.item.command.system.GetTransportMessagesCommand;
 import solo.model.stocks.item.command.system.HelpCommand;
 import solo.model.stocks.item.command.system.HistoryCommand;
 import solo.model.stocks.item.command.system.LastErrorsCommand;
-import solo.model.stocks.item.command.system.LoadRateInfoCommand;
 import solo.model.stocks.item.command.system.SendMessageCommand;
 import solo.model.stocks.item.command.system.SetStockParameterCommand;
+import solo.model.stocks.item.command.system.StartStockCommand;
+import solo.model.stocks.item.command.system.StopStockCommand;
 import solo.model.stocks.item.command.system.UnknownCommand;
 import solo.utils.CommonUtils;
 
@@ -47,11 +48,12 @@ public class CommandFactory
 		registerCommandClass(GetRateInfoCommand.NAME, GetRateInfoCommand.class, CommandGroup.INFO);
 		registerCommandClass(GetRateChartCommand.NAME, GetRateChartCommand.class, CommandGroup.INFO);
 
-		registerCommandClass(LoadRateInfoCommand.NAME, LoadRateInfoCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(SendMessageCommand.NAME, 			SendMessageCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(GetTransportMessagesCommand.NAME,	GetTransportMessagesCommand.class, CommandGroup.SYSTEM);
-		registerCommandClass(CheckRulesCommand.NAME,	CheckRulesCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(CheckRateRulesCommand.NAME,	CheckRateRulesCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(SetStockParameterCommand.NAME, SetStockParameterCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(StartStockCommand.NAME, StartStockCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(StopStockCommand.NAME, StopStockCommand.class, CommandGroup.SYSTEM);
 
 		registerCommandClass(AddRuleCommand.NAME, 		AddRuleCommand.class, CommandGroup.RULES);
 		registerCommandClass(GetRulesCommand.NAME,		GetRulesCommand.class, CommandGroup.RULES);

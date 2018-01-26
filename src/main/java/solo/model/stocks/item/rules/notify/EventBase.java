@@ -40,6 +40,11 @@ public class EventBase extends HasParameters implements IRule
 		m_nPrice = getParameterAsBigDecimal(PRICE_PARAMETER);
 	}
 	
+	public RateInfo getRateInfo()
+	{
+		return m_oRateInfo;
+	}
+	
 	public String getHelp(final String strCommandStart)
 	{
 		return strCommandStart + (StringUtils.isNotBlank(getTemplate()) ? "_" + getTemplate() : StringUtils.EMPTY);

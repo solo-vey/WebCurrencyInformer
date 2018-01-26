@@ -8,6 +8,7 @@ import solo.model.stocks.BaseObject;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
 
 public class RateAnalysisResult extends BaseObject
@@ -23,10 +24,15 @@ public class RateAnalysisResult extends BaseObject
 	
 	public RateAnalysisResult(final StockRateStates oStockRateStates, final RateInfo oRateInfo, final IStockExchange oStockExchange) throws Exception
 	{
+		this(oStockRateStates.getRate(oRateInfo), oRateInfo, oStockExchange);
+	}
+	
+	public RateAnalysisResult(final RateState oRateState, final RateInfo oRateInfo, final IStockExchange oStockExchange) throws Exception
+	{
 		m_oRateInfo = oRateInfo;
-		m_oAsksOrders = oStockRateStates.getRate(oRateInfo).getAsksOrders();
-		m_oBidsOrders = oStockRateStates.getRate(oRateInfo).getBidsOrders();
-		m_oTrades = oStockRateStates.getRate(oRateInfo).getTrades();
+		m_oAsksOrders = oRateState.getAsksOrders();
+		m_oBidsOrders = oRateState.getBidsOrders();
+		m_oTrades = oRateState.getTrades();
     	
     	filterOrders(m_oBidsOrders, m_oAsksOrders.get(0).getPrice().divide(new BigDecimal(2)), m_oAsksOrders.get(0).getPrice());
     	filterOrders(m_oAsksOrders, m_oBidsOrders.get(0).getPrice(), m_oBidsOrders.get(0).getPrice().multiply(new BigDecimal(2)));

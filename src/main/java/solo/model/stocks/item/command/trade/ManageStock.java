@@ -29,7 +29,7 @@ public class ManageStock extends BaseCommand implements ISystemCommand
 		super.execute();
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
-		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
+		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
 		oStockExchange.getManager().manage(oStateAnalysisResult);
 	}
 }

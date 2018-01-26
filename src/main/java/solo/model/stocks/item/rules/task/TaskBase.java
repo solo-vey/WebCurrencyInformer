@@ -36,6 +36,11 @@ public class TaskBase extends HasParameters implements IRule
 		m_oRateInfo = oRateInfo;
 	}
 	
+	public RateInfo getRateInfo()
+	{
+		return m_oRateInfo;
+	}
+	
 	public String getHelp(final String strCommandLine)
 	{
 		return strCommandLine + (StringUtils.isNotBlank(getTemplate()) ? "_" + getTemplate() : StringUtils.EMPTY);

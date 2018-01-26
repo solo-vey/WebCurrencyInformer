@@ -48,6 +48,7 @@ public class WorkerFactory
 //		(new MainWorker(Stocks.BtcTrade)).startWorker();
 		(new MainWorker(Stocks.Exmo)).startWorker();
 		
+		s_oRootWorker.startWorker();
 		s_oRootWorker.run();
 	}
 	

@@ -61,6 +61,11 @@ public class EventFactory extends HasParameters implements IRule
 		m_oEventBase = getEvent(oType, oRateInfo, strPriceInfo);
 	}
 	
+	public RateInfo getRateInfo()
+	{
+		return m_oEventBase.getRateInfo();
+	}
+	
 	public String getHelp(final String strCommandStart) throws Exception
 	{
 		String strHelp = StringUtils.EMPTY;

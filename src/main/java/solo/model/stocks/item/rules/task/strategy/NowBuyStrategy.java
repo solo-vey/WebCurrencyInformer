@@ -24,7 +24,7 @@ public class NowBuyStrategy extends BaseStrategy implements IBuyStrategy
 		BigDecimal nFullSumPrice = oAsks.get(0).getPrice();
 		BigDecimal nFullVolume = oTradeInfo.getNeedBoughtVolume();
 		int nOrderPosition = 0;
-		while (nFullVolume.compareTo(BigDecimal.ZERO) > 0 && nOrderPosition < oAsks.size())
+		while (BigDecimal.ZERO.compareTo(nFullVolume) > 0 && nOrderPosition < oAsks.size())
 		{
 			nFullVolume = nFullVolume.add(oAsks.get(nOrderPosition).getVolume().negate()); 
 			nFullSumPrice = oAsks.get(nOrderPosition).getPrice();

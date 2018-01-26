@@ -8,7 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.currency.Currency;
 import solo.model.stocks.analyse.IStateAnalysis;
 import solo.model.stocks.analyse.SimpleStateAnalysis;
-import solo.model.stocks.history.StockRateStatesLocalHistory;
+import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockCurrencyVolume;
 import solo.model.stocks.item.analyse.StockCandlestick;
@@ -28,7 +28,7 @@ public class BaseStockExchange implements IStockExchange
 	protected IStockSource m_oStockSource;
 	final protected Map<Currency, StockCurrencyVolume> m_oStockCurrencyVolumes = new HashMap<Currency, StockCurrencyVolume>(); 
 	final protected Rules m_oRules;
-	final StockRateStatesLocalHistory m_oStockRateStatesLocalHistory;
+	final StateAnalysisResult m_oLastAnalysisResult;
 	final IStateAnalysis m_oStateAnalysis = new SimpleStateAnalysis();
 	final IStockManager m_oStockManager = IStockManager.NULL;
 	final StockCandlestick m_oStockCandlestick;
@@ -38,8 +38,7 @@ public class BaseStockExchange implements IStockExchange
 		m_strStockName = strStockName;
 		m_strStockProperies = strStockProperies;
 
-		final int nHistoryLength = ResourceUtils.getIntFromResource("history.length", getStockProperties(), 100);
-		m_oStockRateStatesLocalHistory = new StockRateStatesLocalHistory(nHistoryLength);
+		m_oLastAnalysisResult = new StateAnalysisResult();
 		m_oRules = new Rules(this);
 
 		final int nCandleDurationMinutes = ResourceUtils.getIntFromResource("candle.duration_minutes", getStockProperties(), 5);
@@ -61,9 +60,9 @@ public class BaseStockExchange implements IStockExchange
 		return m_oStockSource;
 	}
 	
-	public StockRateStatesLocalHistory getHistory()
+	public StateAnalysisResult getLastAnalysisResult()
 	{
-		return m_oStockRateStatesLocalHistory;
+		return m_oLastAnalysisResult;
 	}
 	
 	public StockCandlestick getStockCandlestick()

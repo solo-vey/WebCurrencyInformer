@@ -34,7 +34,7 @@ public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
     	final Candlestick oCandlestick = oStockExchange.getStockCandlestick().get(m_oRateInfo);
     	final String strFileName = oCandlestick.makeChartImage(25);
     	
-    	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
+    	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
     	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
     	final String strMessage = GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
     	

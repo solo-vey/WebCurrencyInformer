@@ -36,7 +36,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		super.execute();
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange(); 
-    	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getHistory().getLastAnalysisResult();
+    	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
     	
     	final List<RateInfo> aRates = (null != m_oRateInfo ? Arrays.asList(m_oRateInfo) : WorkerFactory.getStockSource().getRates());
     	
@@ -45,7 +45,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
     	{
 			final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
 			strMessage += getRateData(oRateInfo, oAnalysisResult);
-			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo);
+			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo) + "\r\n\r\n";
     	}
 		
     	WorkerFactory.getMainWorker().sendMessage(strMessage);
@@ -66,7 +66,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		strData += "Delta : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getBestPrice().add(oAnalysisResult.getBidsAnalysisResult().getBestPrice().negate())) + 
 							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice().add(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice().negate())) + 
 							" / " + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice(), oAnalysisResult.getBidsAnalysisResult().getBestPrice())
-																	.add(TradeUtils.getMarginValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice()))) + "\r\n\r\n";
+																	.add(TradeUtils.getMarginValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice()))) + "\r\n";
 		return strData;
 	}
 }

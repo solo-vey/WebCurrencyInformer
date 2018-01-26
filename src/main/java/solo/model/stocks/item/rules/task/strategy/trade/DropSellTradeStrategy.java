@@ -87,27 +87,36 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		if (oOrder.getVolume().compareTo(nMinTradeVolume) < 0)
 	    	return;
 		
-		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -15); 
-	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oFithteenMinutesDateCreate))
+		final Date oHalfHourDateCreate = DateUtils.addMinutes(new Date(), -30); 
+	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHalfHourDateCreate))
 	    {
 	    	final BigDecimal nLostPriceAddition = MathUtils.getBigDecimal(oTaskTrade.getTradeInfo().getPriviousLossSum().doubleValue() / oTaskTrade.getTradeInfo().getBoughtVolume().doubleValue(), TradeUtils.getPricePrecision(oRateInfo));
 	    	final BigDecimal nTotalBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice().add(nLostPriceAddition); 
-	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.85, TradeUtils.getPricePrecision(oRateInfo));
-	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 15 minutes critical price ");
+	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.95, TradeUtils.getPricePrecision(oRateInfo));
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 30 minutes critical price ");
 			return;
 	    }
 		
 		final BigDecimal nBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice(); 
-    	final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(nBougthPrice, BigDecimal.ZERO);
+	    final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(nBougthPrice, BigDecimal.ZERO);
+
+    	final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -15); 
+	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oFithteenMinutesDateCreate))
+	    {
+	    	final BigDecimal nNewCriticalPrice = nBougthPrice.add(nTradeCommision);
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 15 minutes critical price ");
+			return;
+	    }
+		
     	final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nBougthPrice);
-    	final BigDecimal nCommisionAndMargin = nTradeMargin.add(nTradeCommision);
+	    final BigDecimal nCommisionAndMargin = nTradeMargin.add(nTradeCommision);
     	final BigDecimal nNewCriticalPriceMin = nBougthPrice.add(nCommisionAndMargin);
     	
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);		
 		if (oCandlestick.isLongGrowth())
 		{
-	    	final BigDecimal nRoundedCriticalPriceMinPlus5Percent = MathUtils.getBigDecimal(nNewCriticalPriceMin.doubleValue() * 1.05, TradeUtils.DEFAULT_PRICE_PRECISION);
+	    	final BigDecimal nRoundedCriticalPriceMinPlus5Percent = MathUtils.getBigDecimal(nNewCriticalPriceMin.doubleValue() * 1.002, TradeUtils.DEFAULT_PRICE_PRECISION);
 	    	final BigDecimal nNewCriticalPriceFull = TradeUtils.getRoundedCriticalPrice(oRateInfo, oTaskTrade.getTradeInfo().calculateCriticalPrice());
 			if (nRoundedCriticalPriceMinPlus5Percent.compareTo(nNewCriticalPriceFull) > 0)
 			{
@@ -136,6 +145,6 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
     			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, oRateInfo) + 
     			" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oTaskTrade.getTradeInfo().getRuleID(), GetTradeInfoCommand.FULL_PARAMETER, "true");
 		oTaskTrade.getTradeInfo().setCriticalPrice(nCriticalPrice, strShortMessage);
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, strMessage); 
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, strMessage); 
 	}
 }

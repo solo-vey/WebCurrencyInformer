@@ -41,8 +41,8 @@ public class GetStockInfoCommand extends BaseCommand
 		String strMessage = StringUtils.EMPTY;
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 		{
-			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx(oCurrencyInfo.getValue().getBalance()) + 
-							(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
+			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx2(oCurrencyInfo.getValue().getBalance()) + 
+							(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx2(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
 							+ "\r\n";
 		}
 
@@ -53,7 +53,7 @@ public class GetStockInfoCommand extends BaseCommand
 		}
 		
 		final RateInfo oRateEthUahInfo = new RateInfo(Currency.ETH, Currency.UAH);
-		final RateAnalysisResult oEthUahRateAnalysisResult = WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateEthUahInfo);
+		final RateAnalysisResult oEthUahRateAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oRateEthUahInfo);
 		final BigDecimal oEthUahPrice = (null != oEthUahRateAnalysisResult ? oEthUahRateAnalysisResult.getBidsAnalysisResult().getBestPrice() : BigDecimal.ZERO);
 		BigDecimal oTotalUahSum = BigDecimal.ZERO;
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
@@ -63,16 +63,16 @@ public class GetStockInfoCommand extends BaseCommand
 				oTotalUahSum = oTotalUahSum.add(oCurrencyInfo.getValue().getBalance());
 			else
 			{
-				if (null == WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo))
+				if (null == WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oRateInfo))
 				{
 					if (null == oEthUahPrice)
 						continue;
 					
 					final RateInfo oEthRateInfo = new RateInfo(Currency.ETH, oCurrencyInfo.getKey());
-					if (null == WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo))
+					if (null == WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo))
 						continue;
 
-					final BigDecimal oEthBidPrice = WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oEthBidPrice = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
 					final BigDecimal oCrossBidPrice = MathUtils.getBigDecimal(oEthUahPrice.doubleValue() / oEthBidPrice.doubleValue(), TradeUtils.getVolumePrecision(oRateInfo));
 
 					final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
@@ -81,7 +81,7 @@ public class GetStockInfoCommand extends BaseCommand
 				}
 				else
 				{
-					final BigDecimal oBidPrice = WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oRateInfo).getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oBidPrice = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oRateInfo).getBidsAnalysisResult().getBestPrice();
 					final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
 					final BigDecimal oSum = oVolume.multiply(oBidPrice);
 					oTotalUahSum = oTotalUahSum.add(oSum);
@@ -98,10 +98,10 @@ public class GetStockInfoCommand extends BaseCommand
 				else
 				{
 					final RateInfo oEthRateInfo = new RateInfo(Currency.ETH, oOrdersInfo.getKey().getCurrencyTo());
-					if (null == WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo))
+					if (null == WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo))
 						continue;
 					
-					final BigDecimal oEthBidPrice = WorkerFactory.getStockExchange().getHistory().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oEthBidPrice = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oEthRateInfo).getBidsAnalysisResult().getBestPrice();
 					final BigDecimal oCrossBidPrice = MathUtils.getBigDecimal(oEthUahPrice.doubleValue() / oEthBidPrice.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION);
 
 					final BigDecimal oSum = oOrder.getSum().multiply(oCrossBidPrice);

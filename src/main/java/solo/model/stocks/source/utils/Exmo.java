@@ -23,7 +23,8 @@ import java.util.Map;
 
 public class Exmo 
 {
-    private static Long _nonce;
+    private static Long _nonce = 0L;
+    private static Long _nonceNext = 0L;
     private String _key;
     private String _secret;
 
@@ -41,11 +42,21 @@ public class Exmo
 
         if (arguments == null)   // If the user provided no arguments, just create an empty argument array.
             arguments = new HashMap<String, String>();
+        
+        if (null == _nonce)
+        	_nonce = 0L;
+        
+        if (null == _nonceNext)
+        	_nonceNext = 0L;
 
-        synchronized (this) 
+        synchronized (_nonce) 
         {
         	_nonce = System.nanoTime();
-        	arguments.put("nonce", "" + ++_nonce);  // Add the dummy nonce.
+        	_nonce = _nonce++;
+        	if (_nonce < _nonceNext)
+        		_nonce = _nonceNext;
+        	_nonceNext = _nonce + 1;
+        	arguments.put("nonce", "" + _nonce);  // Add the dummy nonce.
 
         	String postData = StringUtils.EMPTY;
 
@@ -110,11 +121,12 @@ public class Exmo
 	        if (null != oProxy)
 	        	oBuilder.proxy(oProxy);
 	        OkHttpClient client = oBuilder.build();
+	        final String strURL = "https://api.exmo.com/v1/" + method;
 	        try 
 	        {
 	            RequestBody body = RequestBody.create(form, postData);
 	            Request request = new Request.Builder()
-	                    .url("https://api.exmo.com/v1/" + method)
+	                    .url(strURL)
 	                    .addHeader("Key", _key)
 	                    .addHeader("Sign", sign)
 	                    .post(body)
@@ -125,7 +137,7 @@ public class Exmo
 	        } 
 	        catch (IOException e) 
 	        {
-	            System.err.println("Request fail: " + e.toString());
+	            System.err.println("Request fail [" + strURL + "]: " + e.toString());
 	            return null;  // An error occured...
 	        }
         }

@@ -30,11 +30,18 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	
 	public void startWorker()
 	{
+		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), this);
 
 		m_oStockWorker.startWorker();
 		m_oTransportWorker.startWorker();
-		super.startWorker();
+
+	}
+	
+	public void stopWorker()
+	{
+		m_oStockWorker.stopWorker();
+		super.stopWorker();
 	}
 	
 	public void addCommand(final ICommand oCommand)
@@ -46,6 +53,11 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	public ITransport getTransport()
 	{
 		return m_oTransportWorker.getTransport();
+	}
+
+	public StockWorker getStockWorker()
+	{
+		return m_oStockWorker;
 	}
 	
 	public IStockExchange getStockExchange()

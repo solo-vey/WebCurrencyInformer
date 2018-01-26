@@ -133,7 +133,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public BigDecimal getNeedBoughtVolume()
 	{
-		return m_nNeedBoughtVolume;
+		return (null != m_nNeedBoughtVolume ? m_nNeedBoughtVolume : BigDecimal.ZERO);
 	}
 	
 	public BigDecimal getCriticalPrice()
@@ -219,13 +219,19 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public void setNeedBoughtVolume(final BigDecimal nNeedBoughtVolume, final boolean bWriteToHistory)
 	{
-		if (bWriteToHistory && m_nNeedBoughtVolume.compareTo(nNeedBoughtVolume) != 0)
+		if (bWriteToHistory && getNeedBoughtVolume().compareTo(nNeedBoughtVolume) != 0)
 			addToHistory("Set need buy volume : " + MathUtils.toCurrencyStringEx2(nNeedBoughtVolume)); 
 		m_nNeedBoughtVolume = nNeedBoughtVolume;
 	}
 	
-	public void setTradeSum(BigDecimal nTradeSum, final boolean bWriteToHistory)
+	public void setTradeSum(final BigDecimal nTradeSum, final boolean bWriteToHistory)
 	{
+		if (nTradeSum.compareTo(BigDecimal.ZERO) == 0)
+		{
+			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 	
+			return;
+		}
+		
 		if (bWriteToHistory && m_nTradeSum.compareTo(nTradeSum) != 0)
 			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 
 		m_nTradeSum = nTradeSum;

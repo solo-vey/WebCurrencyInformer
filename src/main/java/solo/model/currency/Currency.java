@@ -9,6 +9,8 @@ public enum Currency
 	ETH("Ethereum"), 
 	/** Waves */
 	WAVES("Waves"),
+	/** Xrp */
+	XRP("Xpr"),
 	/** Dash */
 	DASH("Dash"),
 	/** доллары */

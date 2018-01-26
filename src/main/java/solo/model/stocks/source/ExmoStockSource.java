@@ -44,6 +44,8 @@ public class ExmoStockSource extends BaseStockSource
 //		registerRate(new RateInfo(Currency.BTC, Currency.RUB));
 		
 		registerRate(new RateInfo(Currency.WAVES, Currency.RUB));
+		
+		registerRate(new RateInfo(Currency.XRP, Currency.RUB));
 
 		registerRate(new RateInfo(Currency.USD, Currency.RUB));
 	}
@@ -213,7 +215,7 @@ public class ExmoStockSource extends BaseStockSource
 		while (nTryCount > 0)
 		{
 			oGetOrder = getOrderInternal(strOrderId, oRateInfo);
-			if (!oGetOrder.isCanceled() && !oGetOrder.isDone() && !oGetOrder.isException())
+			if (!oGetOrder.isError() && !oGetOrder.isDone() && !oGetOrder.isException())
 			{
 				if (!oOriginalRateInfo.getIsReverse())
 					return oGetOrder;
@@ -229,7 +231,7 @@ public class ExmoStockSource extends BaseStockSource
 		return oGetOrder;
 	}
 	
-	@SuppressWarnings({"serial", "unchecked"})
+	@SuppressWarnings("serial")
 	protected Order getOrderInternal(final String strOrderId, final RateInfo oRateInfo)
 	{
 		try
@@ -241,6 +243,18 @@ public class ExmoStockSource extends BaseStockSource
 				if (oOrder.getId().equalsIgnoreCase(strOrderId))
 					return oOrder;
 			}
+			
+			final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+			final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
+				put("limit", "100");
+			}});
+			final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
+			for(final Object oOrderData : oUserCenceledOrders)
+			{
+				final Order oCanceledOrder = convert2Order(oOrderData);
+				if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
+					return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
+			}
 
 			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
 			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
@@ -249,34 +263,10 @@ public class ExmoStockSource extends BaseStockSource
 			
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
-				return new Order(strOrderId, Order.CANCEL, oOrderData.get("error").toString());
+				return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
 
-			final Order oOrder = convert2Order(oOrderData);
-			
-			final Object oTrades = oOrderData.get("trades");
-			BigDecimal nTradeSum = BigDecimal.ZERO; 
-			if (oTrades instanceof List<?>)
-			{
-				final List<Object> oListTrades = (List<Object>)oTrades; 
-				for(final Object oTrade : oListTrades)
-				{
-					if (oTrade instanceof Map<?, ?>)
-					{
-						final Map<String, Object> oTradeMap = (Map<String, Object>)oTrade;
-						final BigDecimal nSum = MathUtils.fromString(oTradeMap.get("amount").toString());
-						nTradeSum = nTradeSum.add(nSum);
-					}
-				}
-			}
-			
-			BigDecimal nOrderSum = BigDecimal.ZERO;
-			if (null != oOrderData.get("in_amount") && oOrder.getSide().equals(OrderSide.SELL))
-				nOrderSum = MathUtils.fromString(oOrderData.get("in_amount").toString());
-			else
-			if (null != oOrderData.get("out_amount") && oOrder.getSide().equals(OrderSide.BUY))
-				nOrderSum = MathUtils.fromString(oOrderData.get("out_amount").toString());
-			
-			oOrder.setState(nOrderSum.compareTo(nTradeSum) == 0 ? Order.DONE : Order.WAIT);
+			final Order oOrder = convert2Order(oOrderData);			
+			oOrder.setState(Order.DONE);
 			oOrder.setId(strOrderId);
 
 			return oOrder;

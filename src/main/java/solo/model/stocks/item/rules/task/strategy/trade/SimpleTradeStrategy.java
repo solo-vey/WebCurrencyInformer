@@ -16,6 +16,7 @@ import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.item.rules.task.trade.TradesInfo;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.MessageLevel;
 
 public class SimpleTradeStrategy implements ITradeStrategy
 {
@@ -55,19 +56,14 @@ public class SimpleTradeStrategy implements ITradeStrategy
 			return;
 		
 		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -5); 
-	    if (null == oOrder.getCreated() || oOrder.getCreated().after(oFithteenMinutesDateCreate))
+	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
 		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
 		if (!oRemoveOrder.isException())
 		{
-			final BigDecimal nNeedBuyVolume = oTaskTrade.getTradeInfo().getNeedBoughtVolume();
-			final BigDecimal nBuyVolume = TradeUtils.getWithoutCommision(nNeedBuyVolume);
-			final BigDecimal nDeltaSpendSum = nNeedBuyVolume.multiply(oOrder.getPrice());
-			
-			oTaskTrade.getTradeInfo().addBuy(nDeltaSpendSum.negate(), nBuyVolume.negate());
-			
 			oTaskTrade.getTradeInfo().getHistory().addToHistory("SimpleTradeStrategy.removeBuyIfSmall Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
 		}
 	}
 	
@@ -92,17 +88,14 @@ public class SimpleTradeStrategy implements ITradeStrategy
 			return;
 		
 		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -5); 
-	    if (null == oOrder.getCreated() || oOrder.getCreated().after(oFithteenMinutesDateCreate))
+	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
 		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
 		if (!oRemoveOrder.isException())
 		{
-			final BigDecimal nSellVolume = oTaskTrade.getTradeInfo().getNeedSellVolume();
-			final BigDecimal nDeltaSellSum = nSellVolume.multiply(oOrder.getPrice());
-			oTaskTrade.getTradeInfo().addSell(TradeUtils.getWithoutCommision(nDeltaSellSum).negate(), nSellVolume.negate());
-			
 			oTaskTrade.getTradeInfo().getHistory().addToHistory("SimpleTradeStrategy.removeSellIfSmall Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
 		}
 	}
 	
@@ -120,11 +113,11 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
-		if (!oCandlestick.isLongFall())
-			return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
+//		if (!oCandlestick.isLongFall())
+		return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
 		
-		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
-		return false;
+//		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
+//		return false;
 	}
 	
 	public void startNewTrade(final ITradeTask oTaskTrade, final TradeControler oTradeControler)

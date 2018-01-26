@@ -6,11 +6,16 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.rules.task.trade.ITradeControler;
+import solo.model.stocks.item.rules.task.trade.ITradeTask;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import ua.lz.ep.utils.ResourceUtils;
 
@@ -72,6 +77,22 @@ public class Rules
 	public Map<Integer, IRule> getRules()
 	{
 		return m_oRules;
+	}
+	
+	public List<Entry<Integer, IRule>> getRules(final RateInfo oRateInfo)
+	{
+		final List<Entry<Integer, IRule>> oResult = new LinkedList<Entry<Integer, IRule>>();
+		for(final Entry<Integer, IRule> oRuleInfo : m_oRules.entrySet())
+		{
+			final IRule oRule = oRuleInfo.getValue();
+			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
+				continue;
+			
+			if (oRule.getRateInfo().equals(oRateInfo))
+				oResult.add(oRuleInfo);
+		}
+		return oResult;
 	}
 	
 	public int getNextRuleID()

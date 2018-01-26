@@ -72,7 +72,7 @@ public class BaseStockSource implements IStockSource
 
 	public void checkOrderParameters(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nPrice) throws Exception
 	{
-		final StateAnalysisResult oAnalysisResult = m_oStockExchange.getHistory().getLastAnalysisResult();
+		final StateAnalysisResult oAnalysisResult = m_oStockExchange.getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oAnalysisResult.getRateAnalysisResult(oRateInfo);
 		
 		List<Order> oAsks = oRateAnalysisResult.getAsksOrders(); 

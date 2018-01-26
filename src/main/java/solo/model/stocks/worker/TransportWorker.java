@@ -19,8 +19,8 @@ public class TransportWorker extends BaseWorker
 
 	public void startWorker()
 	{
-		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
 		super.startWorker();
+		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
 	}
 	
 	@Override protected void doWork() throws Exception

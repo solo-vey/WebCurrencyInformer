@@ -345,7 +345,6 @@ public class RequestUtils
 					
 					throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
 				}
-				
 				return strContent;
 			}
 		}

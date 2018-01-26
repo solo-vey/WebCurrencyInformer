@@ -68,6 +68,11 @@ public class TaskFactory extends HasParameters implements IRule
 		return strHelp;
 	}
 	
+	public RateInfo getRateInfo()
+	{
+		return m_oTaskBase.getRateInfo();
+	}
+	
 	public String getInfo(final Integer nRuleID)
 	{
 		return (null != m_oTaskBase ? m_oTaskBase.getInfo(nRuleID) : "/removeRule_" + nRuleID + "\r\n");

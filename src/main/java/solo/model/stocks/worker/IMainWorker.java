@@ -5,4 +5,5 @@ import solo.transport.ITransport;
 public interface IMainWorker
 {
 	ITransport getTransport();
+	StockWorker getStockWorker();
 }
