@@ -41,8 +41,8 @@ public class GetStockInfoCommand extends BaseCommand
 		String strMessage = StringUtils.EMPTY;
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 		{
-			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx2(oCurrencyInfo.getValue().getBalance()) + 
-							(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx2(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
+			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
+							(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
 							+ "\r\n";
 		}
 
@@ -110,7 +110,7 @@ public class GetStockInfoCommand extends BaseCommand
 			}
 		}
 		
-		strMessage += "Total UAH = " + MathUtils.toCurrencyString(oTotalUahSum) + "\r\n";
+		strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
 
 		WorkerFactory.getMainWorker().sendMessage(strMessage);
 	}

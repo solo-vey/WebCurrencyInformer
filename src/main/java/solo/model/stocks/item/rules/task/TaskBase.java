@@ -16,24 +16,38 @@ import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.SendMessageCommand;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
 public class TaskBase extends HasParameters implements IRule
 {
 	private static final long serialVersionUID = -6534375856366736570L;
 	
-	protected RateInfo m_oRateInfo;
+	final static public String RATE_PARAMETER = "#rate#";
 	
-	public TaskBase(final RateInfo oRateInfo, final String strCommandLine)
+	protected RateInfo m_oRateInfo;
+	protected int m_nID = -1;
+	
+	public TaskBase(final String strCommandLine)
 	{
-		super(strCommandLine, StringUtils.EMPTY);
-		m_oRateInfo = oRateInfo;
+		super(strCommandLine, RATE_PARAMETER);
+		m_oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
 	}
 	
-	public TaskBase(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate)
+	public TaskBase(final String strCommandLine, final String strTemplate)
 	{
-		super(strCommandLine, strTemplate);
-		m_oRateInfo = oRateInfo;
+		super(strCommandLine, CommonUtils.mergeParameters(RATE_PARAMETER, strTemplate));
+		m_oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
+	}
+	
+	public int getID()
+	{
+		return m_nID;
+	}
+	
+	public void setID(final int nID)
+	{
+		m_nID = nID;
 	}
 	
 	public RateInfo getRateInfo()
@@ -51,19 +65,19 @@ public class TaskBase extends HasParameters implements IRule
 		return StringUtils.EMPTY;
 	}
 	
-	public String getInfo(final Integer nRuleID)
+	public String getInfo()
 	{
 		return getType() + "/" + getCommandLine() + 
-			(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
+			CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
 	}
 	
-	public void check(final StateAnalysisResult oStateAnalysisResult, final Integer nRuleID)
+	public void check(final StateAnalysisResult oStateAnalysisResult)
 	{
 	}
 	
 	public void onOccurred(final BigDecimal nPrice, final Integer nRuleID)
 	{
-		final String strMessage = "Occurred " + getInfo(null) + "/" + MathUtils.toCurrencyString(nPrice) + 
+		final String strMessage = "Occurred " + getInfo() + "/" + MathUtils.toCurrencyString(nPrice) + 
 			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + 
 			" " + BaseCommand.getCommand(GetRulesCommand.NAME);
 		final ICommand oSendMessageCommand = new SendMessageCommand(strMessage);
@@ -76,9 +90,6 @@ public class TaskBase extends HasParameters implements IRule
 	
 	@Override public boolean equals(Object obj)
 	{
-		if (obj instanceof TaskFactory && ((TaskFactory)obj).m_oTaskBase.equals(this))
-			return true;
-		
 		return super.equals(obj);
 	}
 }

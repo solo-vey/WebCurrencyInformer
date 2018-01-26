@@ -32,6 +32,7 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), this);
+		Thread.currentThread().setName(getStockExchange().getStockName() + " Main");
 
 		m_oStockWorker.startWorker();
 		m_oTransportWorker.startWorker();

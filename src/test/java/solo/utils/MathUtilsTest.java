@@ -56,4 +56,30 @@ public class MathUtilsTest
         //	Assert
     	Assert.assertEquals("3.345007", strResult);
     }
+ 		
+ 	@Test
+    public void testToCurrencyStringEx3Less10More0() throws Exception 
+    {
+    	//	Arrange
+ 		final BigDecimal nValue = new BigDecimal(3.345007);
+    	
+    	//	Act
+    	final String strResult = MathUtils.toCurrencyStringEx3(nValue);
+ 	
+        //	Assert
+    	Assert.assertEquals("3.345007", strResult);
+    }
+		
+ 	@Test
+    public void testToCurrencyStringEx3More10() throws Exception 
+    {
+    	//	Arrange
+ 		final BigDecimal nValue = new BigDecimal(12343.345007);
+    	
+    	//	Act
+    	final String strResult = MathUtils.toCurrencyStringEx3(nValue);
+ 	
+        //	Assert
+    	Assert.assertEquals("12 343.35", strResult);
+    }
 }

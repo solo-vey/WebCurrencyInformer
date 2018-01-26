@@ -6,9 +6,11 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 
 public interface IRule extends Serializable
 {
-	String getInfo(final Integer nRuleID);
+	String getInfo();
 	RateInfo getRateInfo();
+	int getID();
+	void setID(final int nID);
 	String getHelp(final String strCommandStart) throws Exception;
-	void check(final StateAnalysisResult oStateAnalysisResult, final Integer nRuleID);
+	void check(final StateAnalysisResult oStateAnalysisResult);
 	void remove();
 }

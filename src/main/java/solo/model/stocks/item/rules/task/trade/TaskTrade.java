@@ -10,7 +10,6 @@ import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
-import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
@@ -33,15 +32,15 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 	protected TradeInfo m_oTradeInfo;
 
-	public TaskTrade(final RateInfo oRateInfo, final String strCommandLine) throws Exception
+	public TaskTrade(final String strCommandLine) throws Exception
 	{
-		this(oRateInfo, strCommandLine, TRADE_VOLUME);
+		this(strCommandLine, TRADE_VOLUME);
 	}
 
-	public TaskTrade(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate) throws Exception
+	public TaskTrade(final String strCommandLine, final String strTemplate) throws Exception
 	{
-		super(oRateInfo, strCommandLine, strTemplate);
-		m_oTradeInfo = new TradeInfo(oRateInfo, WorkerFactory.getStockExchange().getRules().getNextRuleID());
+		super(strCommandLine, strTemplate);
+		m_oTradeInfo = new TradeInfo(m_oRateInfo, WorkerFactory.getStockExchange().getRules().getNextRuleID());
 		m_oTradeInfo.setTradeSum(getParameterAsBigDecimal(TRADE_VOLUME), true);
 		m_oTradeInfo.setTaskSide(OrderSide.BUY);
 		m_oTradeInfo.setTaskSide(OrderSide.BUY);
@@ -66,11 +65,11 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		final String strMessageFooter = getType() +
 			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) +   
-			" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, WorkerFactory.getStockExchange().getRules().getRuleID(this)); 
+			" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID); 
 		WorkerFactory.getMainWorker().sendMessage(strMessage + "\r\n" + strMessageFooter);
 	}
 	
-	public String getInfo(final Integer nRuleID)
+	public String getInfo()
 	{
 		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 
 				CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + " " : StringUtils.EMPTY);
@@ -78,10 +77,10 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		String strQuickSell = StringUtils.EMPTY;
 		if (getTradeInfo().getTaskSide().equals(OrderSide.SELL))
 		{
-			strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, nRuleID, 
+			strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
 					SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
 					SetTaskParameterCommand.VALUE_PARAMETER, getTradeInfo().getCriticalPriceString()) + 
-					" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
+					" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
 					"\r\n";
 		}
 		
@@ -92,10 +91,10 @@ public class TaskTrade extends TaskBase implements ITradeTask
 					m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
 					strGetRateCommand + strQuickSell + 
 					CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
-					(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
+					CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
 	}
 
-	@Override public void check(final StateAnalysisResult oStateAnalysisResult, final Integer nRuleID)
+	@Override public void check(final StateAnalysisResult oStateAnalysisResult)
 	{
 		m_strCurrentState = StringUtils.EMPTY;
 		final Order oGetOrder = updateTradeInfo(m_oTradeInfo.getOrder());
@@ -371,7 +370,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 	protected void buyDone(final Order oOrder)
 	{
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getInfo(null) + " is executed");
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getInfo() + " is executed");
 		
 		m_oTradeInfo.setCriticalPrice(m_oTradeInfo.calculateCriticalPrice());
 		final String strMessage = "Set critical price " + m_oTradeInfo.getCriticalPriceString() + 
@@ -400,7 +399,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	protected void taskDone(final Order oOrder)
 	{
 		if (getTradeControler().equals(ITradeControler.NULL))
-			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, "Task done. " + getInfo(null) + "\r\n" + m_oTradeInfo.getHistory());
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, "Task done. " + getInfo() + "\r\n" + m_oTradeInfo.getHistory());
 
 		getTradeControler().tradeDone(this);
 		WorkerFactory.getStockExchange().getRules().removeRule(this);

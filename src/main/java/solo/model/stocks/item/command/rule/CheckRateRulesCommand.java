@@ -55,7 +55,7 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
 		final List<Entry<Integer, IRule>> oRules = oStockExchange.getRules().getRules(m_oRateInfo);
 		for(final Entry<Integer, IRule> oRuleInfo : oRules)
-			oRuleInfo.getValue().check(oStateAnalysisResult, oRuleInfo.getKey());
+			oRuleInfo.getValue().check(oStateAnalysisResult);
 	}
 	
 	public static RateState makeReverseRateState(final RateState oRateState)

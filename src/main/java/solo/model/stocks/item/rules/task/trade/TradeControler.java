@@ -17,8 +17,6 @@ import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
-import solo.model.stocks.item.rules.task.TaskFactory;
-import solo.model.stocks.item.rules.task.TaskType;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
@@ -41,21 +39,21 @@ public class TradeControler extends TaskBase implements ITradeControler
 	protected TradesInfo m_oTradesInfo;
 	protected ITradeStrategy m_oTradeStrategy = null;
 	
-	public TradeControler(RateInfo oRateInfo, String strCommandLine)
+	public TradeControler(String strCommandLine)
 	{
-		super(oRateInfo, strCommandLine, CommonUtils.mergeParameters(TRADE_SUM, MAX_TARDES, STRATEGY));
+		super(strCommandLine, CommonUtils.mergeParameters(TRADE_SUM, MAX_TARDES, STRATEGY));
 		initTrade();
 	}
 	
-	public TradeControler(final RateInfo oRateInfo, final String strCommandLine, final String strTemplate)
+	public TradeControler(final String strCommandLine, final String strTemplate)
 	{
-		super(oRateInfo, strCommandLine, CommonUtils.mergeParameters(TRADE_SUM, MAX_TARDES, STRATEGY, strTemplate));
+		super(strCommandLine, CommonUtils.mergeParameters(TRADE_SUM, MAX_TARDES, STRATEGY, strTemplate));
 		initTrade();
 	}
 
 	void initTrade()
 	{
-		m_nMaxTrades = getParameterAsInt(MAX_TARDES, 2);
+		m_nMaxTrades = getParameterAsInt(MAX_TARDES, 1);
 		final BigDecimal nTradeSum = getParameterAsBigDecimal(TRADE_SUM);
 		getTradesInfo().setSum(nTradeSum, m_nMaxTrades);
 		m_oTradeStrategy = getParameterAsTradeStrategy(STRATEGY, DEFAULT_TRADE_STRATEGY);
@@ -66,32 +64,28 @@ public class TradeControler extends TaskBase implements ITradeControler
 		return "CONTROLER";   
 	}
 	
-	public String getInfo(final Integer nRuleID)
+	public String getInfo()
 	{
 		String strInfo = getType() + 
 				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo()) + 
-				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, StringUtils.EMPTY) + 
+				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
 				"\r\n";  
 		
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
-		{
-			int nTaskRuleID = getRuleID(oTaskTrade);
-			strInfo += " -> " + oTaskTrade.getInfo(nTaskRuleID).replace("\r\n", "\r\n    ") + "\r\n"; 
-		}
+			strInfo += " -> " + oTaskTrade.getInfo().replace("\r\n", "\r\n    ") + "\r\n"; 
 		
 		return strInfo + getTradesInfo().getCurrentState() + 
-				(null != nRuleID ? " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, nRuleID) : StringUtils.EMPTY);   
+				" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
 	}
 	
 	public String getFullInfo()
 	{ 
-		int nRuleID = getRuleID(this);
 		String strInfo = getRateInfo().toString().toUpperCase();
 		strInfo += "; Strategy [" + getTradeStrategy().getName() + "]";
 		strInfo += "; tradeCount [" + m_nMaxTrades + "]\r\n";
 		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
-				CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, nRuleID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
+				CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
 				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
 	}
 	
@@ -113,10 +107,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public TradesInfo getTradesInfo()
 	{
 		if (null == m_oTradesInfo)
-		{
-			final int nRuleID = getRuleID(this);
-			m_oTradesInfo = new TradesInfo(m_oRateInfo, nRuleID);
-		}
+			m_oTradesInfo = new TradesInfo(m_oRateInfo, m_nID);
+
 		return m_oTradesInfo;   
 	}
 	
@@ -129,31 +121,13 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		if (null == m_oAllTradesInfo || m_oAllTradesInfo.size() == 0)
 		{
-			final int nRuleID = getRuleID(this);
-			
 			m_oAllTradesInfo = new HashMap<RateInfo, TradesInfo>();
-			m_oAllTradesInfo.put(getRateInfo(), new TradesInfo(getRateInfo(), nRuleID));
+			m_oAllTradesInfo.put(getRateInfo(), new TradesInfo(getRateInfo(), m_nID));
 			
 			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(getRateInfo());
-			m_oAllTradesInfo.put(oReverseRateInfo, new TradesInfo(oReverseRateInfo, nRuleID));
+			m_oAllTradesInfo.put(oReverseRateInfo, new TradesInfo(oReverseRateInfo, m_nID));
 		}
 		return m_oAllTradesInfo;   
-	}
-	
-	protected int getRuleID(final IRule oTask)
-	{
-		for(final IRule oRule : WorkerFactory.getStockExchange().getRules().getRules().values())
-		{
-			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
-			if (null != oTradeTask && oTradeTask.equals(oTask))
-				return WorkerFactory.getStockExchange().getRules().getRuleID(oRule);	
-
-			final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
-			if (null != oTradeControler && oTradeControler.equals(oTask))
-				return WorkerFactory.getStockExchange().getRules().getRuleID(oRule);	
-		}
-		
-		return -1;
 	}
 	
 	protected List<ITradeTask> getTaskTrades()
@@ -172,7 +146,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		return aTaskTrades;
 	}
 	
-	@Override public void check(final StateAnalysisResult oStateAnalysisResult, final Integer nRuleID)
+	@Override public void check(final StateAnalysisResult oStateAnalysisResult)
 	{
 		getTradesInfo().setCurrentState(StringUtils.EMPTY);
 		
@@ -195,7 +169,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		}
 
 		for(final ITradeTask oTaskTrade : aTaskTrades)
-			oTaskTrade.check(oStateAnalysisResult, nRuleID);
+			oTaskTrade.check(oStateAnalysisResult);
 		
 		if (getTradeStrategy().isCreateNewTrade(aTaskTrades, this))
 			createNewTrade(oStateAnalysisResult, aTaskTrades);	
@@ -228,9 +202,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 				}
 			}
 			
-			final String strRuleInfo = "task" + "_" + getRateInfo() + "_" + TaskType.TRADE.toString().toLowerCase() + "_" + nBuySum;
-			final TaskFactory oTask = (TaskFactory) RulesFactory.getRule(strRuleInfo);
-			final TaskTrade oTaskTrade = ((TaskTrade)oTask.getTaskBase());
+			final String strRuleInfo = "trade" + "_" + getRateInfo() + "_" + nBuySum;
+			final IRule oRule = RulesFactory.getRule(strRuleInfo);
+			final TaskTrade oTaskTrade = ((TaskTrade)oRule);
 			
 			if (m_oTradesInfo.getFreeVolume().compareTo(BigDecimal.ZERO) > 0)
 			{

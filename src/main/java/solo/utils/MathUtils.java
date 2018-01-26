@@ -42,19 +42,18 @@ public class MathUtils
 	}
 	
 	@Obsolete
-	public static String toCurrencyStringEx(final BigDecimal oValue)
+	public static String toCurrencyStringEx3(final BigDecimal oValue)
 	{
 		if (null == oValue)
 			return "NaN";
-
-		if (oValue.compareTo(BigDecimal.ZERO) == 0)
-			return "0";
-
-		if (oValue.doubleValue() >= 1 || oValue.doubleValue() <= 0)
-			return toCurrencyString(oValue);
 		
-		final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
-		return oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
+		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= 0)
+		{
+			final DecimalFormat oDecimalFormat = new DecimalFormat("#,###.##");
+			return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, (char)0x20).trim();
+		}
+
+		return toCurrencyStringEx2(oValue);
 	}
 	
 	public static String toCurrencyStringEx2(final BigDecimal oValue)

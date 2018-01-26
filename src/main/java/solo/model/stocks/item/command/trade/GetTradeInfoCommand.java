@@ -1,5 +1,7 @@
 package solo.model.stocks.item.command.trade;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
@@ -42,22 +44,14 @@ public class GetTradeInfoCommand extends BaseCommand
 		
 		final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
 		final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
+		String strMessage = oRule.getInfo();
+		
 		if (null != oTradeTask)
-		{
-			if (m_bIsFull)
-				WorkerFactory.getMainWorker().sendMessage(oTradeTask.getTradeInfo().toString());
-
-			WorkerFactory.getMainWorker().sendMessage(oTradeTask.getTradeInfo().getInfo());
-		}
+			strMessage = (m_bIsFull ? oTradeTask.getTradeInfo() + "\r\n" : StringUtils.EMPTY) + oTradeTask.getTradeInfo().getInfo();
 		else
 		if (null != oTradeControler)
-		{
-			if (m_bIsFull)
-				WorkerFactory.getMainWorker().sendMessage(oTradeControler.getTradesInfo().toString());
-			
-			WorkerFactory.getMainWorker().sendMessage(oTradeControler.getFullInfo());
-		}
-		else
-			WorkerFactory.getMainWorker().sendMessage(oRule.getInfo(m_nRuleID));
+			strMessage = (m_bIsFull ? oTradeControler.getTradesInfo() + "\r\n" : StringUtils.EMPTY) + oTradeControler.getFullInfo();
+
+		WorkerFactory.getMainWorker().sendMessage(strMessage);
 	}
 }

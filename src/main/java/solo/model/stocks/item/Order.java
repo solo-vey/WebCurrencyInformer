@@ -182,7 +182,7 @@ public class Order extends BaseObject implements Serializable
 			 	+ (StringUtils.isNotBlank(getState()) ? ". State [" + getState() + "]" : StringUtils.EMPTY);
 		
 		return getSide() + "/" + MathUtils.toCurrencyStringEx2(getPrice()) + 
-			"/" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getSum()) +
+			"/" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx3(getSum()) +
 			(StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY);
 	}
 	

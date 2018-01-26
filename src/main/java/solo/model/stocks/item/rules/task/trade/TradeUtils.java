@@ -12,8 +12,6 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
-import solo.model.stocks.item.rules.task.TaskBase;
-import solo.model.stocks.item.rules.task.TaskFactory;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
@@ -170,24 +168,13 @@ public class TradeUtils
 		if (oRule instanceof ITradeTask)
 			return (ITradeTask)oRule;
 
-		if (!(oRule instanceof TaskFactory))
-			return null;
-			
-		final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
-		if (oTask instanceof ITradeTask)
-			return (ITradeTask)oTask;
-		
 		return null;
 	}
 	
 	public static ITradeControler getRuleAsTradeControler(final IRule oRule)
 	{
-		if (!(oRule instanceof TaskFactory))
-			return null;
-			
-		final TaskBase oTask = ((TaskFactory)oRule).getTaskBase();
-		if (oTask instanceof ITradeControler)
-			return (ITradeControler)oTask;
+		if (oRule instanceof ITradeControler)
+			return (ITradeControler)oRule;
 		
 		return null;
 	}

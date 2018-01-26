@@ -62,9 +62,6 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public Integer getRuleID()
 	{
-		if (null == m_nRuleID)
-			m_nRuleID = (int)(Math.random() * 100000);
-		
 		return m_nRuleID;
 	}
 	
@@ -249,9 +246,9 @@ public class TradesInfo extends BaseObject implements Serializable
 		final BigDecimal nReceiveAndSellSum = getReceivedSum().add(getSumToSell());
 		final BigDecimal nDelta = nReceiveAndSellSum.add(getSpendSum().negate());
 		return  "Count: " + getTradeCount() + "\r\n" + 
-				"Money: " + MathUtils.toCurrencyStringEx2(getSum()) + "/" + MathUtils.toCurrencyStringEx2(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx2(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx2(getSumToSell()) + "\r\n" + 
+				"Money: " + MathUtils.toCurrencyStringEx3(getSum()) + "/" + MathUtils.toCurrencyStringEx3(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx3(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx3(getSumToSell()) + "\r\n" + 
 				"Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n" + 
-				"Trades: " + MathUtils.toCurrencyStringEx2(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx2(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx2(nDelta) + "\r\n" + 
+				"Trades: " + MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + "\r\n" + 
 				getCurrentState();
 	}
 	
@@ -261,17 +258,17 @@ public class TradesInfo extends BaseObject implements Serializable
 		String strResult = StringUtils.EMPTY;
 		strResult += m_oRateInfo + "\r\n";
 		
-		strResult += "Sum: " + MathUtils.toCurrencyStringEx2(getSum()) + "\r\n";
-		strResult += "LockedSum: " + MathUtils.toCurrencyStringEx2(getLockedSum()) + "\r\n";
-		strResult += "SumToSell: " + MathUtils.toCurrencyStringEx2(getSumToSell()) + "\r\n";
+		strResult += "Sum: " + MathUtils.toCurrencyStringEx3(getSum()) + "\r\n";
+		strResult += "LockedSum: " + MathUtils.toCurrencyStringEx3(getLockedSum()) + "\r\n";
+		strResult += "SumToSell: " + MathUtils.toCurrencyStringEx3(getSumToSell()) + "\r\n";
 		strResult += "Volume: " + MathUtils.toCurrencyStringEx2(getVolume()) + "\r\n";
 		strResult += "LockedVolume: " + MathUtils.toCurrencyStringEx2(getLockedVolume()) + "\r\n";
-		strResult += "BuySum: " + MathUtils.toCurrencyStringEx2(getBuySum()) + "\r\n";
-		strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "\r\n";
-		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
+		strResult += "BuySum: " + MathUtils.toCurrencyStringEx3(getBuySum()) + "\r\n";
+		strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx3(getReceivedSum()) + "\r\n";
+		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx3(getSpendSum()) + "\r\n";
 		strResult += "BuyVolume: " + MathUtils.toCurrencyStringEx2(getBuyVolume()) + "\r\n";
 		strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
-		strResult += "LossSum:" + MathUtils.toCurrencyStringEx2(getLossSum()) + "\r\n";
+		strResult += "LossSum:" + MathUtils.toCurrencyStringEx3(getLossSum()) + "\r\n";
 		
 		return strResult;
 	}

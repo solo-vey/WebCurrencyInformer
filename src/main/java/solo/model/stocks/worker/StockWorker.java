@@ -27,6 +27,7 @@ public class StockWorker extends BaseWorker
 		super.startWorker();
 		
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
+		Thread.currentThread().setName(m_oStockExchange.getStockName() + " StockWorker");
 		
 		for(final RateInfo oRateInfo : m_oStockExchange.getStockSource().getRates())
 		{
@@ -49,10 +50,7 @@ public class StockWorker extends BaseWorker
 	
 	@Override protected void doWork() throws Exception
 	{
-		Thread.currentThread().setName(m_oStockExchange.getStockName() + " StockWorker");
 		super.doWork();
-		/*final ICommand oLoadRateInfoCommand = new LoadRateInfoCommand(); 
-		addCommand(oLoadRateInfoCommand);*/
 	}
 	
 	public IStockExchange getStockExchange()

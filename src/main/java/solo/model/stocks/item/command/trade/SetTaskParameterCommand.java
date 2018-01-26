@@ -62,6 +62,6 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
 		}
 		else
-			WorkerFactory.getMainWorker().sendMessage(oRule.getInfo(m_nRuleID));
+			WorkerFactory.getMainWorker().sendMessage(oRule.getInfo());
 	}
 }

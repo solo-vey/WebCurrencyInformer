@@ -40,6 +40,7 @@ public class Rules
 			return;
 		
 		m_oRules.put(m_nLastRuleID, oRule);
+		oRule.setID(m_nLastRuleID);
 		System.err.printf("Add rule : " + oRule + "\r\n");
 		m_nLastRuleID++;
 		save();
@@ -129,6 +130,10 @@ public class Rules
 	         final Map<Integer, IRule> oRules = (Map<Integer, IRule>) oStream.readObject();
 	         m_oRules.clear();
 	         m_oRules.putAll(oRules);
+	         
+	         for(final Entry<Integer, IRule> oRule : m_oRules.entrySet())
+	        	 oRule.getValue().setID(oRule.getKey());
+	         
 	         oStream.close();
 	         oFileStream.close();
 		} 

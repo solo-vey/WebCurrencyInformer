@@ -21,11 +21,13 @@ public class TransportWorker extends BaseWorker
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
+		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " Transport");
 	}
 	
 	@Override protected void doWork() throws Exception
 	{
 		super.doWork();
+		
 		final ICommand oGetTransportMessagesCommand = new GetTransportMessagesCommand(); 
 		addCommand(oGetTransportMessagesCommand);
 	}

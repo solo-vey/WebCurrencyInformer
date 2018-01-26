@@ -24,11 +24,11 @@ public class StockRateWorker extends BaseWorker
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
+		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " - " + m_oRateInfo);
 	}
 	
 	@Override protected void doWork() throws Exception
 	{
-		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " - " + m_oRateInfo);
 		super.doWork();
 		
 		addCommand(new CheckRateRulesCommand(m_oRateInfo));

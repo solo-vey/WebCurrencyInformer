@@ -9,8 +9,8 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.HelpCommand;
-import solo.model.stocks.item.rules.notify.EventFactory;
-import solo.model.stocks.item.rules.task.TaskFactory;
+import solo.model.stocks.item.rules.task.trade.TaskTrade;
+import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.utils.CommonUtils;
 
 public class RulesFactory
@@ -19,13 +19,13 @@ public class RulesFactory
 	
 	static
 	{
-		registerRuleClass("event", EventFactory.class);
-		registerRuleClass("task",  TaskFactory.class);
+		registerRuleClass("trade",  TaskTrade.class);
+		registerRuleClass("controler",  TradeControler.class);
 	}
 	
-	static protected void registerRuleClass(final String strRule, final Class<?> oClass)
+	static protected void registerRuleClass(final String strTaskType, final Class<?> oClass)
 	{
-		s_oRulesClassByType.put(strRule, oClass);
+		s_oRulesClassByType.put(strTaskType, oClass);
 	}
 	
 	public static Map<String, Class<?>> getAllRuleTypes()
@@ -35,14 +35,15 @@ public class RulesFactory
 
 	public static IRule getRule(final String strCommandLine) throws Exception
 	{
-		final String strRule = CommonUtils.splitFirst(strCommandLine).toLowerCase();
-		final Class<?> oClass = (Class<?>) s_oRulesClassByType.get(strRule);
+		final String strTaskType = CommonUtils.splitFirst(strCommandLine).toLowerCase();
+		final Class<?> oClass = (Class<?>) s_oRulesClassByType.get(strTaskType);
 		if (null == oClass)
 			return null;
 		
 		final String strRuleArguments = CommonUtils.splitTail(strCommandLine).toLowerCase();
+		
 		final Constructor<?> oConstructor = oClass.getConstructor(String.class);
-		return (IRule) oConstructor.newInstance(new Object[] { strRuleArguments });
+		return (IRule) oConstructor.newInstance(new Object[] {strRuleArguments });
 	}
 	
 	public static String getHelp(final String strCommandStart, final String strType) throws Exception
@@ -56,7 +57,7 @@ public class RulesFactory
 					continue;
 				
 				final String strCommand = strCommandStart.replace("#type#", oRuleType.getKey());
-				final String strRuleHelp = getRule(oRuleType.getKey()).getHelp(strCommand); 
+				final String strRuleHelp = getRule(oRuleType.getKey().toString()).getHelp(strCommand); 
 				strHelp += strRuleHelp;
 			}
 		}

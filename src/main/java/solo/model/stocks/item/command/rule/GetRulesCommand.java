@@ -32,12 +32,10 @@ public class GetRulesCommand extends BaseCommand
 			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
 				continue;
 
-			strMessage += oRuleInfo.getValue().getInfo(oRuleInfo.getKey()) + "\r\n";
+			strMessage += oRuleInfo.getValue().getInfo() + "\r\n";
 		}
 
-		if (StringUtils.isNotBlank(strMessage))
-			strMessage += " " + BaseCommand.getCommand(RemoveAllRulesCommand.NAME);
-		else 
+		if (StringUtils.isBlank(strMessage))
 			strMessage += "No rules";
 			
 		WorkerFactory.getMainWorker().sendMessage(strMessage);
