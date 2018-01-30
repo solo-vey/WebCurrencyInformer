@@ -99,7 +99,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		strInfo += "; tradeCount [" + m_nMaxTrades + "]\r\n";
 		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
 				CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-							SetTaskParameterCommand.NAME_PARAMETER, "tradeCount", SetTaskParameterCommand.VALUE_PARAMETER, "0") + "\r\n" +
+							SetTaskParameterCommand.NAME_PARAMETER, "tradeCount", SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n" +
 				CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
 	}
 	
