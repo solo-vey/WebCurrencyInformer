@@ -44,6 +44,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
     	for(final RateInfo oRateInfo : aRates)
     	{
 			final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
+			strMessage += oRateInfo.toString() + "\r\n"; 
 			strMessage += getRateData(oRateInfo, oAnalysisResult);
 			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo) + "\r\n\r\n";
     	}
@@ -56,8 +57,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		if (null == oAnalysisResult)
 			return StringUtils.EMPTY;
 		
-		String strData = oRateInfo.toString() + "\r\n"; 
-		strData += "Sell : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
+		String strData =  "Sell : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
 							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
 		strData += "Buy : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getBidsAnalysisResult().getBestPrice()) + 
 							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice()) + "\r\n";   

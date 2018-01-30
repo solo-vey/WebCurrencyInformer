@@ -1,8 +1,14 @@
 package solo.model.stocks.source;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import solo.CurrencyInformer;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
@@ -20,6 +26,7 @@ import ua.lz.ep.utils.ResourceUtils;
 public class BaseStockSource implements IStockSource
 {
 	final protected List<RateInfo> m_aRates = new LinkedList<RateInfo>();
+	final protected List<RateInfo> m_aAllRates = new LinkedList<RateInfo>();
 	final protected BigDecimal m_nSumIgnore;
 	final protected IStockExchange m_oStockExchange;
 
@@ -44,6 +51,8 @@ public class BaseStockSource implements IStockSource
 		
 		m_strPublicKey = ResourceUtils.getResource("trade.public.key", getStockExchange().getStockProperties());
 		m_strSecretKey = ResourceUtils.getResource("trade.secret.key", getStockExchange().getStockProperties());
+		
+		load();
 	}
 	
 	public IStockExchange getStockExchange()
@@ -115,9 +124,22 @@ public class BaseStockSource implements IStockSource
 		return null;
 	}
 
-	public void registerRate(final RateInfo oRateInfo)
+	public void registerRate(final RateInfo oRateInfo) throws Exception
 	{
+		if (m_aRates.contains(oRateInfo))
+			return;
+		
+		if (!m_aAllRates.contains(oRateInfo))
+			throw new Exception("Unknown rate " + oRateInfo);
+		
 		m_aRates.add(oRateInfo);
+		save();
+	}
+
+	public void removeRate(final RateInfo oRateInfo)
+	{
+		m_aRates.remove(oRateInfo);
+		save();
 	}
 
 	public List<RateInfo> getRates()
@@ -140,5 +162,50 @@ public class BaseStockSource implements IStockSource
 	{
 		final Order oOrder = new Order();
 		return oOrder;
+	}
+	
+	
+	public void save()
+	{
+		final String strStockEventsFileName = getFileName();
+
+		try 
+		{
+	         final FileOutputStream oFileStream = new FileOutputStream(strStockEventsFileName);
+	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
+	         oStream.writeObject(m_aRates);
+	         oStream.close();
+	         oFileStream.close();
+		} 
+		catch (IOException e) 
+		{
+			WorkerFactory.onException("Save rates exception for stock " + m_oStockExchange.getStockName(), e);
+		}			
+	}
+
+	@SuppressWarnings("unchecked")
+	public void load()
+	{
+		final String strStockEventsFileName = getFileName(); 
+		try 
+		{
+	         final FileInputStream oFileStream = new FileInputStream(strStockEventsFileName);
+	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
+	         final List<RateInfo> aRates = (List<RateInfo>) oStream.readObject();
+	         m_aRates.clear();
+	         m_aRates.addAll(aRates);
+	         oStream.close();
+	         oFileStream.close();
+		} 
+		catch (final Exception e) 
+		{
+			WorkerFactory.onException("Load rates exception for stock " + m_oStockExchange.getStockName(), e);
+	    }			
+	}
+
+	String getFileName()
+	{
+		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rates.ser";
+		return strStockEventsFileName;
 	}
 }

@@ -38,7 +38,7 @@ public class MathUtils
 			return "NaN";
 
 		final DecimalFormat oDecimalFormat = new DecimalFormat("#,###.########");
-		return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, (char)0x20).trim();
+		return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, ',').trim();
 	}
 	
 	@Obsolete
@@ -50,7 +50,7 @@ public class MathUtils
 		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= 0)
 		{
 			final DecimalFormat oDecimalFormat = new DecimalFormat("#,###.##");
-			return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, (char)0x20).trim();
+			return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, ',').trim();
 		}
 
 		return toCurrencyStringEx2(oValue);

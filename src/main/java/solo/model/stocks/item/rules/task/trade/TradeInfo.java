@@ -169,7 +169,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public String getCriticalPriceString()
 	{
-		return MathUtils.toCurrencyStringEx2(getCriticalPrice());
+		return MathUtils.toCurrencyStringEx2(getCriticalPrice()).replace(",", StringUtils.EMPTY);
 	}
 	
 	public IBuyStrategy getBuyStrategy()

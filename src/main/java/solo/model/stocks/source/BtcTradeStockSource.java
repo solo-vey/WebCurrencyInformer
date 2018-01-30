@@ -49,9 +49,9 @@ public class BtcTradeStockSource extends BaseStockSource
 		m_strAuthUrl = ResourceUtils.getResource("auth.url", getStockExchange().getStockProperties());
 		m_strOrderStatusUrl = ResourceUtils.getResource("order_status.url", getStockExchange().getStockProperties());
 		
-//		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
-		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
-		
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
+
 		restart();
 	}
 	

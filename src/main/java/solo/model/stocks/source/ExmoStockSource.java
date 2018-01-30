@@ -34,20 +34,66 @@ public class ExmoStockSource extends BaseStockSource
 		super(oStockExchange);
 		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
 		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
-		
-		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
-		registerRate(new RateInfo(Currency.ETH, Currency.RUB));
-//		registerRate(new RateInfo(Currency.ETH, Currency.USD));
-//		registerRate(new RateInfo(Currency.ETH, Currency.EUR));
+				
+		m_aAllRates.add(new RateInfo(Currency.USD, Currency.RUB));
 
-		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
-//		registerRate(new RateInfo(Currency.BTC, Currency.RUB));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.EUR));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.RUB));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.PLN));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USDT));
 		
-		registerRate(new RateInfo(Currency.WAVES, Currency.RUB));
-		
-		registerRate(new RateInfo(Currency.XRP, Currency.RUB));
+		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.EUR));
+		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.RUB));
 
-		registerRate(new RateInfo(Currency.USD, Currency.RUB));
+		m_aAllRates.add(new RateInfo(Currency.DOGE, Currency.BTC));
+		
+		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.RUB));
+
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.LTC));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.EUR));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.RUB));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.PLN));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USDT));
+		
+		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.RUB));
+		
+		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.EUR));
+		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.RUB));
+
+		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.RUB));
+		
+		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.EUR));
+		
+		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.RUB));
+		
+		m_aAllRates.add(new RateInfo(Currency.KICK, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.KICK, Currency.ETH));
+		
+		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.RUB));
+		
+		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.BTC));
+		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.USD));
+		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.RUB));
+		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.ETH));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -105,6 +151,8 @@ public class ExmoStockSource extends BaseStockSource
 
 			if (null != oMapOrder.get("type"))
 				oOrder.setSide(oMapOrder.get("type").toString());
+			else if (null != oMapOrder.get("order_type"))
+				oOrder.setSide(oMapOrder.get("order_type").toString());
 
 			if (null != oMapOrder.get("price"))
 				oOrder.setPrice(MathUtils.fromString(oMapOrder.get("price").toString()));
@@ -253,7 +301,10 @@ public class ExmoStockSource extends BaseStockSource
 			{
 				final Order oCanceledOrder = convert2Order(oOrderData);
 				if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
-					return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
+				{
+					oCanceledOrder.setState(Order.CANCEL);
+					return oCanceledOrder;
+				}
 			}
 
 			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
@@ -340,7 +391,34 @@ public class ExmoStockSource extends BaseStockSource
 			
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "true".equals(oOrderData.get("result").toString()))
+			{
+				int nTryCount = 10;
+				while (nTryCount > 0)
+				{
+					Thread.sleep(100);
+				
+					final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+					final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
+						put("limit", "100");
+					}});
+				
+					final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
+					for(final Object oCanceledOrderData : oUserCenceledOrders)
+					{
+						final Order oCanceledOrder = convert2Order(oCanceledOrderData);
+						if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
+						{
+							oCanceledOrder.setState(Order.CANCEL);
+					        System.out.println("Remove order complete. " + strOrderId + " " + oCanceledOrder.getInfoShort());
+							return oCanceledOrder;
+						}
+					}
+					nTryCount--;
+				}
+				
+		        System.out.println("Remove order complete. " + strOrderId + ". Can't read order after remove");
 				return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
+			}
 
 			final String strError = (oOrderData.containsKey("error") ? oOrderData.get("error").toString() : "Unknown");
 	        System.err.println("Can't remove order: " + strOrderId + "\r\n Error : " + strError);

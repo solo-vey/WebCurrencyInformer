@@ -113,11 +113,11 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
-//		if (!oCandlestick.isLongFall())
-		return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
+		if (!oCandlestick.isLongFall())
+			return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
 		
-//		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
-//		return false;
+		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
+		return false;
 	}
 	
 	public void startNewTrade(final ITradeTask oTaskTrade, final TradeControler oTradeControler)

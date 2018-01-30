@@ -19,16 +19,21 @@ public class StockRateWorker extends BaseWorker
 		m_oRateInfo = oRateInfo;
 		m_oMainWorker = oMainWorker;
 	}
+	
+	public RateInfo getRateInfo()
+	{
+		return m_oRateInfo;
+	}
 
 	public void startWorker()
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
-		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " - " + m_oRateInfo);
 	}
 	
 	@Override protected void doWork() throws Exception
 	{
+		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " - " + m_oRateInfo);
 		super.doWork();
 		
 		addCommand(new CheckRateRulesCommand(m_oRateInfo));
@@ -41,4 +46,16 @@ public class StockRateWorker extends BaseWorker
 		
 		return (oRules.size() > 0 ? m_nTimeOut : m_nTimeOut * 10);
 	}
+	
+	@Override public boolean equals(Object oObject)
+	{
+		if (null == oObject)
+			return false;
+		
+		if (!(oObject instanceof StockRateWorker))
+			return false;
+		
+		final StockRateWorker oStockRateWorker = (StockRateWorker)oObject;
+		return m_oRateInfo.equals(oStockRateWorker.m_oRateInfo) && m_oMainWorker.equals(oStockRateWorker.m_oMainWorker);
+	};
 }

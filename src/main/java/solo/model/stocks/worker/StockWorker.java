@@ -27,14 +27,19 @@ public class StockWorker extends BaseWorker
 		super.startWorker();
 		
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
-		Thread.currentThread().setName(m_oStockExchange.getStockName() + " StockWorker");
 		
 		for(final RateInfo oRateInfo : m_oStockExchange.getStockSource().getRates())
-		{
-			final StockRateWorker oStockRateWorker = new StockRateWorker(m_oMainWorker, oRateInfo, m_nTimeOut);
-			m_aStockRateWorkers.add(oStockRateWorker);
-			oStockRateWorker.startWorker();
-		}
+			startRateWorker(oRateInfo);
+	}
+
+	public void startRateWorker(final RateInfo oRateInfo)
+	{
+		final StockRateWorker oStockRateWorker = new StockRateWorker(m_oMainWorker, oRateInfo, m_nTimeOut);
+		if (m_aStockRateWorkers.contains(oStockRateWorker))
+			return;
+		
+		m_aStockRateWorkers.add(oStockRateWorker);
+		oStockRateWorker.startWorker();
 	}
 	
 	public void stopWorker()
@@ -44,12 +49,27 @@ public class StockWorker extends BaseWorker
 		
 		for(final StockRateWorker oStockRateWorker : m_aStockRateWorkers)
 			oStockRateWorker.stopWorker();
+		m_aStockRateWorkers.clear();
 		
 		super.stopWorker();
+	}
+
+	public void stopRateWorker(final RateInfo oRateInfo)
+	{
+		for(int nPos = 0; nPos < m_aStockRateWorkers.size(); nPos++)
+		{
+			if (!m_aStockRateWorkers.get(nPos).getRateInfo().equals(oRateInfo))
+				continue;
+			
+			m_aStockRateWorkers.get(nPos).stopWorker();
+			m_aStockRateWorkers.remove(nPos);
+			return;
+		}
 	}
 	
 	@Override protected void doWork() throws Exception
 	{
+		Thread.currentThread().setName(m_oStockExchange.getStockName() + " StockWorker");
 		super.doWork();
 	}
 	

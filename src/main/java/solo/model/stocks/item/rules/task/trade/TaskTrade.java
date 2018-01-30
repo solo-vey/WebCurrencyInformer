@@ -90,8 +90,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		return getType() + "/" + (m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
 					m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
 					strGetRateCommand + strQuickSell + 
-					CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
-					CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
+					" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
+					" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
 	}
 
 	@Override public void check(final StateAnalysisResult oStateAnalysisResult)
@@ -155,53 +155,67 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return oGetOrder;
 		
 		m_oTradeInfo.setOrder(oGetOrder);
-		if (oGetOrder.getSide().equals(OrderSide.BUY))
-		{
-			if (oGetOrder.isDone())
-			{
-				final BigDecimal nNeedBuyVolume = m_oTradeInfo.getNeedBoughtVolume();
-				final BigDecimal nBuyVolume = TradeUtils.getWithoutCommision(nNeedBuyVolume);
-				final BigDecimal nDeltaSpendSum = nNeedBuyVolume.multiply(oOrder.getPrice());
-				
-				m_oTradeInfo.addBuy(nDeltaSpendSum, nBuyVolume);
-				m_oTradeInfo.setNeedBoughtVolume(BigDecimal.ZERO, true);
-			}
-			else
-			{
-				final BigDecimal nDeltaSpendSum = m_oTradeInfo.getNeedSpendSum().add(oGetOrder.getSum().negate());
-				if (nDeltaSpendSum.compareTo(BigDecimal.ZERO) == 0)
-					return oGetOrder;
-	
-				final BigDecimal nDeltaBoughtVolume = m_oTradeInfo.getNeedBoughtVolume().add(oGetOrder.getVolume().negate());
-				m_oTradeInfo.addBuy(nDeltaSpendSum, TradeUtils.getWithoutCommision(nDeltaBoughtVolume));
-				m_oTradeInfo.setNeedBoughtVolume(oGetOrder.getVolume(), true);
-			}
-			WorkerFactory.getStockExchange().getRules().save();
-			return oGetOrder;
-		}
-
-		if (oGetOrder.getSide().equals(OrderSide.SELL))
-		{
-			if (oGetOrder.isDone())
-			{
-				final BigDecimal nSellVolume = m_oTradeInfo.getNeedSellVolume();
-				final BigDecimal nDeltaSellSum = nSellVolume.multiply(oOrder.getPrice());
-				m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nSellVolume);
-			}
-			else
-			{
-				final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oGetOrder.getVolume().negate());
-				final BigDecimal nDeltaSellSum = nDeltaSellVolume.multiply(oGetOrder.getPrice());
-				if (nDeltaSellSum.compareTo(BigDecimal.ZERO) == 0)
-					return oGetOrder;
-				
-				m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nDeltaSellVolume);
-			}
-			WorkerFactory.getStockExchange().getRules().save();
-			return oGetOrder;
-		}
-		
+		updateOrderTradeInfo(oGetOrder);
 		return oGetOrder;
+	}
+
+	protected void updateOrderTradeInfo(final Order oGetOrder)
+	{
+		if (OrderSide.BUY.equals(oGetOrder.getSide()))
+			updateBuyTradeInfo(oGetOrder);
+		else 
+		if (OrderSide.SELL.equals(oGetOrder.getSide()))
+			updateSellTradeInfo(oGetOrder);
+	}
+
+	protected void updateBuyTradeInfo(final Order oGetOrder)
+	{
+		if (null == oGetOrder.getPrice())
+			return;
+		
+		if (oGetOrder.isDone())
+		{
+			final BigDecimal nNeedBuyVolume = m_oTradeInfo.getNeedBoughtVolume();
+			final BigDecimal nBuyVolume = TradeUtils.getWithoutCommision(nNeedBuyVolume);
+			final BigDecimal nDeltaSpendSum = nNeedBuyVolume.multiply(oGetOrder.getPrice());
+			
+			m_oTradeInfo.addBuy(nDeltaSpendSum, nBuyVolume);
+			m_oTradeInfo.setNeedBoughtVolume(BigDecimal.ZERO, true);
+		}
+		else
+		{
+			final BigDecimal nDeltaSpendSum = m_oTradeInfo.getNeedSpendSum().add(oGetOrder.getSum().negate());
+			if (nDeltaSpendSum.compareTo(BigDecimal.ZERO) == 0)
+				return;
+
+			final BigDecimal nDeltaBoughtVolume = m_oTradeInfo.getNeedBoughtVolume().add(oGetOrder.getVolume().negate());
+			m_oTradeInfo.addBuy(nDeltaSpendSum, TradeUtils.getWithoutCommision(nDeltaBoughtVolume));
+			m_oTradeInfo.setNeedBoughtVolume(oGetOrder.getVolume(), true);
+		}
+		WorkerFactory.getStockExchange().getRules().save();
+	}
+
+	protected void updateSellTradeInfo(final Order oGetOrder)
+	{
+		if (null == oGetOrder.getPrice())
+			return;
+		
+		if (oGetOrder.isDone())
+		{
+			final BigDecimal nSellVolume = m_oTradeInfo.getNeedSellVolume();
+			final BigDecimal nDeltaSellSum = nSellVolume.multiply(oGetOrder.getPrice());
+			m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nSellVolume);
+		}
+		else
+		{
+			final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oGetOrder.getVolume().negate());
+			final BigDecimal nDeltaSellSum = nDeltaSellVolume.multiply(oGetOrder.getPrice());
+			if (nDeltaSellSum.compareTo(BigDecimal.ZERO) == 0)
+				return;
+			
+			m_oTradeInfo.addSell(TradeUtils.getWithoutCommision(nDeltaSellSum), nDeltaSellVolume);
+		}
+		WorkerFactory.getStockExchange().getRules().save();
 	}
 
 	protected Order createBuyOrder(BigDecimal oBuyPrice)
@@ -261,7 +275,18 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return;
 		}
 		
-		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oNewPrice) : oGetOrder.getVolume());
+		if (oRemoveOrder.isCanceled())
+		{
+			if (OrderSide.SELL.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
+			{
+				final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oRemoveOrder.getVolume().negate());
+				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) > 0)
+					m_oTradeInfo.getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]");
+			}
+			updateOrderTradeInfo(oRemoveOrder);
+		}
+		
+		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oNewPrice) : m_oTradeInfo.getNeedSellVolume());
 		final Order oAddOrder = addOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
 		if (null != oOrderDateCreate)
 			oAddOrder.setCreated(oOrderDateCreate);

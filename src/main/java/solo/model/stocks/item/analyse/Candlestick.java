@@ -90,6 +90,24 @@ public class Candlestick implements Serializable
         }
         return MathUtils.getBigDecimal(nSumaryMaxPrice.doubleValue() / nStepCount, TradeUtils.DEFAULT_PRICE_PRECISION);
 	}
+
+	public BigDecimal getMinMaxDelta(int nStepCount)
+	{
+		BigDecimal nMaxPrice = BigDecimal.ZERO;
+		BigDecimal nMinPrice = BigDecimal.ZERO;
+		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+        for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
+        {
+        	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
+        	if (nMaxPrice.compareTo(oCandle.getMax()) < 0)
+        		nMaxPrice = oCandle.getMax();
+        	if (nMinPrice.equals(BigDecimal.ZERO) || nMinPrice.compareTo(oCandle.getMin()) > 0)
+        		nMinPrice = oCandle.getMin();
+        }
+        
+        final BigDecimal nDelta = nMaxPrice.add(nMinPrice.negate());
+        return MathUtils.getBigDecimal(nDelta.doubleValue() * 100.0 / nMaxPrice.doubleValue(), 2);
+	}
 	
 	public String makeChartImage(final int nStepCount) throws IOException
 	{
@@ -127,6 +145,10 @@ public class Candlestick implements Serializable
 	
 	public boolean isLongFall()
 	{
+		final BigDecimal nMinMaxDeltaPercent = getMinMaxDelta(6);
+		if (nMinMaxDeltaPercent.compareTo(new BigDecimal(2)) < 0)
+			return false;
+		
 		return getType().equals(CandlestickType.THREE_BLACK) || 
 				getType().equals(CandlestickType.TWO_BLACK) || 
 				getType().equals(CandlestickType.WHITE_AND_TWO_BLACK);
@@ -134,6 +156,10 @@ public class Candlestick implements Serializable
 	
 	public boolean isLongGrowth()
 	{
+		final BigDecimal nMinMaxDeltaPercent = getMinMaxDelta(6);
+		if (nMinMaxDeltaPercent.compareTo(new BigDecimal(2)) < 0)
+			return false;
+		
 		return getType().equals(CandlestickType.THREE_WHITE) || 
 				getType().equals(CandlestickType.TWO_WHITE) || 
 				getType().equals(CandlestickType.BLACK_AND_TWO_WHITE);

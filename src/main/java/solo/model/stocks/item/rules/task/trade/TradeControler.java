@@ -5,17 +5,19 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 import solo.model.currency.CurrencyAmount;
+import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.RemoveRuleCommand;
+import solo.model.stocks.item.command.system.GetRateChartCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
+import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
@@ -61,19 +63,21 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	@Override public String getType()
 	{
-		return "CONTROLER";   
+		return "CONTROLER [" + getRateInfo() + "]";   
 	}
 	
 	public String getInfo()
 	{
 		String strInfo = getType() + 
-				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo()) + 
 				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
 				"\r\n";  
 		
-		final List<ITradeTask> aTaskTrades = getTaskTrades();
-		for(final ITradeTask oTaskTrade : aTaskTrades)
-			strInfo += " -> " + oTaskTrade.getInfo().replace("\r\n", "\r\n    ") + "\r\n"; 
+		for(final ITradeTask oTaskTrade : getTaskTrades())
+		{
+			final String strOrderSide = (null == oTaskTrade.getTradeInfo().getOrder().getSide() ? "None" : oTaskTrade.getTradeInfo().getOrder().getSide().toString());
+			strInfo += strOrderSide + ";";  
+		}
+		strInfo += "[" + m_nMaxTrades + "] ";
 		
 		return strInfo + getTradesInfo().getCurrentState() + 
 				" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
@@ -82,11 +86,21 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public String getFullInfo()
 	{ 
 		String strInfo = getRateInfo().toString().toUpperCase();
-		strInfo += "; Strategy [" + getTradeStrategy().getName() + "]";
+		
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		for(final ITradeTask oTaskTrade : aTaskTrades)
+			strInfo += " -> " + oTaskTrade.getInfo() + "\r\n"; 
+		
+		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult();
+    	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
+    	strInfo += "\r\n" + GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
+		
+		strInfo += "\r\nStrategy [" + getTradeStrategy().getName() + "]";
 		strInfo += "; tradeCount [" + m_nMaxTrades + "]\r\n";
 		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
-				CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
-				" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
+				CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
+							SetTaskParameterCommand.NAME_PARAMETER, "tradeCount", SetTaskParameterCommand.VALUE_PARAMETER, "0") + "\r\n" +
+				CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
 	}
 	
 	public RateInfo getRateInfo()
@@ -282,6 +296,12 @@ public class TradeControler extends TaskBase implements ITradeControler
 			final ITradeStrategy oTradeStrategy = StrategyFactory.getTradeStrategy(strValue);
 			if (null != oTradeStrategy)
 				m_oTradeStrategy = oTradeStrategy;
+		}
+		
+		if (strParameterName.equalsIgnoreCase("addNeedSellVolume"))
+		{
+			final BigDecimal nNeedSellVolume = new BigDecimal(Double.parseDouble(strValue));
+			getTradesInfo().addBuy(BigDecimal.ZERO, nNeedSellVolume);
 		}
 				
 		super.setParameter(strParameterName, strValue);

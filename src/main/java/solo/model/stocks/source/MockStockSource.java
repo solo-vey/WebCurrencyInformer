@@ -25,8 +25,9 @@ public class MockStockSource extends BaseStockSource
 	{
 		super(oStockExchange);
 		m_strDataRoot = ResourceUtils.getResource("mock.data.root", getStockExchange().getStockProperties());
-//		registerRate(new RateInfo(Currency.BTC, Currency.UAH));
-		registerRate(new RateInfo(Currency.ETH, Currency.UAH));
+		
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
+		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
 	}
 	
 	public void setDateStart(final Date oStartDate, final Date oMaxDate)
