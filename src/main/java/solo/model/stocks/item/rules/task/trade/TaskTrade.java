@@ -74,22 +74,22 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 
 				CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + " " : StringUtils.EMPTY);
 
-		String strQuickSell = StringUtils.EMPTY;
+		String strQuickSell = CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, 
+											GetTradeInfoCommand.FULL_PARAMETER, "true") + "\r\n";
 		if (getTradeInfo().getTaskSide().equals(OrderSide.SELL))
 		{
-			strQuickSell = " " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
+			strQuickSell += CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
 					SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
-					SetTaskParameterCommand.VALUE_PARAMETER, getTradeInfo().getCriticalPriceString()) + 
-					" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
-					"\r\n";
+					SetTaskParameterCommand.VALUE_PARAMETER, getTradeInfo().getCriticalPriceString().split("\\.")[0]) + "\r\n";
 		}
 		
 		if (StringUtils.isNotBlank(m_strCurrentState))
 			strQuickSell += "State [" + m_strCurrentState + "]\r\n";
 		
-		return getType() + "/" + (m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
-					m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
-					strGetRateCommand + strQuickSell + 
+		return (getTradeControler().equals(ITradeControler.NULL) ? getType() + "/" : StringUtils.EMPTY) + 
+					(m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
+					strGetRateCommand + m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
+					strQuickSell + 
 					" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
 					" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
 	}
@@ -281,13 +281,28 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			{
 				final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oRemoveOrder.getVolume().negate());
 				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) > 0)
-					m_oTradeInfo.getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]");
+					m_oTradeInfo.getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder);
 			}
 			updateOrderTradeInfo(oRemoveOrder);
 		}
 		
 		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oNewPrice) : m_oTradeInfo.getNeedSellVolume());
+		if (oNewVolume.compareTo(nMinTradeVolume) < 0)
+		{
+			m_oTradeInfo.getHistory().addToHistory("Volume is small [" + oNewVolume + "]. Remove order " + oRemoveOrder);
+			m_oTradeInfo.setOrder(oRemoveOrder);
+			WorkerFactory.getStockExchange().getRules().save();
+			return;
+		}
+
 		final Order oAddOrder = addOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
+		if (oAddOrder.isError() || oAddOrder.isException())
+		{
+			m_oTradeInfo.getHistory().addToLog("Can't add order " + oAddOrder);
+			m_oTradeInfo.setOrder(Order.NULL);
+			return;
+		}
+		
 		if (null != oOrderDateCreate)
 			oAddOrder.setCreated(oOrderDateCreate);
 		m_oTradeInfo.setOrder(oAddOrder);

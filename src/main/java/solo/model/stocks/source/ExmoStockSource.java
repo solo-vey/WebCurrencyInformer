@@ -279,7 +279,6 @@ public class ExmoStockSource extends BaseStockSource
 		return oGetOrder;
 	}
 	
-	@SuppressWarnings("serial")
 	protected Order getOrderInternal(final String strOrderId, final RateInfo oRateInfo)
 	{
 		try
@@ -292,40 +291,57 @@ public class ExmoStockSource extends BaseStockSource
 					return oOrder;
 			}
 			
-			final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-			final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
-				put("limit", "100");
-			}});
-			final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
-			for(final Object oOrderData : oUserCenceledOrders)
-			{
-				final Order oCanceledOrder = convert2Order(oOrderData);
-				if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
-				{
-					oCanceledOrder.setState(Order.CANCEL);
-					return oCanceledOrder;
-				}
-			}
+			final Order oCanceledOrder = findOrderInCanceled(strOrderId);
+			if (oCanceledOrder.isCanceled())
+				return oCanceledOrder;
 
-			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
-				put("order_id", strOrderId);
-			}});
-			
-			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
-			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
-				return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
-
-			final Order oOrder = convert2Order(oOrderData);			
-			oOrder.setState(Order.DONE);
-			oOrder.setId(strOrderId);
-
-			return oOrder;
+			return getOrderTrades(strOrderId);
 		}
 		catch(final Exception e)
 		{
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
+	}
+
+	@SuppressWarnings("serial")
+	protected Order getOrderTrades(final String strOrderId) throws Exception
+	{
+		final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+		final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
+			put("order_id", strOrderId);
+		}});
+		
+		final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
+		if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
+			return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
+
+		final Order oOrder = convert2Order(oOrderData);			
+		oOrder.setState(Order.DONE);
+		oOrder.setId(strOrderId);
+
+		return oOrder;
+	}
+
+	@SuppressWarnings("serial")
+	protected Order findOrderInCanceled(final String strOrderId) throws Exception
+	{
+		final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+		final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
+			put("limit", "25");
+		}});
+		
+		final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
+		for(final Object oOrderData : oUserCenceledOrders)
+		{
+			final Order oCanceledOrder = convert2Order(oOrderData);
+			if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
+			{
+				oCanceledOrder.setState(Order.CANCEL);
+				return oCanceledOrder;
+			}
+		}
+		
+		return Order.NULL;
 	}
 
 	@Override public Order addOrder(final OrderSide oOriginalSide, final RateInfo oOriginalRateInfo, BigDecimal nOriginalVolume, BigDecimal nOriginalPrice)
@@ -381,6 +397,7 @@ public class ExmoStockSource extends BaseStockSource
 		super.removeOrder(strOrderId);
 		
         System.out.println("Remove order: " + strOrderId);
+        final Date oDateStartRemove = new Date();
 		
 		try
 		{
@@ -392,27 +409,23 @@ public class ExmoStockSource extends BaseStockSource
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "true".equals(oOrderData.get("result").toString()))
 			{
+				final Order oOrderTrades = getOrderTrades(strOrderId);
+				if (oOrderTrades.isError())
+				{
+			        System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + ". No trades");
+					return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
+				}
+				
 				int nTryCount = 10;
 				while (nTryCount > 0)
 				{
-					Thread.sleep(100);
-				
-					final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-					final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
-						put("limit", "100");
-					}});
-				
-					final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
-					for(final Object oCanceledOrderData : oUserCenceledOrders)
+					final Order oCanceledOrder = findOrderInCanceled(strOrderId);
+					if (oCanceledOrder.isCanceled())
 					{
-						final Order oCanceledOrder = convert2Order(oCanceledOrderData);
-						if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
-						{
-							oCanceledOrder.setState(Order.CANCEL);
-					        System.out.println("Remove order complete. " + strOrderId + " " + oCanceledOrder.getInfoShort());
-							return oCanceledOrder;
-						}
+				        System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + " " + oCanceledOrder.getInfoShort());
+						return oCanceledOrder;
 					}
+					Thread.sleep(200);
 					nTryCount--;
 				}
 				

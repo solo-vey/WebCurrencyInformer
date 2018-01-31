@@ -22,6 +22,7 @@ import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
@@ -85,21 +86,22 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	public String getFullInfo()
 	{ 
-		String strInfo = getRateInfo().toString().toUpperCase();
+		String strInfo = StringUtils.EMPTY;
 		
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
-			strInfo += " -> " + oTaskTrade.getInfo() + "\r\n"; 
+			strInfo += oTaskTrade.getInfo() + "\r\n"; 
 		
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult();
     	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
     	strInfo += "\r\n" + GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
 		
-		strInfo += "\r\nStrategy [" + getTradeStrategy().getName() + "]";
-		strInfo += "; tradeCount [" + m_nMaxTrades + "]\r\n";
-		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
-				CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-							SetTaskParameterCommand.NAME_PARAMETER, "tradeCount", SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n" +
+		strInfo += "\r\n[" + getTradeStrategy().getName() + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
+				SetTaskParameterCommand.NAME_PARAMETER, "tradeStrategy", SetTaskParameterCommand.VALUE_PARAMETER, 
+					(getTradeStrategy().getName().equals(SimpleTradeStrategy.NAME) ? DropSellTradeStrategy.NAME : SimpleTradeStrategy.NAME)) + "\r\n";
+		strInfo += "[" + m_nMaxTrades + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
+				SetTaskParameterCommand.NAME_PARAMETER, "tradeCount", SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n";
+		return getTradesInfo().getInfo() + "\r\n" + strInfo +
 				CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
 	}
 	
@@ -263,8 +265,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		m_oTradesInfo.updateOrderInfo(aTaskTrades);
 		
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getType() + 
-				" " + getRateInfo().toString() + "\r\n" + getTradesInfo().getInfo());
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getTradesInfo().getInfo());
 	}	
 
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
@@ -310,6 +311,6 @@ public class TradeControler extends TaskBase implements ITradeControler
 	/** Строковое представление документа */
 	@Override public String toString()
 	{
-		return getRateInfo() + "\r\n" + getTradesInfo().getInfo();
+		return getTradesInfo().getInfo();
 	}
 }

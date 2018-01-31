@@ -57,15 +57,15 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		if (null == oAnalysisResult)
 			return StringUtils.EMPTY;
 		
-		String strData =  "Sell : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
-							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
-		strData += "Buy : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getBidsAnalysisResult().getBestPrice()) + 
-							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
-		strData += "Trades : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getTradesAnalysisResult().getBestPrice()) + 
-							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice()) + "\r\n";
-		strData += "Delta : " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getBestPrice().add(oAnalysisResult.getBidsAnalysisResult().getBestPrice().negate())) + 
-							" / " + MathUtils.toCurrencyStringEx2(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice().add(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice().negate())) + 
-							" / " + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice(), oAnalysisResult.getBidsAnalysisResult().getBestPrice())
+		String strData =  "Sell : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
+							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
+		strData += "Buy : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getBidsAnalysisResult().getBestPrice()) + 
+							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
+		strData += "Trades : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getTradesAnalysisResult().getBestPrice()) + 
+							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice()) + "\r\n";
+		strData += "Delta : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getBestPrice().add(oAnalysisResult.getBidsAnalysisResult().getBestPrice().negate())) + 
+							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice().add(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice().negate())) + 
+							" / " + MathUtils.toCurrencyStringEx3(TradeUtils.getCommisionValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice(), oAnalysisResult.getBidsAnalysisResult().getBestPrice())
 																	.add(TradeUtils.getMarginValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice()))) + "\r\n";
 		return strData;
 	}
