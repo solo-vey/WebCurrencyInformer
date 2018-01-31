@@ -1,7 +1,9 @@
 package solo.model.stocks.item.command.trade;
 
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
@@ -39,6 +41,7 @@ public class GetStockInfoCommand extends BaseCommand
 		final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
 		
 		String strMessage = StringUtils.EMPTY;
+		final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 		{
 			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
@@ -64,7 +67,7 @@ public class GetStockInfoCommand extends BaseCommand
 				continue;
 			}
 			
-			final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oCurrencyInfo.getKey());
+			final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oCurrencyInfo.getKey(), oRateHash);
 			if (null == oBtcToCurrencyRate)
 				continue;
 					
@@ -76,7 +79,7 @@ public class GetStockInfoCommand extends BaseCommand
 
 		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 		{
-			final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oOrdersInfo.getKey().getCurrencyTo());
+			final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oOrdersInfo.getKey().getCurrencyTo(), oRateHash);
 			if (null == oBtcToCurrencyRate)
 				continue;
 				
@@ -96,7 +99,7 @@ public class GetStockInfoCommand extends BaseCommand
 		
 		strMessage += "Total BTC = " + MathUtils.toCurrencyStringEx3(oTotalBtcSum) + "\r\n";
 		
-		final RateAnalysisResult oBtcToUahRate = getRate(oStockExchange, Currency.UAH);
+		final RateAnalysisResult oBtcToUahRate = getRate(oStockExchange, Currency.UAH, oRateHash);
 		if (null != oBtcToUahRate)
 		{
 			final BigDecimal oBtcBidPrice = oBtcToUahRate.getBidsAnalysisResult().getBestPrice();
@@ -107,29 +110,36 @@ public class GetStockInfoCommand extends BaseCommand
 		WorkerFactory.getMainWorker().sendMessage(strMessage);
 	}
 
-	protected RateAnalysisResult getRate(final IStockExchange oStockExchange, final Currency oCurrency) throws Exception
+	protected RateAnalysisResult getRate(final IStockExchange oStockExchange, final Currency oCurrency, final Map<RateInfo, RateAnalysisResult> oRateHash) throws Exception
 	{
 		final RateInfo oRateInfo = new RateInfo(oCurrency, Currency.BTC);
 		final RateAnalysisResult oBtcToCurrencyRate = oStockExchange.getLastAnalysisResult().getRateAnalysisResult(oRateInfo);
 		if (null != oBtcToCurrencyRate)
 			return oBtcToCurrencyRate;
 		
-		return loadRate(oStockExchange, oRateInfo);
+		return loadRate(oStockExchange, oRateInfo, oRateHash);
 	}
 
-	protected RateAnalysisResult loadRate(final IStockExchange oStockExchange, final RateInfo oRateInfo) throws Exception
+	protected RateAnalysisResult loadRate(final IStockExchange oStockExchange, final RateInfo oRateInfo, final Map<RateInfo, RateAnalysisResult> oRateHash) throws Exception
 	{
+		if (oRateHash.containsKey(oRateInfo))
+			return oRateHash.get(oRateInfo);
+		
 		try
 		{
 			final RateState oRateState = oStockExchange.getStockSource().getRateState(oRateInfo);
-			return new RateAnalysisResult(oRateState, oRateInfo, oStockExchange);
+			final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(oRateState, oRateInfo, oStockExchange);
+			oRateHash.put(oRateInfo, oRateAnalysisResult);
+			return oRateAnalysisResult;
 		}
 		catch(final Exception e)
 		{
 			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
 			final RateState oReverseRateState = oStockExchange.getStockSource().getRateState(oReverseRateInfo);
 			final RateState oRateState = CheckRateRulesCommand.makeReverseRateState(oReverseRateState);
-			return new RateAnalysisResult(oRateState, oRateInfo, oStockExchange);
+			final RateAnalysisResult oRateAnalysisResult = new RateAnalysisResult(oRateState, oRateInfo, oStockExchange);
+			oRateHash.put(oRateInfo, oRateAnalysisResult);
+			return oRateAnalysisResult;
 		}
 
 	}

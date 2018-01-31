@@ -116,17 +116,24 @@ abstract public class HasParameters extends BaseObject
 		Currency oCurrencyFrom = Currency.UAH;
 		for(final Currency oCurrency : Currency.values())
 		{
-			if (strValue.toUpperCase().startsWith(oCurrency.toString().toUpperCase()))
-				oCurrencyFrom = oCurrency;
+			if (!strValue.toUpperCase().startsWith(oCurrency.toString().toUpperCase()))
+				continue;
+			
+			oCurrencyFrom = oCurrency;
+			final String strCurrencyTo = strValue.toUpperCase().substring(oCurrencyFrom.toString().toUpperCase().length());
+			final Currency oCurrencyTo = (StringUtils.isNotBlank(strCurrencyTo) ? Currency.valueOf(strCurrencyTo.toUpperCase()) : Currency.UAH);
+			
+			if (null != oCurrencyTo)
+			{
+				final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
+				if (WorkerFactory.getStockSource().getAllRates().contains(oRateInfo))
+					return oRateInfo;
+			
+				return new RateInfo(oCurrencyFrom, oCurrencyTo, true); 
+			}
 		}
-		final String strCurrencyTo = strValue.toUpperCase().substring(oCurrencyFrom.toString().toUpperCase().length());
-		final Currency oCurrencyTo = (StringUtils.isNotBlank(strCurrencyTo) ? Currency.valueOf(strCurrencyTo.toUpperCase()) : Currency.UAH);
-		
-		final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
-		if (WorkerFactory.getStockSource().getRates().contains(oRateInfo))
-			return oRateInfo;
 
-		return new RateInfo(oCurrencyFrom, oCurrencyTo, true); 
+		return null;
 	}
 	
 	public Date getParameterAsDate(final String strParameterName)

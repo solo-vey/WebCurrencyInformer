@@ -146,6 +146,11 @@ public class BaseStockSource implements IStockSource
 	{
 		return m_aRates;
 	}
+
+	public List<RateInfo> getAllRates()
+	{
+		return m_aAllRates;
+	}
 	
 	protected List<Order> convert2Orders(final List<Object> oInputOrders)
 	{

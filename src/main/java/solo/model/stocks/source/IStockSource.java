@@ -15,6 +15,7 @@ public interface IStockSource
 	RateState getRateState(RateInfo oRateInfo) throws Exception;
 	IStockExchange getStockExchange();
 	List<RateInfo> getRates();
+	List<RateInfo> getAllRates();
 	void registerRate(final RateInfo oRateInfo) throws Exception;
 	void removeRate(final RateInfo oRateInfo);
 	Order getOrder(String strOrderId, final RateInfo oRateInfo);
