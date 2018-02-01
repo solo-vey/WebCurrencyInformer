@@ -38,73 +38,80 @@ public class GetStockInfoCommand extends BaseCommand
 	{
 		super.execute();
 		
-		final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
-		
 		String strMessage = StringUtils.EMPTY;
-		final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();
-		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
-		{
-			strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
-							(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
-							+ "\r\n";
-		}
-		strMessage += "\r\n";
-
-		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
-		{
-			for(final Order oOrder : oOrdersInfo.getValue())
-				strMessage += oOrdersInfo.getKey() + "/" + oOrder.getInfo() + "\r\n";
-		}
-		strMessage += "\r\n";
-		
-		BigDecimal oTotalBtcSum = BigDecimal.ZERO;
-		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
-		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
-		{
-			if (oCurrencyInfo.getKey().equals(Currency.BTC))
-			{
-				oTotalBtcSum = oTotalBtcSum.add(oCurrencyInfo.getValue().getBalance());
-				continue;
-			}
+		try
+		{		
+			final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
 			
-			final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oCurrencyInfo.getKey(), oRateHash);
-			if (null == oBtcToCurrencyRate)
-				continue;
-					
-			final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidsAnalysisResult().getBestPrice();
-			final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
-			final BigDecimal oSum = oVolume.multiply(oBtcBidPrice);
-			oTotalBtcSum = oTotalBtcSum.add(oSum);
-		}
-
-		for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
-		{
-			final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oOrdersInfo.getKey().getCurrencyTo(), oRateHash);
-			if (null == oBtcToCurrencyRate)
-				continue;
-				
-			for(final Order oOrder : oOrdersInfo.getValue())
+			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();
+			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
-				if (oOrdersInfo.getKey().getCurrencyFrom().equals(Currency.BTC))
+				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
+								(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
+								+ "\r\n";
+			}
+			strMessage += "\r\n";
+	
+			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
+			{
+				for(final Order oOrder : oOrdersInfo.getValue())
+					strMessage += oOrdersInfo.getKey() + "/" + oOrder.getInfo() + "\r\n";
+			}
+			strMessage += "\r\n";
+			
+			BigDecimal oTotalBtcSum = BigDecimal.ZERO;
+			final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
+			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
+			{
+				if (oCurrencyInfo.getKey().equals(Currency.BTC))
 				{
-					oTotalBtcSum = oTotalBtcSum.add(oOrder.getVolume());
+					oTotalBtcSum = oTotalBtcSum.add(oCurrencyInfo.getValue().getBalance());
 					continue;
 				}
+				
+				final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oCurrencyInfo.getKey(), oRateHash);
+				if (null == oBtcToCurrencyRate)
+					continue;
 						
 				final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidsAnalysisResult().getBestPrice();
-				final BigDecimal oSum = oOrder.getSum().multiply(oBtcBidPrice);
+				final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
+				final BigDecimal oSum = oVolume.multiply(oBtcBidPrice);
 				oTotalBtcSum = oTotalBtcSum.add(oSum);
 			}
+	
+			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
+			{
+				final RateAnalysisResult oBtcToCurrencyRate = getRate(oStockExchange, oOrdersInfo.getKey().getCurrencyTo(), oRateHash);
+				if (null == oBtcToCurrencyRate)
+					continue;
+					
+				for(final Order oOrder : oOrdersInfo.getValue())
+				{
+					if (oOrdersInfo.getKey().getCurrencyFrom().equals(Currency.BTC))
+					{
+						oTotalBtcSum = oTotalBtcSum.add(oOrder.getVolume());
+						continue;
+					}
+							
+					final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oSum = oOrder.getSum().multiply(oBtcBidPrice);
+					oTotalBtcSum = oTotalBtcSum.add(oSum);
+				}
+			}
+			
+			strMessage += "Total BTC = " + MathUtils.toCurrencyStringEx3(oTotalBtcSum) + "\r\n";
+			
+			final RateAnalysisResult oBtcToUahRate = getRate(oStockExchange, Currency.UAH, oRateHash);
+			if (null != oBtcToUahRate)
+			{
+				final BigDecimal oBtcBidPrice = oBtcToUahRate.getBidsAnalysisResult().getBestPrice();
+				final BigDecimal oTotalUahSum = MathUtils.getBigDecimal(oTotalBtcSum.doubleValue() / oBtcBidPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
+				strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
+			}
 		}
-		
-		strMessage += "Total BTC = " + MathUtils.toCurrencyStringEx3(oTotalBtcSum) + "\r\n";
-		
-		final RateAnalysisResult oBtcToUahRate = getRate(oStockExchange, Currency.UAH, oRateHash);
-		if (null != oBtcToUahRate)
+		catch(final Exception e)
 		{
-			final BigDecimal oBtcBidPrice = oBtcToUahRate.getBidsAnalysisResult().getBestPrice();
-			final BigDecimal oTotalUahSum = MathUtils.getBigDecimal(oTotalBtcSum.doubleValue() / oBtcBidPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
-			strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
+			strMessage = e.getMessage();
 		}
 
 		WorkerFactory.getMainWorker().sendMessage(strMessage);

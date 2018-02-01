@@ -226,7 +226,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return oBuyOrder;
 		
 		m_oTradeInfo.setNeedBoughtVolume(oBuyOrder.getVolume(), true);
-		m_oTradeInfo.setTradeSum(oBuyOrder.getSum(), true);
+		m_oTradeInfo.setTradeSum(oBuyOrder.getSum().add(m_oTradeInfo.getSpendSum()), true);
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oBuyOrder.getInfo());
 		m_oTradeInfo.addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyStringEx2(oBuyOrder.getPrice()));
 		return oBuyOrder;
@@ -289,7 +289,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(m_oTradeInfo.getNeedSpendSum(), oNewPrice) : m_oTradeInfo.getNeedSellVolume());
 		if (oNewVolume.compareTo(nMinTradeVolume) < 0)
 		{
-			m_oTradeInfo.getHistory().addToHistory("Volume is small [" + oNewVolume + "]. Remove order " + oRemoveOrder);
+			m_oTradeInfo.getHistory().addToHistory("Volume is small [" + oNewVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
 			m_oTradeInfo.setOrder(oRemoveOrder);
 			WorkerFactory.getStockExchange().getRules().save();
 			return;
@@ -298,8 +298,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final Order oAddOrder = addOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
 		if (oAddOrder.isError() || oAddOrder.isException())
 		{
-			m_oTradeInfo.getHistory().addToLog("Can't add order " + oAddOrder);
+			m_oTradeInfo.getHistory().addToLog("Can't add order " + oAddOrder.getInfoShort());
 			m_oTradeInfo.setOrder(Order.NULL);
+			WorkerFactory.getStockExchange().getRules().save();
 			return;
 		}
 		
@@ -465,15 +466,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (strParameterName.equalsIgnoreCase("criticalPrice"))
 			m_oTradeInfo.setCriticalPrice(MathUtils.fromString(strValue));
 
-		if (strParameterName.equalsIgnoreCase("attachOrder") && m_oTradeInfo.getOrder().isNull())
-		{
-			final Order oGetOrder = WorkerFactory.getStockSource().getOrder(strValue, m_oRateInfo);
-			if (!oGetOrder.isNull() && !oGetOrder.isError() && !oGetOrder.isCanceled())
-			{
-				m_oTradeInfo.setOrder(oGetOrder);
-				WorkerFactory.getStockExchange().getRules().save();
-			}
-		}
+		if (strParameterName.equalsIgnoreCase("addSellVolume"))
+			m_oTradeInfo.addSell(BigDecimal.ZERO, MathUtils.fromString(strValue));
 				
 		super.setParameter(strParameterName, strValue);
 	}
