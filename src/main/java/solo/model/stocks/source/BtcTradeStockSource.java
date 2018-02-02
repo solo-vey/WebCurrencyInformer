@@ -51,8 +51,6 @@ public class BtcTradeStockSource extends BaseStockSource
 		
 		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
 		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
-
-		restart();
 	}
 	
 	@SuppressWarnings("unchecked")
