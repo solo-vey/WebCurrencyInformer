@@ -99,11 +99,6 @@ public class KunaStockSource extends BaseStockSource
 		return oOrder;
 	}
 	
-	@Override public void restart()
-	{
-		m_nTimeDelta = null;
-	}
-	
 	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);

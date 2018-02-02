@@ -10,7 +10,7 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class LastErrorsCommand extends BaseCommand
 {
-	final static public String NAME = "lastErrors";
+	final static public String NAME = "errors";
 	
 	final protected String m_strFind;
 

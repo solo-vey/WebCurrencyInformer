@@ -26,7 +26,7 @@ import solo.utils.MathUtils;
  */
 public class GetStockInfoCommand extends BaseCommand
 {
-	final static public String NAME = "getInfo";
+	final static public String NAME = "info";
 	final static public String RATE_PARAMETER = "#rate#";
 	
 	public GetStockInfoCommand(final String strСommandLine)

@@ -15,7 +15,7 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
 {
-	final static public String NAME = "getChart";
+	final static public String NAME = "chart";
 	final static public String RATE_PARAMETER = "#rate#";
 
 	final protected RateInfo m_oRateInfo;
@@ -32,7 +32,7 @@ public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange(); 
     	final Candlestick oCandlestick = oStockExchange.getStockCandlestick().get(m_oRateInfo);
-    	final String strFileName = oCandlestick.makeChartImage(25);
+    	final String strFileName = oCandlestick.makeChartImage(50);
     	
     	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
     	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);

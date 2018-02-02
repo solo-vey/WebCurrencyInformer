@@ -113,13 +113,6 @@ public class BtcTradeStockSource extends BaseStockSource
 		return oOrder;
 	}
 	
-	@Override public void restart()
-	{
-		m_bIsAuthorized = false;
-		m_nNonce = 1;
-		m_nOutOrderId = (int)(Math.random() * 1000000);
-	}
-	
 	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);

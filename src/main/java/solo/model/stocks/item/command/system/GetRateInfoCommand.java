@@ -20,7 +20,7 @@ import solo.utils.MathUtils;
  */
 public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 {
-	final static public String NAME = "getRate";
+	final static public String NAME = "rate";
 	final static public String RATE_PARAMETER = "#rate#";
 
 	final protected RateInfo m_oRateInfo;

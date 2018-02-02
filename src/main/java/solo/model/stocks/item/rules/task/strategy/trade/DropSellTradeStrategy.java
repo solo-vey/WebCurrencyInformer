@@ -72,6 +72,14 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 			return false;
 		
 		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "]. " + oCandlestick.getType());
+		if (OrderSide.BUY.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
+		{
+			final BigDecimal nDeltaBuyVolume = oTaskTrade.getTradeInfo().getNeedBoughtVolume().add(oRemoveOrder.getVolume().negate());
+			if (nDeltaBuyVolume.compareTo(BigDecimal.ZERO) > 0)
+				oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. nDeltaBuyVolume on cancel volume [" + nDeltaBuyVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
+		}
+		oTaskTrade.updateOrderTradeInfo(oRemoveOrder);
+		
 		return true;
 	}
 

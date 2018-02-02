@@ -159,7 +159,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		return oGetOrder;
 	}
 
-	protected void updateOrderTradeInfo(final Order oGetOrder)
+	public void updateOrderTradeInfo(final Order oGetOrder)
 	{
 		if (OrderSide.BUY.equals(oGetOrder.getSide()))
 			updateBuyTradeInfo(oGetOrder);
@@ -281,7 +281,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			{
 				final BigDecimal nDeltaSellVolume = m_oTradeInfo.getNeedSellVolume().add(oRemoveOrder.getVolume().negate());
 				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) > 0)
-					m_oTradeInfo.getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder);
+					m_oTradeInfo.getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
 			}
 			updateOrderTradeInfo(oRemoveOrder);
 		}

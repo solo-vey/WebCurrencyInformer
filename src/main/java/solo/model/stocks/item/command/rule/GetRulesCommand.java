@@ -15,7 +15,7 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class GetRulesCommand extends BaseCommand
 {
-	final static public String NAME = "getRules";
+	final static public String NAME = "rules";
 	
 	public GetRulesCommand(final String strCommandLine)
 	{

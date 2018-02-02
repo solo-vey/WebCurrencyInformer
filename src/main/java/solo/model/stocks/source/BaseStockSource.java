@@ -70,10 +70,6 @@ public class BaseStockSource implements IStockSource
 		return new StockUserInfo();
 	}
 	
-	@Override public void restart()
-	{
-	}
-
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
 		return new Order(Order.NONE, "Order is absent");

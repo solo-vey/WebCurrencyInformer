@@ -16,7 +16,7 @@ import solo.utils.CommonUtils;
  */
 public class SetTaskParameterCommand extends BaseCommand implements IHistoryCommand
 {
-	final static public String NAME = "setTaskParameter";
+	final static public String NAME = "taskParam";
 	final static public String RULE_ID_PARAMETER = "#ruleID#";
 	final static public String NAME_PARAMETER = "#name#";
 	final static public String VALUE_PARAMETER = "#value#";

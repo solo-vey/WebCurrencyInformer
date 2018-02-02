@@ -15,7 +15,7 @@ import solo.utils.CommonUtils;
  */
 public class GetTradeInfoCommand extends BaseCommand
 {
-	final static public String NAME = "getTradeInfo";
+	final static public String NAME = "tradeInfo";
 	final static public String RULE_ID_PARAMETER = "#ruleID#";
 	final static public String FULL_PARAMETER = "#isFull#";
 	

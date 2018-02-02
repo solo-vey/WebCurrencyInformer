@@ -15,7 +15,6 @@ import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.command.trade.ManageStock;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
-import solo.model.stocks.item.command.trade.StockRestartCommand;
 import solo.model.stocks.item.command.rule.AddRuleCommand;
 import solo.model.stocks.item.command.rule.CheckRateRulesCommand;
 import solo.model.stocks.item.command.rule.GetRulesCommand;
@@ -53,6 +52,7 @@ public class CommandFactory
 		registerCommandClass(SendMessageCommand.NAME, 			SendMessageCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(GetTransportMessagesCommand.NAME,	GetTransportMessagesCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(CheckRateRulesCommand.NAME,	CheckRateRulesCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(ManageStock.NAME,				ManageStock.class,  CommandGroup.SYSTEM);	
 		registerCommandClass(SetStockParameterCommand.NAME, SetStockParameterCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(StartStockCommand.NAME, StartStockCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(StopStockCommand.NAME, StopStockCommand.class, CommandGroup.SYSTEM);
@@ -67,10 +67,8 @@ public class CommandFactory
 		registerCommandClass(GetStockInfoCommand.NAME, 		GetStockInfoCommand.class, CommandGroup.INFO);
 		registerCommandClass(AddOrderCommand.NAME, 			AddOrderCommand.class, CommandGroup.TRADE);
 		registerCommandClass(RemoveOrderCommand.NAME, 		RemoveOrderCommand.class, CommandGroup.TRADE);
-		registerCommandClass(StockRestartCommand.NAME, 		StockRestartCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(GetTradeInfoCommand.NAME, 		GetTradeInfoCommand.class, CommandGroup.TRADE);
 		registerCommandClass(SetTaskParameterCommand.NAME, 	SetTaskParameterCommand.class, CommandGroup.TRADE);
-		registerCommandClass(ManageStock.NAME,				ManageStock.class,  CommandGroup.TRADE);	
 	}
 	
 	static protected void registerCommandClass(final String strCommand, final Class<?> oClass, final CommandGroup oCommandGroup)
