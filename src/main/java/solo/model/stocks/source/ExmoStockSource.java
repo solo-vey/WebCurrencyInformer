@@ -1,6 +1,7 @@
 package solo.model.stocks.source;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
@@ -236,7 +237,8 @@ public class ExmoStockSource extends BaseStockSource
 		final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
 		final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);
 		
-		for(final RateInfo oRateInfo : getRates())
+		final List<RateInfo> aRates = (null == oRequestRateInfo ? getRates() : Arrays.asList(oRequestRateInfo));
+		for(final RateInfo oRateInfo : aRates)
 		{
 			final String strMarket = getRateIdentifier(oRateInfo);
 			final List<Object> oRateOrders = (List<Object>) oAllOrdersData.get(strMarket);
