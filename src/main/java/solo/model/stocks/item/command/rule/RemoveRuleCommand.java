@@ -34,12 +34,12 @@ public class RemoveRuleCommand extends BaseCommand
 		super.execute();
 		
 		if (m_nRuleID.equals(Integer.MIN_VALUE))
-			WorkerFactory.getMainWorker().sendMessage("Bad rule identifier [" + m_nRuleID + "]" + BaseCommand.getCommand(GetRulesCommand.NAME));
+			WorkerFactory.getMainWorker().sendSystemMessage("Bad rule identifier [" + m_nRuleID + "]" + BaseCommand.getCommand(GetRulesCommand.NAME));
 		else
 		{
 			WorkerFactory.getStockExchange().getRules().removeRule(m_nRuleID);
 			if (!m_bIsSilent)
-				WorkerFactory.getMainWorker().sendMessage("Rule " + m_nRuleID + " deleted. " + BaseCommand.getCommand(GetRulesCommand.NAME));
+				WorkerFactory.getMainWorker().sendSystemMessage("Rule " + m_nRuleID + " deleted. " + BaseCommand.getCommand(GetRulesCommand.NAME));
 		}
 	}
 }

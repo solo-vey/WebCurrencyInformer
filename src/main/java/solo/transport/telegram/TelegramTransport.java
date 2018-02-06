@@ -18,8 +18,10 @@ import org.apache.http.impl.client.HttpClients;
 
 import solo.CurrencyInformer;
 import solo.transport.ITransport;
+import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
 import solo.utils.RequestUtils;
+import ua.lz.ep.utils.JsonUtils;
 import ua.lz.ep.utils.ResourceUtils;
 
 public class TelegramTransport implements ITransport
@@ -30,8 +32,10 @@ public class TelegramTransport implements ITransport
 	final protected String m_strBotAccessToken;
 	final protected String m_strProperies;
 	final protected String m_strUserID;
+	final protected String m_strSystemUserID;
 	final protected Integer m_nGetUpdatesTimeout;
 	protected Integer m_nNextMessageID = null; 
+	protected String m_strSystemMessageID = null; 
 	
 	public TelegramTransport(final String strBotName)
 	{
@@ -39,6 +43,7 @@ public class TelegramTransport implements ITransport
 		m_strProperies = strBotName + "TelegramTransport.properties";
 		m_strBotAccessToken = ResourceUtils.getResource("accessToken", getProperties());
 		m_strUserID = ResourceUtils.getResource("user_id", getProperties());
+		m_strSystemUserID = ResourceUtils.getResource("system_user_id", getProperties());
 		m_nGetUpdatesTimeout = ResourceUtils.getIntFromResource("getUpdates.timeout", getProperties(), 4);
 		m_nNextMessageID = ResourceUtils.getIntFromResource("start_message_id", getProperties(), -1);
 	}
@@ -68,28 +73,75 @@ public class TelegramTransport implements ITransport
 		return getApiUrl().replace("METHOD_NAME", "getUpdates");
 	}
 	
+	protected String getDeleteMessageUrl()
+	{
+		return getApiUrl().replace("METHOD_NAME", "deleteMessage");
+	}
+	
 	@Override public Object sendMessage(final String strText) throws Exception
 	{
 		if (StringUtils.isBlank(strText))
 			return null;
 		
+		final boolean bIsSystem = strText.startsWith("SYSTEM\r\n");
+		deleteLastSystemMessage(bIsSystem);
+		
 		final Map<String, String> aParameters = new HashMap<String, String>();
-		aParameters.put("chat_id", m_strUserID);
-		aParameters.put("text", strText);
-		return RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
+		aParameters.put("chat_id", (bIsSystem ? m_strSystemUserID : m_strUserID));
+		aParameters.put("text", strText.replace("SYSTEM\r\n", StringUtils.EMPTY));
+		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
+		oResult.put("message", oResult.get("result"));
+		final TelegramMessage oMessage = new TelegramMessage(oResult);
+		saveLastSystemMessageID(bIsSystem, oMessage.getID());
+		return oResult;
 	}
 	
+	@Override public void deleteMessage(final String strMessageID) throws Exception
+	{
+		if (StringUtils.isBlank(strMessageID))
+			return;
+		
+		try
+		{
+			final Map<String, String> aParameters = new HashMap<String, String>();
+			aParameters.put("chat_id", m_strSystemUserID);
+			aParameters.put("message_id", strMessageID);
+			RequestUtils.sendPostAndReturnJson(getDeleteMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
+		}
+		catch(final Exception e) {}
+	}	
     
 	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
     { 
-    	  MultipartEntityBuilder builder = MultipartEntityBuilder.create(); 
-    	  builder.addTextBody("chat_id", m_strUserID, ContentType.TEXT_PLAIN); 
-    	  builder.addBinaryBody("photo", oPhoto, ContentType.APPLICATION_OCTET_STREAM, oPhoto.getName()); 
-    	  if (null != strCaption) 
-    		  builder.addTextBody("caption", strCaption, ContentType.TEXT_PLAIN);
+		deleteLastSystemMessage(true);
+    	 
+		MultipartEntityBuilder builder = MultipartEntityBuilder.create(); 
+    	builder.addTextBody("chat_id", m_strSystemUserID, ContentType.TEXT_PLAIN); 
+    	builder.addBinaryBody("photo", oPhoto, ContentType.APPLICATION_OCTET_STREAM, oPhoto.getName()); 
+    	if (null != strCaption) 
+    		builder.addTextBody("caption", strCaption, ContentType.TEXT_PLAIN);
     	  
-    	  uploadFileRequest(getSendPhotoUrl(), builder, false);
-  	 } 
+    	final String strResult = uploadFileRequest(getSendPhotoUrl(), builder, false);
+    	final Map<String, Object> oResult = JsonUtils.json2Map(strResult);
+    	oResult.put("message", oResult.get("result"));
+    	final TelegramMessage oMessage = new TelegramMessage(oResult);
+    	saveLastSystemMessageID(true, oMessage.getID());
+  	 }
+
+	void deleteLastSystemMessage(final boolean bIsSystem) throws Exception
+	{
+		if (!bIsSystem || null == m_strSystemMessageID)
+			return;
+
+		deleteMessage(m_strSystemMessageID);
+		m_strSystemMessageID = null;
+	} 
+	
+	void saveLastSystemMessageID(final boolean bIsSystem, final String strMessageID)
+	{
+		if (bIsSystem)
+			m_strSystemMessageID = strMessageID;
+	}
     
     private String uploadFileRequest(String url, MultipartEntityBuilder builder, Boolean returnAllJson) throws Exception
     { 
@@ -127,8 +179,11 @@ public class TelegramTransport implements ITransport
 		if (oMessages.getMessages().size() == 0)
 			return null;
 		
-		final String strLastMessageID = oMessages.getMessages().get(oMessages.getMessages().size() - 1).getID();
+		final String strLastMessageID = oMessages.getMessages().get(oMessages.getMessages().size() - 1).getUpdateID();
 		m_nNextMessageID = Integer.parseInt(strLastMessageID) + 1;
+		
+		for(final ITransportMessage oMessage : oMessages.getMessages())
+			deleteMessage(oMessage.getID());
 		return oMessages;
 	}
 

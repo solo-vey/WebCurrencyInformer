@@ -39,6 +39,8 @@ public class GetStockInfoCommand extends BaseCommand
 		super.execute();
 		
 		String strMessage = StringUtils.EMPTY;
+		WorkerFactory.getMainWorker().sendSystemMessage("Calculate stock info ...");
+		
 		try
 		{		
 			final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
@@ -58,6 +60,7 @@ public class GetStockInfoCommand extends BaseCommand
 					strMessage += oOrdersInfo.getKey() + "/" + oOrder.getInfo() + "\r\n";
 			}
 			strMessage += "\r\n";
+			WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 			
 			BigDecimal oTotalBtcSum = BigDecimal.ZERO;
 			final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
@@ -114,7 +117,7 @@ public class GetStockInfoCommand extends BaseCommand
 			strMessage = e.getMessage();
 		}
 
-		WorkerFactory.getMainWorker().sendMessage(strMessage);
+		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 
 	protected RateAnalysisResult getRate(final IStockExchange oStockExchange, final Currency oCurrency, final Map<RateInfo, RateAnalysisResult> oRateHash) throws Exception

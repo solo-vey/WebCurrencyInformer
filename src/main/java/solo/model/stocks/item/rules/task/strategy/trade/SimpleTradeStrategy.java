@@ -55,7 +55,7 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		if (nFreeVolume.compareTo(nMinTradeVolume) < 0)
 			return;
 		
-		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -5); 
+		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -2); 
 	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
@@ -95,7 +95,7 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		if (nFreeSum.compareTo(oMinTradeSum) < 0)
 			return;
 		
-		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -5); 
+		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -2); 
 	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		

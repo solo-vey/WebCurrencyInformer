@@ -42,7 +42,7 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 		
 		if (null == oRule)
 		{
-			WorkerFactory.getMainWorker().sendMessage("Rule [" + m_nRuleID + "] is absent");
+			WorkerFactory.getMainWorker().sendSystemMessage("Rule [" + m_nRuleID + "] is absent");
 			return;
 		}
 
@@ -51,17 +51,17 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 		if (null != oTradeTask && oTradeTask instanceof HasParameters)
 		{
 			((HasParameters)oTradeTask).setParameter(m_strName, m_strValue);
-			WorkerFactory.getMainWorker().sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
+			WorkerFactory.getMainWorker().sendSystemMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
 					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
 		}
 		else
 		if (null != oTradeControler && oTradeControler instanceof HasParameters)
 		{
 			((HasParameters)oTradeControler).setParameter(m_strName, m_strValue);
-			WorkerFactory.getMainWorker().sendMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
+			WorkerFactory.getMainWorker().sendSystemMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
 					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
 		}
 		else
-			WorkerFactory.getMainWorker().sendMessage(oRule.getInfo());
+			WorkerFactory.getMainWorker().sendSystemMessage(oRule.getInfo());
 	}
 }

@@ -38,7 +38,7 @@ public class GetTradeInfoCommand extends BaseCommand
 		
 		if (null == oRule)
 		{
-			WorkerFactory.getMainWorker().sendMessage("Rule [" + m_nRuleID + "] is absent");
+			WorkerFactory.getMainWorker().sendSystemMessage("Rule [" + m_nRuleID + "] is absent");
 			return;
 		}
 		
@@ -52,6 +52,6 @@ public class GetTradeInfoCommand extends BaseCommand
 		if (null != oTradeControler)
 			strMessage = (m_bIsFull ? oTradeControler.getTradesInfo() + "\r\n" : StringUtils.EMPTY) + oTradeControler.getFullInfo();
 
-		WorkerFactory.getMainWorker().sendMessage(strMessage);
+		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }

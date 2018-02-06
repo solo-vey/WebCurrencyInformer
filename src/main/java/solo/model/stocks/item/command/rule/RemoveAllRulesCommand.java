@@ -27,6 +27,6 @@ public class RemoveAllRulesCommand extends BaseCommand
 		for(final Entry<Integer, IRule> oRuleInfo : oStockExchange.getRules().getRules().entrySet())
 			oStockExchange.getRules().removeRule(oRuleInfo.getKey());
 	
-		WorkerFactory.getMainWorker().sendMessage("All rules deleted");
+		WorkerFactory.getMainWorker().sendSystemMessage("All rules deleted");
 	}
 }

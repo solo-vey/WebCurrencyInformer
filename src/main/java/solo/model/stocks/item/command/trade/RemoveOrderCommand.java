@@ -23,6 +23,6 @@ public class RemoveOrderCommand extends BaseCommand
 		super.execute();
 		WorkerFactory.getStockExchange().getStockSource().removeOrder(m_strOrderId);
 		
-		WorkerFactory.getMainWorker().sendMessage("Order " + m_strOrderId + " deleted. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
+		WorkerFactory.getMainWorker().sendSystemMessage("Order " + m_strOrderId + " deleted. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
 	}
 }

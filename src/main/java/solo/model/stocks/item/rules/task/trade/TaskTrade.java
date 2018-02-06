@@ -61,14 +61,6 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		getTradeControler().tradeStart(this);
 	}
 	
-	public void sendMessage(final String strMessage)
-	{
-		final String strMessageFooter = getType() +
-			" " + CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) +   
-			" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID); 
-		WorkerFactory.getMainWorker().sendMessage(strMessage + "\r\n" + strMessageFooter);
-	}
-	
 	public String getInfo()
 	{
 		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 

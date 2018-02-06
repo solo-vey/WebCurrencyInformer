@@ -3,7 +3,6 @@ package solo.model.stocks.item.command.system;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
@@ -31,7 +30,6 @@ public class LastErrorsCommand extends BaseCommand
 		}
 		strMessage = (StringUtils.isNotBlank(strMessage) ? strMessage : "No errors");
 
-		final ICommand oCommand = new SendMessageCommand(strMessage);
-		WorkerFactory.getMainWorker().addCommand(oCommand);
+		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }

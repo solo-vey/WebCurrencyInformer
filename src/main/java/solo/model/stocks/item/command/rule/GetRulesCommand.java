@@ -38,6 +38,6 @@ public class GetRulesCommand extends BaseCommand
 		if (StringUtils.isBlank(strMessage))
 			strMessage += "No rules";
 			
-		WorkerFactory.getMainWorker().sendMessage(strMessage);
+		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }

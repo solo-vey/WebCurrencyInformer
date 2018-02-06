@@ -19,6 +19,6 @@ public class StopStockCommand extends BaseCommand
 		super.execute();
 		WorkerFactory.getMainWorker().getStockWorker().stopWorker();
 		
-		WorkerFactory.getMainWorker().addCommand(new SendMessageCommand("Stock stopping"));
+		WorkerFactory.getMainWorker().sendSystemMessage("Stock stopping");
 	}
 }

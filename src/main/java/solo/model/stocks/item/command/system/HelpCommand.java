@@ -55,6 +55,6 @@ public class HelpCommand extends BaseCommand
 		else
 			strMessage = CommandFactory.getCommand(m_strCommandInfo).getHelp();
 
-		WorkerFactory.getMainWorker().sendMessage(strMessage);
+		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }

@@ -28,6 +28,6 @@ public class SetStockParameterCommand extends BaseCommand implements IHistoryCom
 		super.execute();
 		
 		WorkerFactory.getStockExchange().setParameter(m_strName, m_strValue);
-		WorkerFactory.getMainWorker().sendMessage("Parameter [" + m_strName + "] = [" + WorkerFactory.getStockExchange().getParameter(m_strName) + "]");
+		WorkerFactory.getMainWorker().sendSystemMessage("Parameter [" + m_strName + "] = [" + WorkerFactory.getStockExchange().getParameter(m_strName) + "]");
 	}
 }

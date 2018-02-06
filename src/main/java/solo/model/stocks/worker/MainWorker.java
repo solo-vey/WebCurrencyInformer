@@ -85,6 +85,15 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		addCommand(oCommand);
 	}
 	
+	public void sendSystemMessage(final String strMessage)
+	{
+		if (StringUtils.isBlank(strMessage))
+			return;
+		
+		final ICommand oCommand = new SendMessageCommand("SYSTEM\r\n" + strMessage);
+		addCommand(oCommand);
+	}	
+	
 	public void sendMessage(final MessageLevel oLevel, final String strMessage)
 	{
 		if (oLevel.equals(MessageLevel.ERROR))

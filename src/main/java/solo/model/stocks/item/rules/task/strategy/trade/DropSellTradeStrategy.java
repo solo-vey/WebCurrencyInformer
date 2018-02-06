@@ -95,12 +95,22 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		if (oOrder.getVolume().compareTo(nMinTradeVolume) < 0)
 	    	return;
 		
+		final Date oHourDateCreate = DateUtils.addMinutes(new Date(), -60); 
+	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHourDateCreate))
+	    {
+	    	final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
+			final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
+			final BigDecimal nNewCriticalPrice = oCandlestick.getMax(24);
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 60 minutes critical price ");
+			return;
+	    }
+	    
 		final Date oHalfHourDateCreate = DateUtils.addMinutes(new Date(), -30); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHalfHourDateCreate))
 	    {
 	    	final BigDecimal nLostPriceAddition = MathUtils.getBigDecimal(oTaskTrade.getTradeInfo().getPriviousLossSum().doubleValue() / oTaskTrade.getTradeInfo().getBoughtVolume().doubleValue(), TradeUtils.getPricePrecision(oRateInfo));
 	    	final BigDecimal nTotalBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice().add(nLostPriceAddition); 
-	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.95, TradeUtils.getPricePrecision(oRateInfo));
+	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.98, TradeUtils.getPricePrecision(oRateInfo));
 	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 30 minutes critical price ");
 			return;
 	    }

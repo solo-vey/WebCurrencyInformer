@@ -49,7 +49,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo) + "\r\n\r\n";
     	}
 		
-    	WorkerFactory.getMainWorker().sendMessage(strMessage);
+    	WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 
 	public static String getRateData(final RateInfo oRateInfo, final RateAnalysisResult oAnalysisResult)

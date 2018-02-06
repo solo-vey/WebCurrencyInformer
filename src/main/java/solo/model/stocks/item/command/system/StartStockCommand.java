@@ -19,6 +19,6 @@ public class StartStockCommand extends BaseCommand
 		super.execute();
 		WorkerFactory.getMainWorker().getStockWorker().startWorker();
 		
-		WorkerFactory.getMainWorker().addCommand(new SendMessageCommand("Stock starting"));
+		WorkerFactory.getMainWorker().sendSystemMessage("Stock starting");
 	}
 }

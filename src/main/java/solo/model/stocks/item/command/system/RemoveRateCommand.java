@@ -24,6 +24,6 @@ public class RemoveRateCommand extends BaseCommand
 		WorkerFactory.getMainWorker().getStockExchange().getStockSource().removeRate(m_oRateInfo);
 		WorkerFactory.getMainWorker().getStockWorker().stopRateWorker(m_oRateInfo);
 		
-		WorkerFactory.getMainWorker().addCommand(new SendMessageCommand("Stock rate worker [" + m_oRateInfo + "] stopped"));
+		WorkerFactory.getMainWorker().sendSystemMessage("Stock rate worker [" + m_oRateInfo + "] stopped");
 	}
 }

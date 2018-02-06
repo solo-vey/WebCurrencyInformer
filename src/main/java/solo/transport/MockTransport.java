@@ -31,4 +31,9 @@ public class MockTransport implements ITransport
 	{
 		return  getName() + "Transport.properties";
 	}
+
+	@Override
+	public void deleteMessage(String strMessageID) throws Exception
+	{
+	}
 }

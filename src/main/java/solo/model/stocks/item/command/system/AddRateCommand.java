@@ -24,6 +24,6 @@ public class AddRateCommand extends BaseCommand
 		WorkerFactory.getMainWorker().getStockExchange().getStockSource().registerRate(m_oRateInfo);
 		WorkerFactory.getMainWorker().getStockWorker().startRateWorker(m_oRateInfo);
 		
-		WorkerFactory.getMainWorker().addCommand(new SendMessageCommand("Stock rate worker [" + m_oRateInfo + "] started"));
+		WorkerFactory.getMainWorker().sendSystemMessage("Stock rate worker [" + m_oRateInfo + "] started");
 	}
 }
