@@ -20,6 +20,7 @@ import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
@@ -218,15 +219,22 @@ public class TradeControler extends TaskBase implements ITradeControler
 				}
 			}
 			
+			final BigDecimal nNeedSellVolume = m_oTradesInfo.getFreeVolume();
+			BigDecimal nNeedSellVolumeSum = BigDecimal.ZERO;
+			if (nNeedSellVolume.compareTo(BigDecimal.ZERO) > 0)
+			{
+				final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
+				final BigDecimal nBuyPrice = StrategyUtils.getBestPrice(oRateAnalysisResult.getBidsOrders());
+				nNeedSellVolumeSum = nBuyPrice.multiply(nNeedSellVolume);
+				nBuySum = nBuySum.add(nNeedSellVolumeSum);
+			}
+			
 			final String strRuleInfo = "trade" + "_" + getRateInfo() + "_" + nBuySum;
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			final TaskTrade oTaskTrade = ((TaskTrade)oRule);
 			
-			if (m_oTradesInfo.getFreeVolume().compareTo(BigDecimal.ZERO) > 0)
-			{
-				final BigDecimal nNeedSellVolume = m_oTradesInfo.getFreeVolume();
-				oTaskTrade.getTradeInfo().addBuy(BigDecimal.ZERO, nNeedSellVolume);
-			}
+			if (nNeedSellVolume.compareTo(BigDecimal.ZERO) > 0)
+				oTaskTrade.getTradeInfo().addBuy(nNeedSellVolumeSum, nNeedSellVolume);
 			oTaskTrade.getTradeInfo().setPriviousLossSum(getTradesInfo().getLossSum());
 			
 			getTradeStrategy().startNewTrade(oTaskTrade, this);

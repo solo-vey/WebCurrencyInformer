@@ -22,19 +22,21 @@ public class CandlestickTest extends BaseTest
     	final Candlestick oCandlestick = StockExchangeFactory.getStockExchange(Stocks.Exmo).getStockCandlestick().get(RateInfo.ETH_UAH);
     	
     	//	Act
-    	oCandlestick.makeChartImage(35);
+    	oCandlestick.makeChartImage(150);
     	
     	//	Asset
     	final File oFile = new File(oCandlestick.getFileName());
     	Assert.assertTrue(oFile.isFile());
+    	
+    	System.err.print(oCandlestick.getMax(24));
     }
 
     @Test public void testCandlestickHistory() throws Exception
     {
     	//	Arrange
-    	final Candlestick oCandlestick = StockExchangeFactory.getStockExchange(Stocks.Exmo).getStockCandlestick().get(new RateInfo(Currency.WAVES, Currency.RUB));
+    	final Candlestick oCandlestick = StockExchangeFactory.getStockExchange(Stocks.Exmo).getStockCandlestick().get(new RateInfo(Currency.ETH, Currency.UAH));
     	
-    	oCandlestick.makeChartImage(100);
+    	oCandlestick.makeChartImage(24);
     	
     	//	Act
     	final List<String> aHistoryInfo = oCandlestick.getHistoryInfo();

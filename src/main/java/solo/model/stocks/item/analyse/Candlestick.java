@@ -108,6 +108,20 @@ public class Candlestick implements Serializable
         final BigDecimal nDelta = nMaxPrice.add(nMinPrice.negate());
         return MathUtils.getBigDecimal(nDelta.doubleValue() * 100.0 / nMaxPrice.doubleValue(), 2);
 	}
+
+	public BigDecimal getMax(int nStepCount)
+	{
+		BigDecimal nMaxPrice = BigDecimal.ZERO;
+		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+        for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
+        {
+        	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
+        	if (nMaxPrice.compareTo(oCandle.getMax()) < 0)
+        		nMaxPrice = oCandle.getMax();
+        }
+        
+        return nMaxPrice;
+	}
 	
 	public String makeChartImage(final int nStepCount) throws IOException
 	{
