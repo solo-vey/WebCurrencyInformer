@@ -14,6 +14,8 @@ import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
+import solo.model.stocks.item.rules.task.strategy.CarefullBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -37,27 +39,33 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 	{
 		super.checkTrade(oTaskTrade, aTaskTrades, oTradeControler);
 		
-		final boolean bIsRemoveTrade = removeBuyIfFall(oTaskTrade, oTradeControler);
+		setCarefullBuyIfFall(oTaskTrade, oTradeControler);
 		resetCriticalPriceForSellOrder(oTaskTrade, aTaskTrades, oTradeControler);
 		
-		return bIsRemoveTrade;
+		return false;
 	}
 
-	protected boolean removeBuyIfFall(final ITradeTask oTaskTrade, final TradeControler oTradeControler)
+	protected void setCarefullBuyIfFall(final ITradeTask oTaskTrade, final TradeControler oTradeControler)
 	{
 		final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
 		if (!OrderSide.BUY.equals(oOrder.getSide()))
-			return false;
+			return;
 		
 		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
 		if (!oCandlestick.isLongFall())
-			return false;
+		{
+			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
+			return;
+		}
 		
 		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
 		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
-			return false;
+		{
+			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
+			return;
+		}
 
 		final BigDecimal nFreeSum = oTradeControler.getTradesInfo().getFreeSum();
 		final BigDecimal nFreeSumAndOrderSum = nFreeSum.add(oGetOrder.getSum());
@@ -65,22 +73,21 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
 		
 		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0 && nFreeSumAndOrderSum.compareTo(oMinTradeSum) < 0)
-			return false;
+		{
+			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
+			return;
+		}
 		
 		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
 		if (oRemoveOrder.isDone())
-			return false;
-		
-		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "]. " + oCandlestick.getType());
-		if (OrderSide.BUY.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
 		{
-			final BigDecimal nDeltaBuyVolume = oTaskTrade.getTradeInfo().getNeedBoughtVolume().add(oRemoveOrder.getVolume().negate());
-			if (nDeltaBuyVolume.compareTo(BigDecimal.ZERO) > 0)
-				oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.removeBuyIfFall. nDeltaBuyVolume on cancel volume [" + nDeltaBuyVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
+			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
+			return;
 		}
-		oTaskTrade.updateOrderTradeInfo(oRemoveOrder);
 		
-		return true;
+		oTaskTrade.getTradeInfo().setBuyStrategy(StrategyFactory.getBuyStrategy(CarefullBuyStrategy.NAME));		
+		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.setCarefullBuyIfFall. Set CarefullBuyStrategy. Trand - " + oCandlestick.getType());	
+		return;
 	}
 
 	protected void resetCriticalPriceForSellOrder(final ITradeTask oTaskTrade, final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
@@ -98,9 +105,12 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final Date oHourDateCreate = DateUtils.addMinutes(new Date(), -60); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHourDateCreate))
 	    {
-	    	final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
-			final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
-			final BigDecimal nNewCriticalPrice = oCandlestick.getMax(24);
+	    	//final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
+			//final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
+			//final BigDecimal nNewCriticalPrice = oCandlestick.getMax(24);
+			
+	    	final BigDecimal nTotalBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice(); 
+	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.85, TradeUtils.getPricePrecision(oRateInfo));
 	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 60 minutes critical price ");
 			return;
 	    }
@@ -108,9 +118,8 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final Date oHalfHourDateCreate = DateUtils.addMinutes(new Date(), -30); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHalfHourDateCreate))
 	    {
-	    	final BigDecimal nLostPriceAddition = MathUtils.getBigDecimal(oTaskTrade.getTradeInfo().getPriviousLossSum().doubleValue() / oTaskTrade.getTradeInfo().getBoughtVolume().doubleValue(), TradeUtils.getPricePrecision(oRateInfo));
-	    	final BigDecimal nTotalBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice().add(nLostPriceAddition); 
-	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.98, TradeUtils.getPricePrecision(oRateInfo));
+	    	final BigDecimal nTotalBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice(); 
+	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nTotalBougthPrice.doubleValue() * 0.96, TradeUtils.getPricePrecision(oRateInfo));
 	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 30 minutes critical price ");
 			return;
 	    }

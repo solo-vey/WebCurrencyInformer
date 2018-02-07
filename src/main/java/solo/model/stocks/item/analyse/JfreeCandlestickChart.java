@@ -94,7 +94,7 @@ public class JfreeCandlestickChart extends JPanel
     	
     	final int nScale = getScale(oHistory);
     	final Date oMinDate = DateUtils.addMinutes(new Date(), -nDurationMinutes);
-        for(int nPos = oHistory.size() - 1; nPos > 0; nPos--)
+        for(int nPos = oHistory.size() - 1; nPos >= 0; nPos--)
         {
         	final JapanCandle oCandle = oHistory.get(nPos);
         	if (oCandle.getDate().before(oMinDate))

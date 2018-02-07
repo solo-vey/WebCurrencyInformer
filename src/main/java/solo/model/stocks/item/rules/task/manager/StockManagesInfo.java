@@ -1,41 +1,52 @@
 package solo.model.stocks.item.rules.task.manager;
 
+import java.io.Serializable;
 import java.math.BigDecimal;
 
-import solo.model.stocks.analyse.StateAnalysisResult;
+import org.apache.commons.lang.StringUtils;
+
+import solo.model.stocks.BaseObject;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 
-public class StockManager implements IStockManager
+public class StockManagesInfo extends BaseObject implements Serializable
 {
-	protected StockManagesInfo m_oStockManagesInfo = new StockManagesInfo();
+	private static final long serialVersionUID = -7601846839784506296L;
+
+	public StockManagesInfo()
+	{
+	}
 	
-	public void manage(final StateAnalysisResult oStateAnalysisResult) 
+	
+	public void tradeStart(final TaskTrade oTaskTrade) 
 	{
 		
 	}
 	
-	public void tradeStart(final TaskTrade oTaskTrade) 
-	{
-		m_oStockManagesInfo.tradeStart(oTaskTrade);
-	}
-	
 	public void tradeDone(final TaskTrade oTaskTrade) 
 	{
-		m_oStockManagesInfo.tradeDone(oTaskTrade);
+		
 	}
 	
 	public void buyDone(final TaskTrade oTaskTrade) 
 	{
-		m_oStockManagesInfo.buyDone(oTaskTrade);
+		
 	}
 	
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
 	{
-		m_oStockManagesInfo.addBuy(nSpendSum, nBuyVolume);
+		
 	}
 	
 	public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) 
 	{
-		m_oStockManagesInfo.addSell(nReceiveSum, nSoldVolume);
+		
 	} 
+	
+	/** Строковое представление документа */
+	@Override public String toString()
+	{
+		String strResult = StringUtils.EMPTY;
+
+		return strResult;
+	}
 }

@@ -31,7 +31,6 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nLockedVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nBuySum = BigDecimal.ZERO;
-	protected BigDecimal m_nLossSum = BigDecimal.ZERO;
 
 	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
 	protected BigDecimal m_nSpendSum = BigDecimal.ZERO;
@@ -114,13 +113,6 @@ public class TradesInfo extends BaseObject implements Serializable
 		return m_nBuySum;
 	}
 	
-	public BigDecimal getLossSum()
-	{
-		if (null == m_nLossSum)
-			m_nLossSum = BigDecimal.ZERO;
-		return m_nLossSum;
-	}
-	
 	public BigDecimal getSoldVolume()
 	{
 		return m_nSoldVolume;
@@ -183,11 +175,9 @@ public class TradesInfo extends BaseObject implements Serializable
 		m_nVolume = m_nVolume.add(nSoldVolume.negate());
 	}
 	
-	public void setLossSum(final BigDecimal nLossSum)
+	public void setRuleID(final Integer nRuleID)
 	{
-		m_nLossSum = nLossSum;
-		
-		addToHistory("Set loss sum : " + MathUtils.toCurrencyString(nLossSum)); 
+		m_nRuleID = nRuleID;
 	}
 	
 	public void tradeStart(final TaskTrade oTaskTrade)
@@ -201,10 +191,6 @@ public class TradesInfo extends BaseObject implements Serializable
 	public void tradeDone(final TaskTrade oTaskTrade)
 	{
 		m_nTradeCount++;
-		final BigDecimal nTradeDelta = oTaskTrade.getTradeInfo().getFullDelta();
-		if (nTradeDelta.compareTo(BigDecimal.ZERO) < 0)
-			setLossSum(nTradeDelta.negate());
-		
 		addToHistory(oTaskTrade.getTradeInfo().getInfo()); 
 	}
 	
@@ -269,8 +255,6 @@ public class TradesInfo extends BaseObject implements Serializable
 			strResult += "LockedVolume: " + MathUtils.toCurrencyStringEx2(getLockedVolume()) + "\r\n";
 		if (getBuySum().compareTo(BigDecimal.ZERO) > 0)
 			strResult += "BuySum: " + MathUtils.toCurrencyStringEx3(getBuySum()) + "\r\n";
-		if (getLossSum().compareTo(BigDecimal.ZERO) > 0)
-			strResult += "LossSum:" + MathUtils.toCurrencyStringEx3(getLossSum()) + "\r\n";
 		
 		return strResult;
 	}

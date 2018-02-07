@@ -28,7 +28,6 @@ public class TradeInfo extends BaseObject implements Serializable
 
 	protected BigDecimal m_nCriticalPrice;
 	protected BigDecimal m_nCriticalVolume;
-	protected BigDecimal m_nPriviousLossSum = BigDecimal.ZERO;
 	
 	protected IBuyStrategy m_oBuyStrategy;
 	protected ISellStrategy m_oSellStrategy;
@@ -69,10 +68,7 @@ public class TradeInfo extends BaseObject implements Serializable
 			final BigDecimal nNeedSellVolume = calculateCriticalPrice().multiply(getNeedSellVolume());
 			nDelta =  nDelta.add(nNeedSellVolume);
 		}
-
-		if (getPriviousLossSum().compareTo(BigDecimal.ZERO) != 0)
-			nDelta =  nDelta.add(getPriviousLossSum().negate());
-
+		
 		return nDelta;
 	}	
 	
@@ -141,19 +137,10 @@ public class TradeInfo extends BaseObject implements Serializable
 		return (null != m_nCriticalPrice ? m_nCriticalPrice : BigDecimal.ZERO);
 	}
 	
-	public BigDecimal getPriviousLossSum()
-	{
-		if (null == m_nPriviousLossSum)
-			m_nPriviousLossSum = BigDecimal.ZERO;
-		return m_nPriviousLossSum;
-	}
-	
 	public BigDecimal getMinCriticalPrice()
 	{
 		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(getAveragedBoughPrice());
-		final BigDecimal nLostPriceAddition = MathUtils.getBigDecimal(getPriviousLossSum().doubleValue() / getBoughtVolume().doubleValue(), TradeUtils.getPricePrecision(m_oRateInfo));
-		final BigDecimal nFullAddition = nTradeMargin.add(nLostPriceAddition);
-		return getAveragedBoughPrice().add(nFullAddition);
+		return getAveragedBoughPrice().add(nTradeMargin);
 	}
 
 	public BigDecimal calculateCriticalPrice()
@@ -278,18 +265,18 @@ public class TradeInfo extends BaseObject implements Serializable
 		addToHistory("Set critical volume : " + MathUtils.toCurrencyStringEx2(nCriticalVolume)); 
 	}
 
-	public void setPriviousLossSum(final BigDecimal nPriviousLossSum)
-	{
-		m_nPriviousLossSum = nPriviousLossSum;
-		addToHistory("Set privious loss sum : " + MathUtils.toCurrencyStringEx2(m_nPriviousLossSum)); 
-	}
-	
 	public void setBuyStrategy(IBuyStrategy oBuyStrategy)
 	{
 		m_oBuyStrategy = oBuyStrategy;
 		addToHistory("Set buy strategy : " + oBuyStrategy); 
 	}
-	
+
+	public void restoreDefaultBuyStrategy()
+	{
+		final IBuyStrategy oDefaultBuyStrategy = TradeUtils.getBuyStrategy(m_oRateInfo);
+		if (oDefaultBuyStrategy.equals(m_oBuyStrategy))
+			setBuyStrategy(oDefaultBuyStrategy);
+	}	
 	public void setSellStrategy(ISellStrategy oSellStrategy)
 	{
 		m_oSellStrategy = oSellStrategy;
@@ -345,7 +332,6 @@ public class TradeInfo extends BaseObject implements Serializable
 		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
 		strResult += "BoughtVolume: " + MathUtils.toCurrencyStringEx2(getBoughtVolume()) + "\r\n";
 		strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
-		strResult += "PriviousLossSum: " + MathUtils.toCurrencyStringEx2(getPriviousLossSum()) + "\r\n\r\n";
 		strResult += getHistory();
 		return strResult;
 	}

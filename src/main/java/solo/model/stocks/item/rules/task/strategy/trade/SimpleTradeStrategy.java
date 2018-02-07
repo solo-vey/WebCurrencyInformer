@@ -55,7 +55,7 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		if (nFreeVolume.compareTo(nMinTradeVolume) < 0)
 			return;
 		
-		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -2); 
+		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -1); 
 	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
@@ -95,7 +95,7 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		if (nFreeSum.compareTo(oMinTradeSum) < 0)
 			return;
 		
-		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -2); 
+		final Date oFithteenMinutesDateCreate = DateUtils.addMinutes(new Date(), -1); 
 	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
@@ -129,11 +129,11 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
-		if (!oCandlestick.isLongFall())
+		//if (!oCandlestick.isLongFall())
 			return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
 		
-		oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
-		return false;
+		//oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
+		//return false;
 	}
 	
 	public void startNewTrade(final ITradeTask oTaskTrade, final TradeControler oTradeControler)

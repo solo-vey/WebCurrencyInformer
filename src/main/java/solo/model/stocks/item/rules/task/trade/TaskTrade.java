@@ -408,8 +408,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		m_oTradeInfo.setCriticalPrice(m_oTradeInfo.calculateCriticalPrice());
 		final String strMessage = "Set critical price " + m_oTradeInfo.getCriticalPriceString() + 
 									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(m_oTradeInfo.getAveragedBoughPrice(), m_oTradeInfo.getAveragedBoughPrice())) + 
-									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getMarginValue(m_oTradeInfo.getAveragedBoughPrice())) + 
-									"/" + MathUtils.toCurrencyStringEx2(m_oTradeInfo.getPriviousLossSum());
+									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getMarginValue(m_oTradeInfo.getAveragedBoughPrice()));
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, strMessage);
 		m_oTradeInfo.addToHistory(strMessage);
 		getTradeControler().buyDone(this);

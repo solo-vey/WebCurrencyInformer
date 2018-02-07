@@ -68,6 +68,12 @@ public class TradeControler extends TaskBase implements ITradeControler
 		return "CONTROLER [" + getRateInfo() + "]";   
 	}
 	
+	@Override public void setID(final int nID)
+	{
+		super.setID(nID);
+		getTradesInfo().setRuleID(nID);
+	}
+	
 	public String getInfo()
 	{
 		String strInfo = getType() + 
@@ -235,7 +241,6 @@ public class TradeControler extends TaskBase implements ITradeControler
 			
 			if (nNeedSellVolume.compareTo(BigDecimal.ZERO) > 0)
 				oTaskTrade.getTradeInfo().addBuy(nNeedSellVolumeSum, nNeedSellVolume);
-			oTaskTrade.getTradeInfo().setPriviousLossSum(getTradesInfo().getLossSum());
 			
 			getTradeStrategy().startNewTrade(oTaskTrade, this);
 			oTaskTrade.setTradeControler(this);
