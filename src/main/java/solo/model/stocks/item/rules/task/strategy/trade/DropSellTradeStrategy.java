@@ -60,31 +60,6 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 			return;
 		}
 		
-		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
-		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
-		{
-			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
-			return;
-		}
-
-		final BigDecimal nFreeSum = oTradeControler.getTradesInfo().getFreeSum();
-		final BigDecimal nFreeSumAndOrderSum = nFreeSum.add(oGetOrder.getSum());
-		final BigDecimal oMinTradeSum = TradeUtils.getMinTradeSum(oRateInfo); 
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
-		
-		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0 && nFreeSumAndOrderSum.compareTo(oMinTradeSum) < 0)
-		{
-			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
-			return;
-		}
-		
-		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
-		if (oRemoveOrder.isDone())
-		{
-			oTaskTrade.getTradeInfo().restoreDefaultBuyStrategy();
-			return;
-		}
-		
 		oTaskTrade.getTradeInfo().setBuyStrategy(StrategyFactory.getBuyStrategy(CarefullBuyStrategy.NAME));		
 		oTaskTrade.getTradeInfo().getHistory().addToHistory("DropSellTradeStrategy.setCarefullBuyIfFall. Set CarefullBuyStrategy. Trand - " + oCandlestick.getType());	
 		return;
