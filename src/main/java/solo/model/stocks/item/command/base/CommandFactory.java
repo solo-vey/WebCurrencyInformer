@@ -10,6 +10,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.command.trade.AddOrderCommand;
+import solo.model.stocks.item.command.trade.GetManagerInfoCommand;
 import solo.model.stocks.item.command.trade.GetStockInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.command.trade.ManageStock;
@@ -69,6 +70,7 @@ public class CommandFactory
 		registerCommandClass(RemoveOrderCommand.NAME, 		RemoveOrderCommand.class, CommandGroup.TRADE);
 		registerCommandClass(GetTradeInfoCommand.NAME, 		GetTradeInfoCommand.class, CommandGroup.TRADE);
 		registerCommandClass(SetTaskParameterCommand.NAME, 	SetTaskParameterCommand.class, CommandGroup.TRADE);
+		registerCommandClass(GetManagerInfoCommand.NAME, 	GetManagerInfoCommand.class, CommandGroup.TRADE);
 	}
 	
 	static protected void registerCommandClass(final String strCommand, final Class<?> oClass, final CommandGroup oCommandGroup)
