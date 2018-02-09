@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task.strategy;
+package solo.model.stocks.item.rules.task.strategy.trade;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -6,6 +6,8 @@ import java.util.List;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.model.stocks.item.rules.task.trade.TradeInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
