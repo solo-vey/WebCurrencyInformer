@@ -13,6 +13,7 @@ import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockCurrencyVolume;
 import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
+import solo.model.stocks.item.rules.task.manager.StockManager;
 import solo.model.stocks.source.IStockSource;
 import solo.transport.MessageLevel;
 import ua.lz.ep.utils.ResourceUtils;
@@ -30,7 +31,7 @@ public class BaseStockExchange implements IStockExchange
 	final protected Rules m_oRules;
 	final StateAnalysisResult m_oLastAnalysisResult;
 	final IStateAnalysis m_oStateAnalysis = new SimpleStateAnalysis();
-	final IStockManager m_oStockManager = IStockManager.NULL;
+	final IStockManager m_oStockManager;
 	final StockCandlestick m_oStockCandlestick;
 
 	public BaseStockExchange(final String strStockName, final String strStockProperies)
@@ -40,6 +41,7 @@ public class BaseStockExchange implements IStockExchange
 
 		m_oLastAnalysisResult = new StateAnalysisResult();
 		m_oRules = new Rules(this);
+		m_oStockManager = new StockManager(this);
 
 		final int nCandleDurationMinutes = ResourceUtils.getIntFromResource("candle.duration_minutes", getStockProperties(), 5);
 		m_oStockCandlestick = new StockCandlestick(this, nCandleDurationMinutes);
