@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task.strategy.trade;
+package solo.model.stocks.item.rules.task.strategy;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -29,7 +29,7 @@ public class CurrentPriceBuyStrategy extends BaseStrategy implements IBuyStrateg
 				return oBidOrder.getPrice().add(oMinChangePrice);
 		}
 		
-		return oTradeInfo.getCriticalPrice();
+		return oTradeInfo.getCriticalPrice().add(TradeUtils.getMinChangePrice());
 	}
 
 }

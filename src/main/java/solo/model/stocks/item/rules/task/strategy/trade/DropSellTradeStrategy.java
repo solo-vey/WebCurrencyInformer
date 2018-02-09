@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task.strategy.controler;
+package solo.model.stocks.item.rules.task.strategy.trade;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -14,7 +14,7 @@ import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
-import solo.model.stocks.item.rules.task.strategy.trade.CarefullBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.CarefullBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
@@ -118,7 +118,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		if (oCandlestick.isLongGrowth())
 		{
 	    	final BigDecimal nRoundedCriticalPriceMinPlus5Percent = MathUtils.getBigDecimal(nNewCriticalPriceMin.doubleValue() * 1.002, TradeUtils.DEFAULT_PRICE_PRECISION);
-	    	final BigDecimal nNewCriticalPriceFull = TradeUtils.getRoundedCriticalPrice(oRateInfo, oTaskTrade.getTradeInfo().calculateCriticalPrice());
+	    	final BigDecimal nNewCriticalPriceFull = oTaskTrade.getTradeInfo().calculateCriticalPrice();
 			if (nRoundedCriticalPriceMinPlus5Percent.compareTo(nNewCriticalPriceFull) > 0)
 			{
 				setNewCriticalPrice(nNewCriticalPriceFull, oTaskTrade, "Restore critical price ");
@@ -132,8 +132,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 	protected void setNewCriticalPrice(final BigDecimal nCriticalPrice, final ITradeTask oTaskTrade, final String strType)
 	{
 		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
-		final BigDecimal nRoundedCriticalPrice = TradeUtils.getRoundedCriticalPrice(oRateInfo, nCriticalPrice);
-		if (nRoundedCriticalPrice.compareTo(oTaskTrade.getTradeInfo().getCriticalPrice()) == 0)
+		if (nCriticalPrice.compareTo(oTaskTrade.getTradeInfo().getCriticalPrice()) == 0)
 			return;
 		
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();

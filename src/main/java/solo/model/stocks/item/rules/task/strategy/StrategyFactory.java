@@ -3,20 +3,20 @@ package solo.model.stocks.item.rules.task.strategy;
 import java.util.HashMap;
 import java.util.Map;
 
-import solo.model.stocks.item.rules.task.strategy.controler.DropSellTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.controler.ITradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.controler.ReverseTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.controler.SimpleTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.CarefullBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.CurrentPriceBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.CurrentPriceSellStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.IBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.ISellStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.NowBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.NowSellStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.QuickBuyExStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.QuickBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.QuickSellStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.CalmRateTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ReverseTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.CarefullBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.CurrentPriceBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
+import solo.model.stocks.item.rules.task.strategy.NowBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.NowSellStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickBuyExStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
 
 public class StrategyFactory
 {
@@ -34,11 +34,11 @@ public class StrategyFactory
 		
 		addSellStrategy(new QuickSellStrategy());
 		addSellStrategy(new NowSellStrategy());
-		addSellStrategy(new CurrentPriceSellStrategy());
 		
 		addTradeStrategy(new SimpleTradeStrategy());
 		addTradeStrategy(new DropSellTradeStrategy());
 		addTradeStrategy(new ReverseTradeStrategy());
+		addTradeStrategy(new CalmRateTradeStrategy());
 	}
 	
 	static public void addBuyStrategy(final IBuyStrategy oBuyStrategy)

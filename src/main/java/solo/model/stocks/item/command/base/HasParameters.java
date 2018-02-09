@@ -14,7 +14,7 @@ import solo.model.currency.Currency;
 import solo.model.stocks.BaseObject;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
-import solo.model.stocks.item.rules.task.strategy.controler.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;

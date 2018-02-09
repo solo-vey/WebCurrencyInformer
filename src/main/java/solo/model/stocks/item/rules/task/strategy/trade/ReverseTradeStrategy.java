@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task.strategy.controler;
+package solo.model.stocks.item.rules.task.strategy.trade;
 
 import java.math.BigDecimal;
 import java.util.Date;

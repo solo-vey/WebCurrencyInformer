@@ -21,9 +21,9 @@ import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
-import solo.model.stocks.item.rules.task.strategy.controler.DropSellTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.controler.ITradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.controler.SimpleTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
@@ -36,7 +36,6 @@ public class TradeControler extends TaskBase implements ITradeControler
 	final static public String TRADE_SUM = "#sum#";
 	final static public String MAX_TARDES = "#count#";
 	final static public String STRATEGY = "#strategy#";
-	final static public ITradeStrategy DEFAULT_TRADE_STRATEGY = StrategyFactory.getTradeStrategy(DropSellTradeStrategy.NAME);
 	
 	protected Integer m_nMaxTrades;
 	protected Map<RateInfo, TradesInfo> m_oAllTradesInfo = new HashMap<RateInfo, TradesInfo>();
@@ -60,7 +59,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		m_nMaxTrades = getParameterAsInt(MAX_TARDES, 1);
 		final BigDecimal nTradeSum = getParameterAsBigDecimal(TRADE_SUM);
 		getTradesInfo().setSum(nTradeSum, m_nMaxTrades);
-		m_oTradeStrategy = getParameterAsTradeStrategy(STRATEGY, DEFAULT_TRADE_STRATEGY);
+		m_oTradeStrategy = getParameterAsTradeStrategy(STRATEGY, TradeUtils.getTradeStrategy(m_oRateInfo));
 	}
 	
 	@Override public String getType()

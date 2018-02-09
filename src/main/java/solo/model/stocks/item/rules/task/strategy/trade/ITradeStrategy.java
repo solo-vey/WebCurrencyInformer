@@ -1,8 +1,8 @@
-package solo.model.stocks.item.rules.task.strategy.controler;
+package solo.model.stocks.item.rules.task.strategy.trade;
 
 import java.util.List;
 
-import solo.model.stocks.item.rules.task.strategy.trade.IStrategy;
+import solo.model.stocks.item.rules.task.strategy.IStrategy;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 

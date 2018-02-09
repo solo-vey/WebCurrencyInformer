@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
@@ -40,6 +41,11 @@ public class Candlestick implements Serializable
 		m_oRateInfo = oRateInfo;
 	}
 	
+	public Collection<JapanCandle> getHistory()
+	{
+		return m_oHistory;
+	}
+	
 	public void addRateInfo(RateAnalysisResult oRateAnalysisResult)
 	{
 		if (m_oHistory.size() == 0)
@@ -70,7 +76,7 @@ public class Candlestick implements Serializable
 	public BigDecimal getAverageMinPrice(int nStepCount)
 	{
 		BigDecimal nSumaryMinPrice = BigDecimal.ZERO;
-		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+		nStepCount = getStepCount(nStepCount);
         for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
@@ -82,7 +88,7 @@ public class Candlestick implements Serializable
 	public BigDecimal getAverageMaxPrice(int nStepCount)
 	{
 		BigDecimal nSumaryMaxPrice = BigDecimal.ZERO;
-		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+		nStepCount = getStepCount(nStepCount);
         for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
@@ -91,11 +97,11 @@ public class Candlestick implements Serializable
         return MathUtils.getBigDecimal(nSumaryMaxPrice.doubleValue() / nStepCount, TradeUtils.DEFAULT_PRICE_PRECISION);
 	}
 
-	public BigDecimal getMinMaxDelta(int nStepCount)
+	public BigDecimal getMinMaxDeltaPercent(int nStepCount)
 	{
 		BigDecimal nMaxPrice = BigDecimal.ZERO;
 		BigDecimal nMinPrice = BigDecimal.ZERO;
-		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+		nStepCount = getStepCount(nStepCount);
         for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
@@ -108,11 +114,29 @@ public class Candlestick implements Serializable
         final BigDecimal nDelta = nMaxPrice.add(nMinPrice.negate());
         return MathUtils.getBigDecimal(nDelta.doubleValue() * 100.0 / nMaxPrice.doubleValue(), 2);
 	}
-
+	
+	public BigDecimal getMinMaxDelta(int nStepCount)
+	{
+		BigDecimal nMaxPrice = BigDecimal.ZERO;
+		BigDecimal nMinPrice = BigDecimal.ZERO;
+		nStepCount = getStepCount(nStepCount);
+        for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
+        {
+        	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
+        	if (nMaxPrice.compareTo(oCandle.getMax()) < 0)
+        		nMaxPrice = oCandle.getMax();
+        	if (nMinPrice.equals(BigDecimal.ZERO) || nMinPrice.compareTo(oCandle.getMin()) > 0)
+        		nMinPrice = oCandle.getMin();
+        }
+        
+        final BigDecimal nDelta = nMaxPrice.add(nMinPrice.negate());
+        return nDelta;
+	}
+	
 	public BigDecimal getMax(int nStepCount)
 	{
 		BigDecimal nMaxPrice = BigDecimal.ZERO;
-		nStepCount = (-1 == nStepCount ? m_oHistory.size() : nStepCount);
+		nStepCount = getStepCount(nStepCount);
         for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
@@ -122,7 +146,26 @@ public class Candlestick implements Serializable
         
         return nMaxPrice;
 	}
-	
+
+	public BigDecimal getMin(int nStepCount)
+	{
+		BigDecimal nMinPrice = new BigDecimal(Integer.MAX_VALUE);
+		nStepCount = getStepCount(nStepCount);
+        for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
+        {
+        	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
+        	if (nMinPrice.compareTo(oCandle.getMin()) > 0)
+        		nMinPrice = oCandle.getMin();
+        }
+        
+        return nMinPrice;
+	}	
+
+	protected int getStepCount(int nStepCount)
+	{
+		return (nStepCount <= 0 ? m_oHistory.size() : nStepCount);
+	}
+
 	public String makeChartImage(final int nStepCount) throws IOException
 	{
 		final JFreeChart oChart = JfreeCandlestickChart.createChart(m_oRateInfo.toString() + " - " + getType(), m_oHistory, m_nCandleDurationMinutes * nStepCount);
@@ -159,7 +202,7 @@ public class Candlestick implements Serializable
 	
 	public boolean isLongFall()
 	{
-		final BigDecimal nMinMaxDeltaPercent = getMinMaxDelta(6);
+		final BigDecimal nMinMaxDeltaPercent = getMinMaxDeltaPercent(6);
 		if (nMinMaxDeltaPercent.compareTo(new BigDecimal(2)) < 0)
 			return false;
 		
@@ -170,7 +213,7 @@ public class Candlestick implements Serializable
 	
 	public boolean isLongGrowth()
 	{
-		final BigDecimal nMinMaxDeltaPercent = getMinMaxDelta(6);
+		final BigDecimal nMinMaxDeltaPercent = getMinMaxDeltaPercent(6);
 		if (nMinMaxDeltaPercent.compareTo(new BigDecimal(2)) < 0)
 			return false;
 		

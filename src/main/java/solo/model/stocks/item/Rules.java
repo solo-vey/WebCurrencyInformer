@@ -127,7 +127,7 @@ public class Rules
 		{
 	         final FileInputStream oFileStream = new FileInputStream(strStockEventsFileName);
 	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
-	         final Map<Integer, IRule> oRules = (Map<Integer, IRule>) oStream.readObject();
+	         final Map<Integer, IRule> oRules = (Map<Integer, IRule>)oStream.readObject();
 	         m_oRules.clear();
 	         m_oRules.putAll(oRules);
 	         

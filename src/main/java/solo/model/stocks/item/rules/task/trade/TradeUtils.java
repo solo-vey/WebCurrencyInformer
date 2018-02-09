@@ -12,10 +12,12 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
-import solo.model.stocks.item.rules.task.strategy.trade.IBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.ISellStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.QuickBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.QuickSellStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
@@ -94,11 +96,6 @@ public class TradeUtils
 		return MathUtils.getBigDecimal(nPrice.doubleValue(), getPricePrecision(oRateInfo));
 	}
 	
-	public static BigDecimal getRoundedCriticalPrice(final RateInfo oRateInfo, final BigDecimal nPrice)
-	{
-		return MathUtils.getBigDecimal(nPrice.doubleValue(), getPricePrecision(oRateInfo));
-	}
-	
 	public static BigDecimal getRoundedVolume(final RateInfo oRateInfo, final BigDecimal nVolume)
 	{
 		return MathUtils.getBigDecimal(nVolume.doubleValue(), getVolumePrecision(oRateInfo));
@@ -143,6 +140,14 @@ public class TradeUtils
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
 		final String strSellStrategy = ResourceUtils.getResource("stock." + strMarket + ".sell_strategy", oStockExchange.getStockProperties(), QuickSellStrategy.NAME);
 		return StrategyFactory.getSellStrategy(strSellStrategy);
+	}
+
+	public static ITradeStrategy getTradeStrategy(final RateInfo oRateInfo)
+	{
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strTradeStrategy = ResourceUtils.getResource("stock." + strMarket + ".trade_strategy", oStockExchange.getStockProperties(), DropSellTradeStrategy.NAME);
+		return StrategyFactory.getTradeStrategy(strTradeStrategy);
 	}
 	
 	public static List<Order> getMyOrders()

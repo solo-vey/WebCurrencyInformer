@@ -1,4 +1,4 @@
-package solo.model.stocks.item.rules.task.strategy.controler;
+package solo.model.stocks.item.rules.task.strategy.trade;
 
 import java.math.BigDecimal;
 import java.util.Date;
@@ -9,16 +9,13 @@ import org.apache.commons.lang.time.DateUtils;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.analyse.Candlestick;
-import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
-import solo.model.stocks.item.rules.task.trade.TradesInfo;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 
-public class SimpleTradeStrategy implements ITradeStrategy
+public class SimpleTradeStrategy extends BaseTradeStrategy
 {
 	private static final long serialVersionUID = 6260569733645147335L;
 	
@@ -115,29 +112,20 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		oTaskTrade.updateOrderTradeInfo(oRemoveOrder);
 	}
 	
-	public void checkTrades(final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
-	{
-		oTradeControler.getTradesInfo().updateOrderInfo(aTaskTrades);
-	}
-	
 	public boolean isCreateNewTrade(final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
 	{
 		final int nMaxTrades = oTradeControler.getMaxTrades();
 		if (aTaskTrades.size() >= nMaxTrades)
 			return false;
 		
-		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
-		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
-		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
+//		final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
+//		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
+//		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
 		//if (!oCandlestick.isLongFall())
 			return !getIsOrderSidePrecent(aTaskTrades, OrderSide.BUY);
 		
 		//oTradesInfo.setCurrentState("Wait buy. Trand - " + oCandlestick.getType());
 		//return false;
-	}
-	
-	public void startNewTrade(final ITradeTask oTaskTrade, final TradeControler oTradeControler)
-	{
 	}
 	
 	public static boolean getIsOrderSidePrecent(final List<ITradeTask> aTaskTrades, final OrderSide oOrderSide)
@@ -148,5 +136,4 @@ public class SimpleTradeStrategy implements ITradeStrategy
 		
 		return bIsPrecent;
 	}
-
 }
