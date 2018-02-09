@@ -93,7 +93,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		checkTaskDone(oGetOrder);
 
 		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
-		if (m_oTradeInfo.getTaskSide().equals(OrderSide.BUY) && oGetOrder.isNull())
+		if (m_oTradeInfo.getTaskSide().equals(OrderSide.BUY) && m_oTradeInfo.getOrder().isNull())
 		{
 			BigDecimal oBuyPrice = m_oTradeInfo.getBuyStrategy().getBuyPrice(oRateAnalysisResult, getTradeInfo());
 			if (oBuyPrice.equals(BigDecimal.ZERO))
@@ -104,7 +104,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return;
 		}
 
-		if (m_oTradeInfo.getTaskSide().equals(OrderSide.SELL) && oGetOrder.isNull())
+		if (m_oTradeInfo.getTaskSide().equals(OrderSide.SELL) && m_oTradeInfo.getOrder().isNull())
 		{
 			BigDecimal oSellPrice = m_oTradeInfo.getSellStrategy().getSellPrice(oRateAnalysisResult, getTradeInfo());
 			if (oSellPrice.equals(BigDecimal.ZERO))

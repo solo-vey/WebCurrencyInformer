@@ -267,6 +267,9 @@ public class TradeInfo extends BaseObject implements Serializable
 
 	public void setBuyStrategy(IBuyStrategy oBuyStrategy)
 	{
+		if (m_oBuyStrategy.equals(oBuyStrategy))
+			return;
+		
 		m_oBuyStrategy = oBuyStrategy;
 		addToHistory("Set buy strategy : " + oBuyStrategy); 
 	}
@@ -274,11 +277,14 @@ public class TradeInfo extends BaseObject implements Serializable
 	public void restoreDefaultBuyStrategy()
 	{
 		final IBuyStrategy oDefaultBuyStrategy = TradeUtils.getBuyStrategy(m_oRateInfo);
-		if (oDefaultBuyStrategy.equals(m_oBuyStrategy))
-			setBuyStrategy(oDefaultBuyStrategy);
+		setBuyStrategy(oDefaultBuyStrategy);
 	}	
+	
 	public void setSellStrategy(ISellStrategy oSellStrategy)
 	{
+		if (m_oSellStrategy.equals(oSellStrategy))
+			return;
+
 		m_oSellStrategy = oSellStrategy;
 		addToHistory("Set sell strategy : " + oSellStrategy); 
 	}

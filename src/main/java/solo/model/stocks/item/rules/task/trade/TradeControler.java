@@ -21,9 +21,9 @@ import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
-import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.DropSellTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.SimpleTradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.CommonUtils;
@@ -264,11 +264,13 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public void tradeStart(final TaskTrade oTaskTrade) 
 	{
 		getTradesInfo().tradeStart(oTaskTrade);
+		WorkerFactory.getStockExchange().getManager().tradeStart(oTaskTrade);
 	}
 
 	public void buyDone(final TaskTrade oTaskTrade) 
 	{
 		getTradesInfo().buyDone(oTaskTrade);
+		WorkerFactory.getStockExchange().getManager().buyDone(oTaskTrade);
 	}
 	
 	public void tradeDone(final TaskTrade oTaskTrade)
@@ -277,6 +279,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		m_oTradesInfo.updateOrderInfo(aTaskTrades);
+		WorkerFactory.getStockExchange().getManager().tradeDone(oTaskTrade);
 		
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getTradesInfo().getInfo());
 	}	
@@ -287,6 +290,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		if (nSpendSum.compareTo(BigDecimal.ZERO) != 0 || nBuyVolume.compareTo(BigDecimal.ZERO) != 0)
 			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getRateInfo().toString() +  " Buy : " + MathUtils.toCurrencyStringEx2(nSpendSum) + 
 					" / " + MathUtils.toCurrencyStringEx2(nBuyVolume));
+		WorkerFactory.getStockExchange().getManager().addBuy(nSpendSum, nBuyVolume);
 	}
 	
 	public void addSell(final BigDecimal nReceivedSum, final BigDecimal nSoldVolume) 
@@ -295,6 +299,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		if (nReceivedSum.compareTo(BigDecimal.ZERO) != 0 || nSoldVolume.compareTo(BigDecimal.ZERO) != 0)
 			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getRateInfo().toString() +  " Sell : " + MathUtils.toCurrencyStringEx2(nReceivedSum) + 
 					" / " + MathUtils.toCurrencyStringEx2(nSoldVolume));
+		WorkerFactory.getStockExchange().getManager().addSell(nReceivedSum, nSoldVolume);
 	}
 	
 	@Override public void setParameter(final String strParameterName, final String strValue)
