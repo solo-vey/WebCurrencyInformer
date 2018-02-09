@@ -10,8 +10,8 @@ import solo.model.stocks.BaseObject;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
-import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ISellStrategy;
 import solo.utils.MathUtils;
 
 public class TradeInfo extends BaseObject implements Serializable

@@ -14,7 +14,7 @@ import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
-import solo.model.stocks.item.rules.task.strategy.CarefullBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.CarefullBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;

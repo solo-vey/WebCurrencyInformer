@@ -7,6 +7,14 @@ import solo.model.stocks.item.rules.task.strategy.controler.DropSellTradeStrateg
 import solo.model.stocks.item.rules.task.strategy.controler.ITradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.controler.ReverseTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.controler.SimpleTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.CarefullBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.IBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ISellStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.NowBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.NowSellStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.QuickBuyExStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.QuickBuyStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.QuickSellStrategy;
 
 public class StrategyFactory
 {
