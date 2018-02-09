@@ -3,10 +3,10 @@ package solo.model.stocks.item.rules.task.strategy;
 import java.util.HashMap;
 import java.util.Map;
 
-import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.ReverseTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.DropSellTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.ITradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.ReverseTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.controler.SimpleTradeStrategy;
 
 public class StrategyFactory
 {
