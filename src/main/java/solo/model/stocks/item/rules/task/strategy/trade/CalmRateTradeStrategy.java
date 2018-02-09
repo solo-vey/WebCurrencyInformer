@@ -60,7 +60,7 @@ public class CalmRateTradeStrategy extends BaseTradeStrategy
 		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
 		final Candlestick oCandlestick = oStockCandlestick.get(oTradesInfo.getRateInfo());
 		
-		for(int nStepCount = 3; nStepCount < oCandlestick.getHistory().size(); nStepCount++)
+		for(int nStepCount = 12; nStepCount < oCandlestick.getHistory().size(); nStepCount++)
 		{
 			final BigDecimal nDelta = oCandlestick.getMinMaxDelta(nStepCount);
 			if (nDelta.compareTo(nMinDelta) < 0)

@@ -25,10 +25,10 @@ public class PeriodTradesBlock implements Serializable
 			for(final Integer nKey : m_oPeriodTrades.keySet())
 			{
 				aRemove.add(nKey);
-				if (nKey == nLastUsePeriod)
+				if (nKey == nPeriod)
 					break;
 			}
-			for(final Integer nRemovePeriod :aRemove)
+			for(final Integer nRemovePeriod : aRemove)
 				m_oPeriodTrades.remove(nRemovePeriod);
 		}
 		

@@ -29,7 +29,7 @@ public class BaseTradeStrategy implements ITradeStrategy
 	public boolean isCreateNewTrade(final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
 	{
 		final int nMaxTrades = oTradeControler.getMaxTrades();
-		return (nMaxTrades < aTaskTrades.size());
+		return (nMaxTrades > aTaskTrades.size());
 	}
 	
 	public void startNewTrade(final ITradeTask oTaskTrade, final TradeControler oTradeControler)
