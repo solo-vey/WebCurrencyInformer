@@ -172,7 +172,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		getTradesInfo().setCurrentState(StringUtils.EMPTY);
 		
-		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		List<ITradeTask> aTaskTrades = getTaskTrades();
 		getTradeStrategy().checkTrades(aTaskTrades, this);
 		
 		final List<ITradeTask> aListRemoveTrades = new LinkedList<ITradeTask>();
@@ -193,6 +193,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 			oTaskTrade.check(oStateAnalysisResult);
 		
+		aTaskTrades = getTaskTrades();
 		if (getTradeStrategy().isCreateNewTrade(aTaskTrades, this))
 			createNewTrade(oStateAnalysisResult, aTaskTrades);	
 	}
@@ -244,6 +245,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			getTradeStrategy().startNewTrade(oTaskTrade, this);
 			oTaskTrade.setTradeControler(this);
 			oTaskTrade.starTask();
+			oTaskTrade.check(oStateAnalysisResult);
 			WorkerFactory.getStockExchange().getRules().addRule(oTaskTrade);
 		}
 		catch(final Exception e) 

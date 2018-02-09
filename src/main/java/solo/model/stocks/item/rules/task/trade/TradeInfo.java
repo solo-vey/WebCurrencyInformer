@@ -56,7 +56,14 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public BigDecimal getDelta()
 	{
-		return m_nReceivedSum.add(m_nSpendSum.negate());
+		BigDecimal nDelta = m_nReceivedSum.add(m_nSpendSum.negate());	
+		if (getNeedSellVolume().compareTo(BigDecimal.ZERO) != 0)
+		{
+			final BigDecimal nNeedSellVolume = getAveragedBoughPrice().multiply(getNeedSellVolume());
+			nDelta = nDelta.add(nNeedSellVolume);
+		}
+		
+		return nDelta;
 	}
 	
 	public BigDecimal getFullDelta()
@@ -65,7 +72,7 @@ public class TradeInfo extends BaseObject implements Serializable
 		
 		if (getNeedSellVolume().compareTo(BigDecimal.ZERO) != 0)
 		{
-			final BigDecimal nNeedSellVolume = calculateCriticalPrice().multiply(getNeedSellVolume());
+			final BigDecimal nNeedSellVolume = getAveragedBoughPrice().multiply(getNeedSellVolume());
 			nDelta =  nDelta.add(nNeedSellVolume);
 		}
 		
