@@ -276,6 +276,7 @@ public class ExmoStockSource extends BaseStockSource
 			try { Thread.sleep(250); }
 			catch (InterruptedException e) { break; }
 			nTryCount -= (oGetOrder.isException() ? 1 : 5);
+			System.out.println("Get order repeat : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getState());
 		}
 		
 		return oGetOrder;
