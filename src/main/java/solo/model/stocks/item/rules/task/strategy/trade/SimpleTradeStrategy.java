@@ -13,7 +13,6 @@ import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
-import solo.transport.MessageLevel;
 
 public class SimpleTradeStrategy extends BaseTradeStrategy
 {
@@ -56,20 +55,7 @@ public class SimpleTradeStrategy extends BaseTradeStrategy
 	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
-		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
-		if (oRemoveOrder.isException())
-			return;
-		
-		oTaskTrade.getTradeInfo().getHistory().addToHistory("SimpleTradeStrategy.removeBuyIfSmall Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
-		
-		if (OrderSide.BUY.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
-		{
-			final BigDecimal nDeltaBuyVolume = oTaskTrade.getTradeInfo().getNeedBoughtVolume().add(oRemoveOrder.getVolume().negate());
-			if (nDeltaBuyVolume.compareTo(BigDecimal.ZERO) > 0)
-				oTaskTrade.getTradeInfo().getHistory().addToHistory("SimpleTradeStrategy.removeBuyIfSmall. nDeltaBuyVolume on cancel volume [" + nDeltaBuyVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
-		}
-		oTaskTrade.updateOrderTradeInfo(oRemoveOrder);
+		removeBuyOrder(oTaskTrade, oGetOrder, "SimpleTradeStrategy.removeBuyIfSmall.");
 	}
 	
 	protected void removeSellIfSmall(final ITradeTask oTaskTrade, final TradeControler oTradeControler)
@@ -96,20 +82,7 @@ public class SimpleTradeStrategy extends BaseTradeStrategy
 	    if (null == oGetOrder.getCreated() || oGetOrder.getCreated().after(oFithteenMinutesDateCreate))
 	    	return;
 		
-		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
-		if (oRemoveOrder.isException())
-			return;
-		
-		oTaskTrade.getTradeInfo().getHistory().addToHistory("SimpleTradeStrategy.removeSellIfSmall Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
-	
-		if (OrderSide.SELL.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
-		{
-			final BigDecimal nDeltaSellVolume = oTaskTrade.getTradeInfo().getNeedSellVolume().add(oRemoveOrder.getVolume().negate());
-			if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) > 0)
-				oTaskTrade.getTradeInfo().getHistory().addToHistory("SimpleTradeStrategy.removeSellIfSmall. nDeltaBuyVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
-		}
-		oTaskTrade.updateOrderTradeInfo(oRemoveOrder);
+		removeSellOrder(oTaskTrade, oGetOrder, "SimpleTradeStrategy.removeSellIfSmall");
 	}
 	
 	public boolean isCreateNewTrade(final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
