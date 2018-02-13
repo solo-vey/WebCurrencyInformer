@@ -48,6 +48,10 @@ public class GetStockInfoCommand extends BaseCommand
 			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
+				if (oCurrencyInfo.getValue().getBalance().compareTo(new BigDecimal(0.000001)) < 0 && 
+					oCurrencyInfo.getValue().getLocked().compareTo(new BigDecimal(0.000001)) < 0)
+						continue;
+				
 				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
 								(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
 								+ "\r\n";

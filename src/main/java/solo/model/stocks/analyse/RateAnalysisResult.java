@@ -37,11 +37,9 @@ public class RateAnalysisResult extends BaseObject
     	filterOrders(m_oBidsOrders, m_oAsksOrders.get(0).getPrice().divide(new BigDecimal(2)), m_oAsksOrders.get(0).getPrice());
     	filterOrders(m_oAsksOrders, m_oBidsOrders.get(0).getPrice(), m_oBidsOrders.get(0).getPrice().multiply(new BigDecimal(2)));
     	
-    	final double nCurrencyVolume = oStockExchange.getStockCurrencyVolume(oRateInfo.getCurrencyTo()).getVolume().doubleValue();
-    	
-    	m_oAsksAnalysisResult = new OrderAnalysisResult(m_oAsksOrders, nCurrencyVolume, nCurrencyVolume);
-    	m_oBidsAnalysisResult = new OrderAnalysisResult(m_oBidsOrders, nCurrencyVolume, nCurrencyVolume);
-    	m_oTradesAnalysisResult = new OrderAnalysisResult(m_oTrades, nCurrencyVolume, nCurrencyVolume);
+    	m_oAsksAnalysisResult = new OrderAnalysisResult(m_oAsksOrders);
+    	m_oBidsAnalysisResult = new OrderAnalysisResult(m_oBidsOrders);
+    	m_oTradesAnalysisResult = new OrderAnalysisResult(m_oTrades);
 	}
 
 	private void filterOrders(final List<Order> oOrders, BigDecimal nMinPrice, BigDecimal nMaxPrice)

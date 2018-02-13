@@ -1,5 +1,6 @@
 package solo.model.stocks.item.command.system;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 
@@ -44,9 +45,8 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
     	for(final RateInfo oRateInfo : aRates)
     	{
 			final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
-			strMessage += oRateInfo.toString() + "\r\n"; 
-			strMessage += getRateData(oRateInfo, oAnalysisResult);
-			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo) + "\r\n\r\n";
+			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo) + "\r\n"; 
+			strMessage += getRateData(oRateInfo, oAnalysisResult) + "\r\n";
     	}
 		
     	WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
@@ -57,16 +57,24 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		if (null == oAnalysisResult)
 			return StringUtils.EMPTY;
 		
-		String strData =  "Sell : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getBestPrice()) + 
-							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
-		strData += "Buy : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getBidsAnalysisResult().getBestPrice()) + 
-							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice()) + "\r\n";   
-		strData += "Trades : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getTradesAnalysisResult().getBestPrice()) + 
-							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getTradesAnalysisResult().getAverageAllSumPrice()) + "\r\n";
-		strData += "Delta : " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getBestPrice().add(oAnalysisResult.getBidsAnalysisResult().getBestPrice().negate())) + 
-							" / " + MathUtils.toCurrencyStringEx3(oAnalysisResult.getAsksAnalysisResult().getAverageAllSumPrice().add(oAnalysisResult.getBidsAnalysisResult().getAverageAllSumPrice().negate())) + 
-							" / " + MathUtils.toCurrencyStringEx3(TradeUtils.getCommisionValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice(), oAnalysisResult.getBidsAnalysisResult().getBestPrice())
-																	.add(TradeUtils.getMarginValue(oAnalysisResult.getAsksAnalysisResult().getBestPrice()))) + "\r\n";
+		final BigDecimal nAskPrice = oAnalysisResult.getAsksAnalysisResult().getBestPrice();
+		final BigDecimal nBidPrice = oAnalysisResult.getBidsAnalysisResult().getBestPrice();
+		
+		final BigDecimal nDelta = nAskPrice.add(nBidPrice.negate());
+		final BigDecimal nCommisionAndMargin = TradeUtils.getCommisionValue(nAskPrice, nBidPrice).add(TradeUtils.getMarginValue(nAskPrice));
+		
+		final BigDecimal nQuarterDelta = MathUtils.getBigDecimal(nDelta.doubleValue() / 4, TradeUtils.getPricePrecision(oRateInfo));
+		final BigDecimal nAskBottomPrice = nAskPrice.add(nQuarterDelta.negate());
+		final BigDecimal nBidTopPrice = nBidPrice.add(nQuarterDelta);
+		final BigDecimal nTradePrice = oAnalysisResult.getTradesAnalysisResult().getBestPrice();
+		final String strTradeType = (nTradePrice.compareTo(nAskBottomPrice) > 0 ? "^" : nTradePrice.compareTo(nBidTopPrice) < 0 ? "v" : "-");
+		
+		String strData = MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
+						MathUtils.toCurrencyStringEx3(nBidPrice) + " / " +  
+						MathUtils.toCurrencyStringEx3(nTradePrice) + "[" + strTradeType + "]\r\n";
+		strData += MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
+					MathUtils.toCurrencyStringEx3(nCommisionAndMargin) + " / " + 
+					MathUtils.toCurrencyStringEx3(nDelta.add(nCommisionAndMargin.negate())) + "\r\n";
 		return strData;
 	}
 }

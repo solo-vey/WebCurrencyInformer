@@ -36,65 +36,10 @@ public class CryptopiaStockSource extends BaseStockSource
 		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
 		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
 				
-		m_aAllRates.add(new RateInfo(Currency.USD, Currency.RUB));
-
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.RUB));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.PLN));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USDT));
-		
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.RUB));
-
-		m_aAllRates.add(new RateInfo(Currency.DOGE, Currency.BTC));
-		
-		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.RUB));
-
 		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.LTC));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.RUB));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.PLN));
+		
 		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USDT));
-		
-		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.RUB));
-
-		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.EUR));
-		
-		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.KICK, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.KICK, Currency.ETH));
-		
-		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.RUB));
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.ETH));
+		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USDT));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -105,15 +50,15 @@ public class CryptopiaStockSource extends BaseStockSource
 		final String strMarket = getRateIdentifier(oRateInfo); 
 		final String strOrderBookUrl = m_strOrdersUrl.replace("#rate#", strMarket);
 		final Map<String, Object> oAllOrders = RequestUtils.sendGetAndReturnMap(strOrderBookUrl, true, RequestUtils.DEFAULT_TEMEOUT);
-		final Map<String, Object> oRateOrders = (Map<String, Object>) oAllOrders.get(strMarket);
-		final List<Order> oAsksOrders = convert2Orders((List<Object>) oRateOrders.get("ask"));
-		final List<Order> oBidsOrders = convert2Orders((List<Object>) oRateOrders.get("bid"));
+		final Map<String, Object> oRateOrders = (Map<String, Object>) oAllOrders.get("Data");
+		final List<Order> oAsksOrders = convert2Orders((List<Object>) oRateOrders.get("Sell"));
+		final List<Order> oBidsOrders = convert2Orders((List<Object>) oRateOrders.get("Buy"));
 		oRateState.setAsksOrders(oAsksOrders);
 		oRateState.setBidsOrders(oBidsOrders);
 		
 		final String strTradesUrl = m_strTradesUrl.replace("#rate#", strMarket);
 		final Map<String, Object> oTrades = RequestUtils.sendGetAndReturnMap(strTradesUrl, true, RequestUtils.DEFAULT_TEMEOUT);
-		final List<Object> oRateTrades = (List<Object>) oTrades.get(strMarket);
+		final List<Object> oRateTrades = (List<Object>) oTrades.get("Data");
 		final List<Order> oTradeOrders = convert2Orders(oRateTrades);
 		oRateState.setTrades(oTradeOrders);
 		
@@ -133,66 +78,36 @@ public class CryptopiaStockSource extends BaseStockSource
 		
 		final Order oOrder = new Order();
 		
-		if (oInputOrder instanceof List<?>)
-		{
-			final List<Object> oListParams = (List<Object>)oInputOrder;  
-			oOrder.setPrice(MathUtils.fromString(oListParams.get(0).toString()));
-			oOrder.setState(Order.WAIT);
-			oOrder.setVolume(MathUtils.fromString(oListParams.get(1).toString()));
-		}
-		
 		if (oInputOrder instanceof Map<?, ?>)
 		{
 			final Map<String, Object> oMapOrder = (Map<String, Object>)oInputOrder;  
-			if (null != oMapOrder.get("trade_id"))
-				oOrder.setId(oMapOrder.get("trade_id").toString());
-			else
-			if (null != oMapOrder.get("order_id"))
-				oOrder.setId(oMapOrder.get("order_id").toString());
 
-			if (null != oMapOrder.get("type"))
-				oOrder.setSide(oMapOrder.get("type").toString());
-			else if (null != oMapOrder.get("order_type"))
-				oOrder.setSide(oMapOrder.get("order_type").toString());
+			if (null != oMapOrder.get("OrderId"))
+				oOrder.setId(oMapOrder.get("OrderId").toString());
 
-			if (null != oMapOrder.get("price"))
-				oOrder.setPrice(MathUtils.fromString(oMapOrder.get("price").toString()));
-			else
-			if (null != oMapOrder.get("out_amount") && null != oMapOrder.get("in_amount"))
-			{
-				final BigDecimal nOutAmount = MathUtils.fromString(oMapOrder.get("out_amount").toString());
-				final BigDecimal nInAmount = MathUtils.fromString(oMapOrder.get("in_amount").toString());
-				
-				if (nOutAmount.compareTo(BigDecimal.ZERO) > 0 && nInAmount.compareTo(BigDecimal.ZERO) > 0)
-				{
-					if (oOrder.getSide().equals(OrderSide.BUY))
-						oOrder.setPrice(MathUtils.getBigDecimal(nOutAmount.doubleValue() / nInAmount.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION));
-					else
-						oOrder.setPrice(MathUtils.getBigDecimal(nInAmount.doubleValue() / nOutAmount.doubleValue(), TradeUtils.DEFAULT_VOLUME_PRECISION));
-				}
-			}
+			if (null != oMapOrder.get("Type"))
+				oOrder.setSide(oMapOrder.get("Type").toString());
+
+			if (null != oMapOrder.get("Price"))
+				oOrder.setPrice(MathUtils.fromString(oMapOrder.get("Price").toString()));
+
 			
-			if (null != oMapOrder.get("quantity"))
-				oOrder.setVolume(MathUtils.fromString(oMapOrder.get("quantity").toString()));
+			if (null != oMapOrder.get("Volume"))
+				oOrder.setVolume(MathUtils.fromString(oMapOrder.get("Volume").toString()));
 			else
-			if (null != oMapOrder.get("in_amount") && oOrder.getSide().equals(OrderSide.BUY))
-				oOrder.setVolume(MathUtils.fromString(oMapOrder.get("in_amount").toString()));
-			else
-			if (null != oMapOrder.get("out_amount") && oOrder.getSide().equals(OrderSide.SELL))
-					oOrder.setVolume(MathUtils.fromString(oMapOrder.get("out_amount").toString()));
+			if (null != oMapOrder.get("Amount"))
+				oOrder.setVolume(MathUtils.fromString(oMapOrder.get("Amount").toString()));
 			
-			if (null != oMapOrder.get("date"))
-			{
-				final Integer nDate = (Integer)oMapOrder.get("date");
-				oOrder.setCreated(new Date(((long)nDate) * 1000));
-			}
 
-			if (null != oMapOrder.get("created"))
+			if (null != oMapOrder.get("Timestamp"))
 			{
-				final String strDate = oMapOrder.get("created").toString();
+				final String strDate = oMapOrder.get("Timestamp").toString();
 				final Long nDate = Long.decode(strDate);
-				oOrder.setCreated(new Date(((long)nDate) * 1000));
+				oOrder.setCreated(new Date((long)nDate));
 			}
+			
+			if (null != oMapOrder.get("TimeStamp"))
+				oOrder.setCreated(oMapOrder.get("TimeStamp").toString(), "yyyy-MM-dd HH:mm:ss");
 			
 			oOrder.setState(Order.WAIT);
 		}

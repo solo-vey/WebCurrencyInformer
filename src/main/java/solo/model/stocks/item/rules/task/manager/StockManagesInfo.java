@@ -33,7 +33,7 @@ public class StockManagesInfo extends BaseObject implements Serializable
 		m_oTotal.addTrade(oTaskTrade);
 		
 		final Calendar oCalendar = Calendar.getInstance();
-		m_oMonthsTotal.addTrade(oCalendar.get(Calendar.MONTH + 1), oTaskTrade);
+		m_oMonthsTotal.addTrade(oCalendar.get(Calendar.MONTH) + 1, oTaskTrade);
 		m_oDaysTotal.addTrade(oCalendar.get(Calendar.DAY_OF_MONTH), oTaskTrade);
 		m_oHoursTotal.addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
 	}
@@ -55,18 +55,28 @@ public class StockManagesInfo extends BaseObject implements Serializable
 	
 	public String asString(final String strType)
 	{
+		final Calendar oCalendar = Calendar.getInstance();
 		if (strType.equalsIgnoreCase("TOTAL") || StringUtils.isBlank(strType))
 			return m_oTotal.toString();
 		
 		if (strType.equalsIgnoreCase("HOURS"))
 			return m_oHoursTotal.toString();
 		
+		if (strType.equalsIgnoreCase("HOUR"))
+			return m_oHoursTotal.m_oPeriodTrades.get(oCalendar.get(Calendar.HOUR_OF_DAY)).toString();
+		
 		if (strType.equalsIgnoreCase("DAYS"))
 			return m_oDaysTotal.toString();
+		
+		if (strType.equalsIgnoreCase("DAY"))
+			return m_oDaysTotal.m_oPeriodTrades.get(oCalendar.get(Calendar.DAY_OF_MONTH)).toString();
 		
 		if (strType.equalsIgnoreCase("MONTHS"))
 			return m_oMonthsTotal.toString();
 		
-		return "Unknown type [" + strType + "] of info [TOTAL, HOURS, DAYS, MONTHS]";
+		if (strType.equalsIgnoreCase("MONTH"))
+			return m_oMonthsTotal.m_oPeriodTrades.get(oCalendar.get(Calendar.MONTH) + 1).toString();
+		
+		return "Unknown type [" + strType + "] of info [TOTAL, HOURS, HOUR, DAYS, DAY, MONTHS, MONTH]";
 	}
 }

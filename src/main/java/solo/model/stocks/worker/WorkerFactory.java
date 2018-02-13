@@ -47,6 +47,7 @@ public class WorkerFactory
 //		(new MainWorker(Stocks.Kuna)).startWorker();
 //		(new MainWorker(Stocks.BtcTrade)).startWorker();
 		(new MainWorker(Stocks.Exmo)).startWorker();
+		(new MainWorker(Stocks.Cryptopia)).startWorker();
 		
 		s_oRootWorker.startWorker();
 		s_oRootWorker.run();

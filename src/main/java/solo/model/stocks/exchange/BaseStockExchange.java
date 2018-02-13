@@ -1,16 +1,11 @@
 package solo.model.stocks.exchange;
 
-import java.util.HashMap;
-import java.util.Map;
-
 import org.apache.commons.lang.StringUtils;
 
-import solo.model.currency.Currency;
 import solo.model.stocks.analyse.IStateAnalysis;
 import solo.model.stocks.analyse.SimpleStateAnalysis;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Rules;
-import solo.model.stocks.item.StockCurrencyVolume;
 import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.StockManager;
@@ -27,7 +22,6 @@ public class BaseStockExchange implements IStockExchange
 	final protected String m_strStockName;
 	final protected String m_strStockProperies;
 	protected IStockSource m_oStockSource;
-	final protected Map<Currency, StockCurrencyVolume> m_oStockCurrencyVolumes = new HashMap<Currency, StockCurrencyVolume>(); 
 	final protected Rules m_oRules;
 	final StateAnalysisResult m_oLastAnalysisResult;
 	final IStateAnalysis m_oStateAnalysis = new SimpleStateAnalysis();
@@ -75,11 +69,6 @@ public class BaseStockExchange implements IStockExchange
 	public IStateAnalysis getAnalysis()
 	{
 		return m_oStateAnalysis;
-	}
-	
-	public StockCurrencyVolume getStockCurrencyVolume(final Currency oCurrency)
-	{
-		return (null != m_oStockCurrencyVolumes.get(oCurrency) ? m_oStockCurrencyVolumes.get(oCurrency) : new StockCurrencyVolume(oCurrency, 1.0));
 	}
 	
 	public Rules getRules()

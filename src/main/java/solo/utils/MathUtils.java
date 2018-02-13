@@ -47,7 +47,7 @@ public class MathUtils
 		if (null == oValue)
 			return "NaN";
 		
-		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= 0)
+		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= -10)
 		{
 			final DecimalFormat oDecimalFormat = new DecimalFormat("#,###.##");
 			return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, ',').trim();
