@@ -34,6 +34,7 @@ public class StrategyFactory
 		
 		addSellStrategy(new QuickSellStrategy());
 		addSellStrategy(new NowSellStrategy());
+		addSellStrategy(new HalfSellStrategy());
 		
 		addTradeStrategy(new SimpleTradeStrategy());
 		addTradeStrategy(new DropSellTradeStrategy());
