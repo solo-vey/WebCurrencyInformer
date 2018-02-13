@@ -40,7 +40,7 @@ public class CurrencyTradesBlock implements Serializable
 				nSpendSumInCurrency = nSpendSumInCurrency.add(nNeedSellSum.negate());
 			}
 			
-			final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidsAnalysisResult().getBestPrice();
+			final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBestBidPrice();
 			final BigDecimal nSpendSum = nSpendSumInCurrency.multiply(oBtcBidPrice);
 			final BigDecimal nReceivedSum = oTaskTrade.getTradeInfo().getReceivedSum().multiply(oBtcBidPrice);
 			final TradeInfo oBtcTradeInfo = new TradeInfo(oRateInfo, -1);

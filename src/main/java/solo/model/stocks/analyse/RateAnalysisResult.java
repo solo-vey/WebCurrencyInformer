@@ -10,13 +10,11 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockRateStates;
+import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 
 public class RateAnalysisResult extends BaseObject
 {
 	final protected RateInfo m_oRateInfo;
-	final protected OrderAnalysisResult m_oAsksAnalysisResult;
-	final protected OrderAnalysisResult m_oBidsAnalysisResult;
-	final protected OrderAnalysisResult m_oTradesAnalysisResult;
 
 	final protected List<Order> m_oAsksOrders;
 	final protected List<Order> m_oBidsOrders;
@@ -36,10 +34,6 @@ public class RateAnalysisResult extends BaseObject
     	
     	filterOrders(m_oBidsOrders, m_oAsksOrders.get(0).getPrice().divide(new BigDecimal(2)), m_oAsksOrders.get(0).getPrice());
     	filterOrders(m_oAsksOrders, m_oBidsOrders.get(0).getPrice(), m_oBidsOrders.get(0).getPrice().multiply(new BigDecimal(2)));
-    	
-    	m_oAsksAnalysisResult = new OrderAnalysisResult(m_oAsksOrders);
-    	m_oBidsAnalysisResult = new OrderAnalysisResult(m_oBidsOrders);
-    	m_oTradesAnalysisResult = new OrderAnalysisResult(m_oTrades);
 	}
 
 	private void filterOrders(final List<Order> oOrders, BigDecimal nMinPrice, BigDecimal nMaxPrice)
@@ -60,19 +54,19 @@ public class RateAnalysisResult extends BaseObject
 		return m_oRateInfo;
 	}
 
-	public OrderAnalysisResult getAsksAnalysisResult()
+	public BigDecimal getBestAskPrice()
 	{
-		return m_oAsksAnalysisResult;
+		return StrategyUtils.getBestPrice(m_oAsksOrders);
 	}
 
-	public OrderAnalysisResult getBidsAnalysisResult()
+	public BigDecimal getBestBidPrice()
 	{
-		return m_oBidsAnalysisResult;
+		return StrategyUtils.getBestPrice(m_oBidsOrders);
 	}
 
-	public OrderAnalysisResult getTradesAnalysisResult()
+	public BigDecimal getTopTradePrice()
 	{
-		return m_oTradesAnalysisResult;
+		return StrategyUtils.getBestPrice(m_oTrades);
 	}
 
 

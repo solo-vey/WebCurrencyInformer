@@ -57,8 +57,8 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		if (null == oAnalysisResult)
 			return StringUtils.EMPTY;
 		
-		final BigDecimal nAskPrice = oAnalysisResult.getAsksAnalysisResult().getBestPrice();
-		final BigDecimal nBidPrice = oAnalysisResult.getBidsAnalysisResult().getBestPrice();
+		final BigDecimal nAskPrice = oAnalysisResult.getBestAskPrice();
+		final BigDecimal nBidPrice = oAnalysisResult.getBestBidPrice();
 		
 		final BigDecimal nDelta = nAskPrice.add(nBidPrice.negate());
 		final BigDecimal nCommisionAndMargin = TradeUtils.getCommisionValue(nAskPrice, nBidPrice).add(TradeUtils.getMarginValue(nAskPrice));
@@ -66,7 +66,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		final BigDecimal nQuarterDelta = MathUtils.getBigDecimal(nDelta.doubleValue() / 4, TradeUtils.getPricePrecision(oRateInfo));
 		final BigDecimal nAskBottomPrice = nAskPrice.add(nQuarterDelta.negate());
 		final BigDecimal nBidTopPrice = nBidPrice.add(nQuarterDelta);
-		final BigDecimal nTradePrice = oAnalysisResult.getTradesAnalysisResult().getBestPrice();
+		final BigDecimal nTradePrice = oAnalysisResult.getTopTradePrice();
 		final String strTradeType = (nTradePrice.compareTo(nAskBottomPrice) > 0 ? "^" : nTradePrice.compareTo(nBidTopPrice) < 0 ? "v" : "-");
 		
 		String strData = MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   

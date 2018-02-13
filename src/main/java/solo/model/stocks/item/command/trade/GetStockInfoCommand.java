@@ -80,7 +80,7 @@ public class GetStockInfoCommand extends BaseCommand
 				if (null == oBtcToCurrencyRate)
 					continue;
 						
-				final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidsAnalysisResult().getBestPrice();
+				final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBestBidPrice();
 				final BigDecimal oVolume = oCurrencyInfo.getValue().getBalance();
 				final BigDecimal oSum = oVolume.multiply(oBtcBidPrice);
 				oTotalBtcSum = oTotalBtcSum.add(oSum);
@@ -100,7 +100,7 @@ public class GetStockInfoCommand extends BaseCommand
 						continue;
 					}
 							
-					final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidsAnalysisResult().getBestPrice();
+					final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBestBidPrice();
 					final BigDecimal oSum = oOrder.getSum().multiply(oBtcBidPrice);
 					oTotalBtcSum = oTotalBtcSum.add(oSum);
 				}
@@ -111,7 +111,7 @@ public class GetStockInfoCommand extends BaseCommand
 			final RateAnalysisResult oBtcToUahRate = getRate(oStockExchange, Currency.UAH, oRateHash);
 			if (null != oBtcToUahRate)
 			{
-				final BigDecimal oBtcBidPrice = oBtcToUahRate.getBidsAnalysisResult().getBestPrice();
+				final BigDecimal oBtcBidPrice = oBtcToUahRate.getBestBidPrice();
 				final BigDecimal oTotalUahSum = MathUtils.getBigDecimal(oTotalBtcSum.doubleValue() / oBtcBidPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
 				strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
 			}
