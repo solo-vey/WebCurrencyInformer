@@ -6,6 +6,7 @@ import java.util.Map;
 
 import solo.model.stocks.exchange.Stocks;
 import solo.transport.telegram.BtcTradeTelegramTransport;
+import solo.transport.telegram.CryptopiaTelegramTransport;
 import solo.transport.telegram.ExmoTelegramTransport;
 import solo.transport.telegram.KunaTelegramTransport;
 
@@ -19,6 +20,7 @@ public class TransportFactory
 		registerTransport(Stocks.Kuna, 		KunaTelegramTransport.class);
 		registerTransport(Stocks.BtcTrade,	BtcTradeTelegramTransport.class);
 		registerTransport(Stocks.Exmo, 		ExmoTelegramTransport.class);
+		registerTransport(Stocks.Cryptopia,	CryptopiaTelegramTransport.class);
 	}
 	
 	static void registerTransport(final Stocks oStock, final Class<?> oClass)

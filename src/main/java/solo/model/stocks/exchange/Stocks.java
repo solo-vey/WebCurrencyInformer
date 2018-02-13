@@ -6,5 +6,6 @@ public enum Stocks
 	Kuna,
 	BtcTrade,
 	Exmo,
+	Cryptopia,
 	Mock;
 }
