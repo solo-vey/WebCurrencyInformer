@@ -33,6 +33,10 @@ public class TradeControler extends TaskBase implements ITradeControler
 {
 	private static final long serialVersionUID = 2548242566461334806L;
 	
+	public static final String TRADE_SUM_PARAMETER = "tradeSum";
+	public static final String TRADE_COUNT_PARAMETER = "tradeCount";
+	public static final String TRADE_STRATEGY_PARAMETER = "tradeStrategy";
+	
 	final static public String TRADE_SUM = "#sum#";
 	final static public String MAX_TARDES = "#count#";
 	final static public String STRATEGY = "#strategy#";
@@ -59,7 +63,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		m_nMaxTrades = getParameterAsInt(MAX_TARDES, 1);
 		final BigDecimal nTradeSum = getParameterAsBigDecimal(TRADE_SUM);
 		getTradesInfo().setSum(nTradeSum, m_nMaxTrades);
-		m_oTradeStrategy = getParameterAsTradeStrategy(STRATEGY, TradeUtils.getTradeStrategy(m_oRateInfo));
+		setDefaultTradeStrategy();
 	}
 	
 	@Override public String getType()
@@ -71,6 +75,20 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		super.setID(nID);
 		getTradesInfo().setRuleID(nID);
+	}
+	
+	public void setDefaultTradeStrategy()
+	{
+		setTradeStrategy(getParameterAsTradeStrategy(STRATEGY, TradeUtils.getTradeStrategy(m_oRateInfo)));
+	}
+	
+	public void setTradeStrategy(final ITradeStrategy oTradeStrategy)
+	{
+		if (null == oTradeStrategy || (null != m_oTradeStrategy && m_oTradeStrategy.equals(oTradeStrategy)))
+			return;
+		
+		m_oTradeStrategy = oTradeStrategy;
+		getTradesInfo().addToHistory("Set trade strategy [" + m_oTradeStrategy.getName() + "]");
 	}
 	
 	public String getInfo()
@@ -103,10 +121,10 @@ public class TradeControler extends TaskBase implements ITradeControler
     	strInfo += "\r\n" + GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
 		
 		strInfo += "\r\n[" + getTradeStrategy().getName() + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-				SetTaskParameterCommand.NAME_PARAMETER, "tradeStrategy", SetTaskParameterCommand.VALUE_PARAMETER, 
+				SetTaskParameterCommand.NAME_PARAMETER, TRADE_STRATEGY_PARAMETER, SetTaskParameterCommand.VALUE_PARAMETER, 
 					(getTradeStrategy().getName().equals(SimpleTradeStrategy.NAME) ? DropSellTradeStrategy.NAME : SimpleTradeStrategy.NAME)) + "\r\n";
 		strInfo += "[" + m_nMaxTrades + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-				SetTaskParameterCommand.NAME_PARAMETER, "tradeCount", SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n";
+				SetTaskParameterCommand.NAME_PARAMETER, TRADE_COUNT_PARAMETER, SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n";
 		return getTradesInfo().getInfo() + "\r\n" + strInfo +
 				CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
 	}
@@ -303,19 +321,37 @@ public class TradeControler extends TaskBase implements ITradeControler
 		WorkerFactory.getStockExchange().getManager().addSell(nReceivedSum, nSoldVolume);
 	}
 	
+	@Override public String getParameter(final String strParameterName)
+	{
+		if (strParameterName.equalsIgnoreCase(TRADE_COUNT_PARAMETER))
+			return m_nMaxTrades.toString();
+		
+		if (strParameterName.equalsIgnoreCase(TRADE_SUM_PARAMETER))
+			getTradesInfo().getSum().toString();	
+		
+		if (strParameterName.equalsIgnoreCase(TRADE_STRATEGY_PARAMETER))
+			return m_oTradeStrategy.getName();
+		
+		if (strParameterName.equalsIgnoreCase(TradeControler.MAX_TARDES))
+			return StringUtils.isBlank(super.getParameter(MAX_TARDES)) ? "1" : super.getParameter(MAX_TARDES);
+
+		return super.getParameter(strParameterName);
+	}
+	
 	@Override public void setParameter(final String strParameterName, final String strValue)
 	{		
-		if (strParameterName.equalsIgnoreCase("tradeCount"))
+		if (strParameterName.equalsIgnoreCase(TRADE_COUNT_PARAMETER))
 			m_nMaxTrades = Integer.decode(strValue);
 	
-		if (strParameterName.equalsIgnoreCase("tradeSum"))
+		if (strParameterName.equalsIgnoreCase(TRADE_SUM_PARAMETER))
 			getTradesInfo().setSum(new BigDecimal(Integer.decode(strValue)), m_nMaxTrades);	
 		
-		if (strParameterName.equalsIgnoreCase("tradeStrategy"))
+		if (strParameterName.equalsIgnoreCase(TRADE_STRATEGY_PARAMETER))
 		{
-			final ITradeStrategy oTradeStrategy = StrategyFactory.getTradeStrategy(strValue);
-			if (null != oTradeStrategy)
-				m_oTradeStrategy = oTradeStrategy;
+			if (strValue.equalsIgnoreCase("default"))
+				setDefaultTradeStrategy();
+			else
+				setTradeStrategy(StrategyFactory.getTradeStrategy(strValue));
 		}
 		
 		if (strParameterName.equalsIgnoreCase("addNeedSellVolume"))
