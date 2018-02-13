@@ -78,22 +78,29 @@ public class TelegramTransport implements ITransport
 		return getApiUrl().replace("METHOD_NAME", "deleteMessage");
 	}
 	
-	@Override public Object sendMessage(final String strText) throws Exception
+	@Override public Object sendMessage(final String strText)
 	{
 		if (StringUtils.isBlank(strText))
 			return null;
 		
-		final boolean bIsSystem = strText.startsWith("SYSTEM\r\n");
-		deleteLastSystemMessage(bIsSystem);
+		try
+		{
+			final boolean bIsSystem = strText.startsWith("SYSTEM\r\n");
+			final boolean bIsManager = strText.startsWith("MANAGER\r\n");
+			deleteLastSystemMessage(bIsSystem);
+			
+			final Map<String, String> aParameters = new HashMap<String, String>();
+			aParameters.put("chat_id", (bIsSystem || bIsManager ? m_strSystemUserID : m_strUserID));
+			aParameters.put("text", strText.replace("SYSTEM\r\n", StringUtils.EMPTY));
+			final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
+			oResult.put("message", oResult.get("result"));
+			final TelegramMessage oMessage = new TelegramMessage(oResult);
+			saveLastSystemMessageID(bIsSystem, oMessage.getID());
+			return oResult;
+		}
+		catch(final Exception e) {}
 		
-		final Map<String, String> aParameters = new HashMap<String, String>();
-		aParameters.put("chat_id", (bIsSystem ? m_strSystemUserID : m_strUserID));
-		aParameters.put("text", strText.replace("SYSTEM\r\n", StringUtils.EMPTY));
-		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
-		oResult.put("message", oResult.get("result"));
-		final TelegramMessage oMessage = new TelegramMessage(oResult);
-		saveLastSystemMessageID(bIsSystem, oMessage.getID());
-		return oResult;
+		return null;
 	}
 	
 	@Override public void deleteMessage(final String strMessageID) throws Exception
