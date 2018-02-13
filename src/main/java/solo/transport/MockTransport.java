@@ -11,7 +11,7 @@ public class MockTransport implements ITransport
 		return "Mock";
 	}
 
-	@Override public Object sendMessage(final String strText) throws Exception
+	@Override public Object sendMessage(final String strText)
 	{
 		System.out.println(strText);
 		return strText;
