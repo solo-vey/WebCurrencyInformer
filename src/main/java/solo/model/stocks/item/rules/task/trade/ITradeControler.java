@@ -18,7 +18,9 @@ public interface ITradeControler extends Serializable
 	void tradeDone(final TaskTrade oTaskTrade);
 	void buyDone(final TaskTrade oTaskTrade);
 	void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume); 
-	void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume); 
+	void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume);
+	String getParameter(final String strParameterName);
+	void setParameter(final String strParameterName, final String strValue);
 }
 
 class NullTradeControler implements ITradeControler
@@ -32,4 +34,6 @@ class NullTradeControler implements ITradeControler
 	public void buyDone(final TaskTrade oTaskTrade) {}
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {} 
 	public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {} 
+	public String getParameter(final String strParameterName) { return null; }
+	public void setParameter(final String strParameterName, final String strValue) {} 
 }
