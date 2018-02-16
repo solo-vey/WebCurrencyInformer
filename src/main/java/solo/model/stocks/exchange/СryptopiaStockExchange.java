@@ -1,6 +1,7 @@
 package solo.model.stocks.exchange;
 
 import solo.model.stocks.source.CryptopiaStockSource;
+import solo.model.stocks.source.TestStockSource;
 
 public class СryptopiaStockExchange extends BaseStockExchange
 {
@@ -10,6 +11,7 @@ public class СryptopiaStockExchange extends BaseStockExchange
 	public СryptopiaStockExchange()
 	{
 		super(NAME, PROPERIES_FILE);
-		m_oStockSource = new CryptopiaStockSource(this);
+		final CryptopiaStockSource oRealStockSource = new CryptopiaStockSource(this);
+		m_oStockSource = new TestStockSource(this, oRealStockSource);
 	}
 }
