@@ -38,10 +38,17 @@ public class TradesInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nBuyVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO;
 	
+	protected boolean m_bIsTest = false;
+	
 	public TradesInfo(final RateInfo oRateInfo, final int nRuleID)
 	{
 		m_oRateInfo = oRateInfo;
 		m_nRuleID = nRuleID;
+	}
+	
+	public boolean getIsTest()
+	{
+		return m_bIsTest;
 	}
 	
 	public RateInfo getRateInfo()
@@ -173,6 +180,11 @@ public class TradesInfo extends BaseObject implements Serializable
 
 		m_nSoldVolume = m_nSoldVolume.add(nSoldVolume);
 		m_nVolume = m_nVolume.add(nSoldVolume.negate());
+	}
+	
+	public void setIsTest(final boolean bIsTest)
+	{
+		m_bIsTest = bIsTest;
 	}
 	
 	public void setRuleID(final Integer nRuleID)

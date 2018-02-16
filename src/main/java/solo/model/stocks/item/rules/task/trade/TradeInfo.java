@@ -38,7 +38,9 @@ public class TradeInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nBoughtVolume = BigDecimal.ZERO; 
 	protected BigDecimal m_nNeedBoughtVolume = BigDecimal.ZERO; 
 	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
-	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO; 
+	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO;
+	
+	protected boolean m_bIsTest = false;
 	
 	public TradeInfo(final RateInfo oRateInfo, final int nRuleID)
 	{
@@ -82,6 +84,11 @@ public class TradeInfo extends BaseObject implements Serializable
 	public Integer getRuleID()
 	{
 		return m_nRuleID;
+	}
+		
+	public boolean getIsTest()
+	{
+		return m_bIsTest;
 	}
 	
 	public TradeHistory getHistory()
@@ -146,7 +153,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public BigDecimal getMinCriticalPrice()
 	{
-		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(getAveragedBoughPrice());
+		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(getAveragedBoughPrice(), getRateInfo());
 		return getAveragedBoughPrice().add(nTradeMargin);
 	}
 
@@ -199,6 +206,11 @@ public class TradeInfo extends BaseObject implements Serializable
 	public BigDecimal getSoldVolume()
 	{
 		return m_nSoldVolume;
+	}
+	
+	public void setIsTest(final boolean bIsTest)
+	{
+		m_bIsTest = bIsTest;
 	}
 	
 	public void setOrder(Order oOrder)
