@@ -30,17 +30,19 @@ import solo.utils.ResourceUtils;
 
 public class TestStockSource extends BaseStockSource
 {
+	final IStockSource m_oRealStockSource;
 	final TestStockSourceData m_oStockSourceData;
 	
 	public TestStockSource(final IStockExchange oStockExchange, IStockSource oRealStockSource)
 	{
 		super(oStockExchange);
-		m_oStockSourceData = new TestStockSourceData(oStockExchange.getStockName(), oRealStockSource);
+		m_oRealStockSource = oRealStockSource;
+		m_oStockSourceData = new TestStockSourceData(oStockExchange.getStockName());
 	}
 	
 	@Override public RateState getRateState(final RateInfo oRateInfo) throws Exception
 	{
-		final RateState oRateState = m_oStockSourceData.getRealStockSource().getRateState(oRateInfo);
+		final RateState oRateState = m_oRealStockSource.getRateState(oRateInfo);
 		checkOrders(oRateInfo, oRateState);
 		return oRateState;
 	}
@@ -200,23 +202,16 @@ class TestStockSourceData implements Serializable
 {
 	private static final long serialVersionUID = -4224697724800230874L;
 	
-	final IStockSource m_oRealStockSource;
 	final Map<RateInfo, List<Order>> m_oRateOrders = new HashMap<RateInfo, List<Order>>();
 	final List<Order> m_oRemoveOrders = new LinkedList<Order>();
 	final List<Order> m_oDoneOrders = new LinkedList<Order>();
 	final Map<RateInfo, Date> m_aLastTradeOrder = new HashMap<RateInfo, Date>();
 	final String m_strStockExchangeName;
 	
-	public TestStockSourceData(final String strStockExchangeName, IStockSource oRealStockSource)
+	public TestStockSourceData(final String strStockExchangeName)
 	{
-		m_oRealStockSource = oRealStockSource;
 		m_strStockExchangeName = strStockExchangeName;
 		load();
-	}
-
-	public IStockSource getRealStockSource()
-	{
-		return m_oRealStockSource;
 	}
 
 	public Map<RateInfo, List<Order>> getRateOrders()
