@@ -1,7 +1,5 @@
 package solo.model.stocks.item.command.trade;
 
-import org.apache.commons.lang.StringUtils;
-
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
@@ -15,7 +13,7 @@ import solo.utils.CommonUtils;
  */
 public class GetTradeInfoCommand extends BaseCommand
 {
-	final static public String NAME = "tradeInfo";
+	final static public String NAME = "trade";
 	final static public String RULE_ID_PARAMETER = "#ruleID#";
 	final static public String FULL_PARAMETER = "#isFull#";
 	
@@ -24,7 +22,7 @@ public class GetTradeInfoCommand extends BaseCommand
 	
 	public GetTradeInfoCommand(final String strСommandLine)
 	{
-		super(strСommandLine, CommonUtils.mergeParameters(RULE_ID_PARAMETER, FULL_PARAMETER));
+		super(strСommandLine, CommonUtils.mergeParameters(RULE_ID_PARAMETER));
 		m_nRuleID = getParameterAsInt(RULE_ID_PARAMETER);
 		m_bIsFull = getParameterAsBoolean(FULL_PARAMETER);
 	}
@@ -47,10 +45,10 @@ public class GetTradeInfoCommand extends BaseCommand
 		String strMessage = oRule.getInfo();
 		
 		if (null != oTradeTask)
-			strMessage = (m_bIsFull ? oTradeTask.getTradeInfo() + "\r\n" : StringUtils.EMPTY) + oTradeTask.getTradeInfo().getInfo();
+			strMessage = oTradeTask.getTradeInfo() + "\r\n" + oTradeTask.getTradeInfo().getInfo();
 		else
 		if (null != oTradeControler)
-			strMessage = (m_bIsFull ? oTradeControler.getTradesInfo() + "\r\n" : StringUtils.EMPTY) + oTradeControler.getFullInfo();
+			strMessage = oTradeControler.getTradesInfo() + "\r\n" + oTradeControler.getFullInfo();
 
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}

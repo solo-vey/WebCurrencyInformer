@@ -22,8 +22,8 @@ import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.source.utils.Exmo;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
-import ua.lz.ep.utils.JsonUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.JsonUtils;
+import solo.utils.ResourceUtils;
 
 public class CryptopiaStockSource extends BaseStockSource
 {
@@ -103,7 +103,7 @@ public class CryptopiaStockSource extends BaseStockSource
 			{
 				final String strDate = oMapOrder.get("Timestamp").toString();
 				final Long nDate = Long.decode(strDate);
-				oOrder.setCreated(new Date((long)nDate));
+				oOrder.setCreated(new Date(((long)nDate) * 1000));
 			}
 			
 			if (null != oMapOrder.get("TimeStamp"))

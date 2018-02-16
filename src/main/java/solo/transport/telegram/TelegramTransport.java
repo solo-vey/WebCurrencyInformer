@@ -20,9 +20,9 @@ import solo.CurrencyInformer;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
+import solo.utils.JsonUtils;
 import solo.utils.RequestUtils;
-import ua.lz.ep.utils.JsonUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class TelegramTransport implements ITransport
 {

@@ -6,8 +6,11 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+
 import solo.CurrencyInformer;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
@@ -16,12 +19,13 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
+import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class BaseStockSource implements IStockSource
 {
@@ -63,6 +67,11 @@ public class BaseStockSource implements IStockSource
 	public RateState getRateState(RateInfo oRateInfo) throws Exception
 	{
 		return new RateState(oRateInfo);
+	}
+	
+	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
+	{
+		return new HashMap<RateInfo, RateStateShort>();
 	}
 	
 	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception

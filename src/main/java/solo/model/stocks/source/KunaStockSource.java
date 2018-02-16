@@ -19,7 +19,7 @@ import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class KunaStockSource extends BaseStockSource
 {

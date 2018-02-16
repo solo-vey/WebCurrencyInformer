@@ -49,24 +49,24 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 		oAsks = StrategyUtils.removeMyOrders(oAsks, oMyOrders); 
 		oBids = StrategyUtils.removeMyOrders(oBids, oMyOrders);
 		oBids = StrategyUtils.removeFirstTooExpenciveBids(oAsks, oBids);
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids, oRateAnalysisResult.getRateInfo()))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		oAsks = StrategyUtils.removeFakeOrders(oAsks, null, oRateAnalysisResult.getRateInfo()); 
 		oBids = StrategyUtils.removeFakeOrders(oBids, null, oRateAnalysisResult.getRateInfo());
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids, oRateAnalysisResult.getRateInfo()))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		
-		oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks); 
-		oBids = StrategyUtils.removeTooExpenciveOrders(oBids);
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks, oRateAnalysisResult.getRateInfo()); 
+		oBids = StrategyUtils.removeTooExpenciveOrders(oBids, oRateAnalysisResult.getRateInfo());
+		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids, oRateAnalysisResult.getRateInfo()))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		while(true)
 		{
 			oAsks = StrategyUtils.removeTopOrders(oAsks); 
 			oBids = StrategyUtils.removeTopOrders(oBids);
-			if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+			if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids, oRateAnalysisResult.getRateInfo()))
 				return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		}
 	}

@@ -61,7 +61,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		final BigDecimal nBidPrice = oAnalysisResult.getBestBidPrice();
 		
 		final BigDecimal nDelta = nAskPrice.add(nBidPrice.negate());
-		final BigDecimal nCommisionAndMargin = TradeUtils.getCommisionValue(nAskPrice, nBidPrice).add(TradeUtils.getMarginValue(nAskPrice));
+		final BigDecimal nCommisionAndMargin = TradeUtils.getCommisionValue(nAskPrice, nBidPrice).add(TradeUtils.getMarginValue(nAskPrice, oRateInfo));
 		
 		final BigDecimal nQuarterDelta = MathUtils.getBigDecimal(nDelta.doubleValue() / 4, TradeUtils.getPricePrecision(oRateInfo));
 		final BigDecimal nAskBottomPrice = nAskPrice.add(nQuarterDelta.negate());

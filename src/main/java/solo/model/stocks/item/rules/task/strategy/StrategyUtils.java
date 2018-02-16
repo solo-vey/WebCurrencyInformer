@@ -13,7 +13,7 @@ import solo.model.stocks.item.rules.task.trade.TradeUtils;
 
 public class StrategyUtils
 {
-	public static boolean isDeltaTooSmall(List<Order> oAsks, List<Order> oBids)
+	public static boolean isDeltaTooSmall(List<Order> oAsks, List<Order> oBids, final RateInfo oRateInfo)
 	{
 		final BigDecimal nAskPrice = getBestPrice(oAsks);
 		final BigDecimal nBidPrice = getBestPrice(oBids);
@@ -22,7 +22,7 @@ public class StrategyUtils
 			nDelta = nDelta.negate();
 		
 		final BigDecimal nCommision = TradeUtils.getCommisionValue(nBidPrice, nAskPrice);
-		final BigDecimal nMargin = TradeUtils.getMarginValue(nAskPrice);
+		final BigDecimal nMargin = TradeUtils.getMarginValue(nAskPrice, oRateInfo);
 		final BigDecimal nMinDelta = nCommision.add(nMargin);
 		return (nDelta.compareTo(nMinDelta) < 0);
 	}
@@ -40,10 +40,10 @@ public class StrategyUtils
 		return oResult;
 	}
 
-	public static List<Order> removeTooExpenciveOrders(List<Order> oOrders)
+	public static List<Order> removeTooExpenciveOrders(List<Order> oOrders, final RateInfo oRateInfo)
 	{
 		final List<Order> oResult = removeTopOrders(oOrders);
-		if (isDeltaTooSmall(oOrders, oResult))
+		if (isDeltaTooSmall(oOrders, oResult, oRateInfo))
 			return oOrders;
 		
 		return oResult;

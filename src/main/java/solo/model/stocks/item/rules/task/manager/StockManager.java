@@ -22,7 +22,7 @@ import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class StockManager implements IStockManager
 {
@@ -71,7 +71,7 @@ public class StockManager implements IStockManager
 		if (aWorkingControler.size() > 1)
 		{
 			oTaskTrade.getTradeControler().setParameter(TradeControler.TRADE_COUNT_PARAMETER, "0");
-			WorkerFactory.getTransport().sendMessage("MANAGER\r\nStop controler [" + oTaskTrade.getID() + "]");
+			WorkerFactory.getTransport().sendMessage("MANAGER\r\nStop controler [" + oRateInfo + "]");
 		}
 	}
 		
@@ -91,7 +91,7 @@ public class StockManager implements IStockManager
 				continue;
 			
 			oControler.getTradesInfo().getHistory().addToLog("Manager.startAllControlers.");
-			strMessage += "Start controler [" + oRule.getID() + "]\r\n";	
+			strMessage += "Start controler [" + oRateInfo + "]\r\n";	
 			oControler.setParameter(TradeControler.TRADE_COUNT_PARAMETER, oControler.getParameter(TradeControler.MAX_TARDES));
 		}
 		

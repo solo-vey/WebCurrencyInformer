@@ -35,16 +35,16 @@ public class CarefullBuyStrategy extends BaseStrategy implements IBuyStrategy
 
 		oBids = StrategyUtils.removeFirstTooExpenciveBids(oAsks, oBids);
 		oBids = StrategyUtils.removeFakeOrders(oBids, null, oRateAnalysisResult.getRateInfo());
-		oBids = StrategyUtils.removeTooExpenciveOrders(oBids);
+		oBids = StrategyUtils.removeTooExpenciveOrders(oBids, oRateAnalysisResult.getRateInfo());
 
 		final BigDecimal oMinChangePrice = TradeUtils.getMinChangePrice();
-		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+		if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids, oRateAnalysisResult.getRateInfo()))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
 		while(true)
 		{
 			oBids = StrategyUtils.removeTopOrders(oBids);
-			if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids))
+			if (!StrategyUtils.isDeltaTooSmall(oAsks, oBids, oRateAnalysisResult.getRateInfo()))
 				return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		}
 	}

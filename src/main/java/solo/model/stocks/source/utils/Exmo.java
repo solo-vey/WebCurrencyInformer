@@ -6,7 +6,7 @@ import okhttp3.OkHttpClient.Builder;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import solo.CurrencyInformer;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;

@@ -13,7 +13,7 @@ import solo.model.currency.Currency;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.StockRateStates;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class MockStockSource extends BaseStockSource
 {

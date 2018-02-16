@@ -93,10 +93,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	public String getInfo()
 	{
-		String strInfo = getType() + 
-				" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, GetTradeInfoCommand.FULL_PARAMETER, "true") + 
-				"\r\n";  
-		
+		String strInfo = "[" + getRateInfo() + "] ";  		
 		for(final ITradeTask oTaskTrade : getTaskTrades())
 		{
 			final String strOrderSide = (null == oTaskTrade.getTradeInfo().getOrder().getSide() ? "None" : oTaskTrade.getTradeInfo().getOrder().getSide().toString());
@@ -104,8 +101,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 		}
 		strInfo += "[" + m_nMaxTrades + "] ";
 		
-		return strInfo + getTradesInfo().getCurrentState() + 
-				" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
+		return strInfo + 
+			" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID) + 
+			getTradesInfo().getCurrentState();   
 	}
 	
 	public String getFullInfo()
@@ -114,19 +112,21 @@ public class TradeControler extends TaskBase implements ITradeControler
 		
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
-			strInfo += oTaskTrade.getInfo() + "\r\n"; 
+			strInfo += oTaskTrade.getInfo() + " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID) + "\r\n"; 
 		
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult();
     	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
-    	strInfo += "\r\n" + GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
+    	strInfo += "\r\n" + GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult) + 
+    		CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo()) + "\r\n";
 		
 		strInfo += "\r\n[" + getTradeStrategy().getName() + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
 				SetTaskParameterCommand.NAME_PARAMETER, TRADE_STRATEGY_PARAMETER, SetTaskParameterCommand.VALUE_PARAMETER, 
 					(getTradeStrategy().getName().equals(SimpleTradeStrategy.NAME) ? DropSellTradeStrategy.NAME : SimpleTradeStrategy.NAME)) + "\r\n";
 		strInfo += "[" + m_nMaxTrades + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
 				SetTaskParameterCommand.NAME_PARAMETER, TRADE_COUNT_PARAMETER, SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n";
-		return getTradesInfo().getInfo() + "\r\n" + strInfo +
-				CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo());
+		
+		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
+				" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);
 	}
 	
 	public RateInfo getRateInfo()

@@ -14,7 +14,7 @@ import solo.CurrencyInformer;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class StockCandlestick implements Serializable
 {

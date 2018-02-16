@@ -17,7 +17,7 @@ import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class Rules
 {

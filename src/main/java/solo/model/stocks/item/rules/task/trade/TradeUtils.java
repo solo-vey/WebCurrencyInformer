@@ -23,7 +23,7 @@ import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class TradeUtils
 {
@@ -55,33 +55,64 @@ public class TradeUtils
 		return nBuyPrice.multiply(nCommision).add(nSellPrice.multiply(nCommision));
 	}
 
-	public static BigDecimal getMarginValue(final BigDecimal nPrice)
+	public static BigDecimal getMarginValue1(final BigDecimal nPrice)
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.margin", oStockExchange.getStockProperties(), 20));
-		final BigDecimal nCommision = nStockCommision.divide(new BigDecimal(10000));
-		return nPrice.multiply(nCommision);
+		final BigDecimal nStockMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock.margin", oStockExchange.getStockProperties(), 20));
+		final BigDecimal nMargin = nStockMargin.divide(new BigDecimal(10000));
+		return nPrice.multiply(nMargin);
+	}
+	
+	public static BigDecimal getMarginValue(final BigDecimal nPrice, final RateInfo oRateInfo)
+	{
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final BigDecimal nStockMarketMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock." + strMarket + ".margin", oStockExchange.getStockProperties(), Integer.MIN_VALUE));
+		if (nStockMarketMargin.compareTo(BigDecimal.ZERO) >= 0)
+		{
+			final BigDecimal nMarketMargin = nStockMarketMargin.divide(new BigDecimal(10000));
+			return nPrice.multiply(nMarketMargin);			
+		}
+		
+		final BigDecimal nStockMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock.margin", oStockExchange.getStockProperties(), 20));
+		final BigDecimal nMargin = nStockMargin.divide(new BigDecimal(10000));
+		return nPrice.multiply(nMargin);
 	}
 	
 	public static int getPricePrecision(final RateInfo oRateInfo)
 	{
-		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".price.precision", oStockExchange.getStockProperties(), DEFAULT_PRICE_PRECISION);
+		
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final int nMarketPricePrecision = ResourceUtils.getIntFromResource("stock." + strMarket + ".price.precision", oStockExchange.getStockProperties(), Integer.MAX_VALUE);
+		if (nMarketPricePrecision != Integer.MAX_VALUE)
+			return nMarketPricePrecision;
+		
+		return ResourceUtils.getIntFromResource("stock.price.precision", oStockExchange.getStockProperties(), DEFAULT_PRICE_PRECISION);
 	}
 	
 	public static int getVolumePrecision(final RateInfo oRateInfo)
 	{
-		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), DEFAULT_VOLUME_PRECISION);
+		
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final int nMarketVolumePrecision = ResourceUtils.getIntFromResource("stock." + strMarket + ".volume.precision", oStockExchange.getStockProperties(), Integer.MAX_VALUE);
+		if (nMarketVolumePrecision != Integer.MAX_VALUE)
+			return nMarketVolumePrecision;
+		
+		return ResourceUtils.getIntFromResource("stock.volume.precision", oStockExchange.getStockProperties(), DEFAULT_VOLUME_PRECISION);
 	}
 	
 	public static int getFakeMinPrice(final RateInfo oRateInfo)
 	{
-		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		return ResourceUtils.getIntFromResource("stock." + strMarket + ".fake_price", oStockExchange.getStockProperties(), 500);
+		
+		final String strMarket = oRateInfo.getCurrencyFrom().toString().toLowerCase() + "_" + oRateInfo.getCurrencyTo().toString().toLowerCase(); 
+		final int nMarketFakeMinPrice = ResourceUtils.getIntFromResource("stock." + strMarket + ".fake_price", oStockExchange.getStockProperties(), Integer.MAX_VALUE);
+		if (nMarketFakeMinPrice != Integer.MAX_VALUE)
+			return nMarketFakeMinPrice;
+		
+		return ResourceUtils.getIntFromResource("stock.fake_price", oStockExchange.getStockProperties(), 500);
 	}
 	
 	public static BigDecimal getMinChangePrice()

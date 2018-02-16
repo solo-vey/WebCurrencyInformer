@@ -109,7 +109,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 			return;
 	    }
 		
-    	final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nBougthPrice);
+    	final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nBougthPrice, oRateInfo);
 	    final BigDecimal nCommisionAndMargin = nTradeMargin.add(nTradeCommision);
     	final BigDecimal nNewCriticalPriceMin = nBougthPrice.add(nCommisionAndMargin);
     	

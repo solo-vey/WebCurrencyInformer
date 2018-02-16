@@ -1,6 +1,6 @@
 package solo.model.stocks;
 
-import ua.lz.ep.utils.JsonUtils;
+import solo.utils.JsonUtils;
 
 public class BaseObject
 {

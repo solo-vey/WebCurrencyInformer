@@ -3,7 +3,7 @@ package solo.model.stocks.worker;
 import solo.model.stocks.item.command.system.GetTransportMessagesCommand;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.transport.ITransport;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class TransportWorker extends BaseWorker
 {

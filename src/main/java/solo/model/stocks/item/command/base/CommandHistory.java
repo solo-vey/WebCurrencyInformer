@@ -13,7 +13,7 @@ import org.apache.commons.lang.StringUtils;
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.command.system.IHistoryCommand;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class CommandHistory
 {

@@ -24,22 +24,19 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.log4j.Logger;
 
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.worker.WorkerFactory;
-import ua.lz.ep.utils.JsonUtils;
-import ua.lz.ep.utils.ResourceUtils;
 
 /** Класс для работы с РЕЕЗ запросами к сторонним сервисам */
 @SuppressWarnings("deprecation")
 public class RequestUtils
 {
 	public final static int DEFAULT_TEMEOUT = 5;
-    /** The Constant s_oLogger. */
-    final static Logger s_oLogger = LoggerFactory.getLogger(RequestUtils.class);
+	/** The logger. */
+	private static Logger s_oLogger = Logger.getLogger(RequestUtils.class);
 	
 	/** Отправдяеи post запрос по указанному адресу
 	 * @param strURL URL запроса

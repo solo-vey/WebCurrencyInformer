@@ -25,7 +25,7 @@ import solo.model.stocks.item.StockUserInfo;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class BtcTradeStockSource extends BaseStockSource
 {

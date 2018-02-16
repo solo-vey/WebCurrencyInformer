@@ -13,6 +13,7 @@ import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.system.ISystemCommand;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
 
 /** Формат комманды 
@@ -54,8 +55,30 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
 		final List<Entry<Integer, IRule>> oRules = oStockExchange.getRules().getRules(m_oRateInfo);
+		if (oRules.size() == 0)
+			return;
+		
 		for(final Entry<Integer, IRule> oRuleInfo : oRules)
 			oRuleInfo.getValue().check(oStateAnalysisResult);
+		
+		/*final MainWorker oMainWorker = WorkerFactory.getMainWorker();
+		final ExecutorService oThreadPool = Executors.newFixedThreadPool(oRules.size());
+		for (int nThreadPos = 0; nThreadPos < oRules.size(); nThreadPos++) 
+		{
+			final Entry<Integer, IRule> oRuleInfo = oRules.get(nThreadPos);
+			final CheckRuleThread oLoadRateThread = new CheckRuleThread(oRuleInfo.getValue(), oStateAnalysisResult, oMainWorker);
+			oThreadPool.submit(oLoadRateThread);
+		};
+		oThreadPool.shutdown();
+			
+		try 
+		{
+			oThreadPool.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS);
+		} 
+		catch (InterruptedException e) 
+		{
+			WorkerFactory.onException("CheckRateRulesCommand.execute()", e);
+		}*/
 	}
 	
 	public static RateState makeReverseRateState(final RateState oRateState)
@@ -69,4 +92,32 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 			oReverseRateState.getTrades().add(TradeUtils.makeReveseOrder(oOrder));
 		return oReverseRateState;
 	}
+}
+
+class CheckRuleThread implements Runnable 
+{
+	final IRule m_oRule;
+	final StateAnalysisResult m_oStateAnalysisResult;
+	final MainWorker m_oMainWorker;
+
+    public CheckRuleThread(final IRule oRule, final StateAnalysisResult oStateAnalysisResult, final MainWorker oMainWorker)
+    {
+    	m_oRule = oRule;
+    	m_oStateAnalysisResult = oStateAnalysisResult;
+    	m_oMainWorker = oMainWorker;
+    }
+
+    public void run() 
+    {
+		try
+		{
+			Thread.currentThread().setName("Check rule #" + m_oRule.getID());
+			WorkerFactory.registerMainWorkerThread(Thread.currentThread().getId(), m_oMainWorker);
+			m_oRule.check(m_oStateAnalysisResult);	
+		}
+		catch (final Exception e)
+		{
+			WorkerFactory.onException("Check rule #" + m_oRule.getID(), e);
+		}
+    }
 }

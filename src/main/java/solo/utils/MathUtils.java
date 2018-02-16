@@ -4,21 +4,12 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
-import org.apache.http.annotation.Obsolete;
-
 public class MathUtils
 {
 	public static BigDecimal getBigDecimal(final double nValue, final int nScale)
 	{
 		final BigDecimal oOriginalValue = new BigDecimal(nValue);
 		return oOriginalValue.setScale(nScale, RoundingMode.DOWN);
-	}
-
-	@Obsolete
-	public static BigDecimal getBigDecimalRoundedUp(final double nValue, final int nScale)
-	{
-		final BigDecimal oOriginalValue = new BigDecimal(nValue);
-		return oOriginalValue.setScale(nScale, RoundingMode.UP);
 	}
 
 	public static BigDecimal getRoundedBigDecimal(final double nValue, final int nScale)
@@ -41,7 +32,6 @@ public class MathUtils
 		return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, ',').trim();
 	}
 	
-	@Obsolete
 	public static String toCurrencyStringEx3(final BigDecimal oValue)
 	{
 		if (null == oValue)

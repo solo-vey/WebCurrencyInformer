@@ -19,7 +19,7 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class Candlestick implements Serializable
 {

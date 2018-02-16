@@ -56,8 +56,8 @@ public class QuickBuyExStrategy extends QuickBuyStrategy
 		if (!isDeltaTooSmall(oAsks, oBids, oTradeInfo))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 		
-		oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks); 
-		oBids = StrategyUtils.removeTooExpenciveOrders(oBids);
+		oAsks = StrategyUtils.removeTooExpenciveOrders(oAsks, oRateAnalysisResult.getRateInfo()); 
+		oBids = StrategyUtils.removeTooExpenciveOrders(oBids, oRateAnalysisResult.getRateInfo());
 		if (!isDeltaTooSmall(oAsks, oBids, oTradeInfo))
 			return StrategyUtils.getBestPrice(oBids).add(oMinChangePrice);
 
@@ -72,7 +72,7 @@ public class QuickBuyExStrategy extends QuickBuyStrategy
 	
 	public static boolean isDeltaTooSmall(List<Order> oAsks, List<Order> oBids, final TradeInfo oTradeInfo)
 	{
-		final boolean bIsDeltaTooSmall = StrategyUtils.isDeltaTooSmall(oAsks, oBids);
+		final boolean bIsDeltaTooSmall = StrategyUtils.isDeltaTooSmall(oAsks, oBids, oTradeInfo.getRateInfo());
 		final BigDecimal nBidPrice = StrategyUtils.getBestPrice(oBids);
 		final BigDecimal nVolume = MathUtils.getBigDecimal(oTradeInfo.getTradeSum().doubleValue() / nBidPrice.doubleValue(), TradeUtils.getVolumePrecision(oTradeInfo.getRateInfo()));
 		return nVolume.compareTo(oTradeInfo.getCriticalVolume()) < 0 || bIsDeltaTooSmall;

@@ -42,12 +42,12 @@ public class CalmRateTradeStrategy extends BaseTradeStrategy
 		final BigDecimal nAskPrice = StrategyUtils.getBestPrice(oRateAnalysisResult.getAsksOrders());
 		final BigDecimal nBidPrice = StrategyUtils.getBestPrice(oRateAnalysisResult.getBidsOrders());
 		final BigDecimal nCommision = TradeUtils.getCommisionValue(nBidPrice, nAskPrice);
-		final BigDecimal nMargin = TradeUtils.getMarginValue(nAskPrice);
+		final BigDecimal nMargin = TradeUtils.getMarginValue(nAskPrice, oTaskTrade.getRateInfo());
 		final BigDecimal nMinDelta = nCommision.add(nMargin);
 		
 		final BigDecimal nMiddlePrice = getMinPrice(nMinDelta, oTradeControler.getTradesInfo());  
 		final BigDecimal nTradeCommision = TradeUtils.getCommisionValue(nMiddlePrice, nMiddlePrice);
-		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nMiddlePrice);
+		final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nMiddlePrice, oTaskTrade.getRateInfo());
 		final BigDecimal nTradeDelta = nTradeCommision.add(nTradeMargin);
 		final BigDecimal nHalfTradeDelta = MathUtils.getBigDecimal(nTradeDelta.doubleValue() / 2, TradeUtils.getPricePrecision(oTradeControler.getTradesInfo().getRateInfo()));
     	final BigDecimal nNewCriticalPriceMin = nMiddlePrice.add(nHalfTradeDelta.negate());

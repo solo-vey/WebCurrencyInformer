@@ -36,7 +36,6 @@ public class MainWorker extends BaseWorker implements IMainWorker
 
 		m_oStockWorker.startWorker();
 		m_oTransportWorker.startWorker();
-
 	}
 	
 	public void stopWorker()

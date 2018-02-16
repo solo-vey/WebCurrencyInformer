@@ -17,24 +17,27 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
+import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.source.utils.Exmo;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
-import ua.lz.ep.utils.JsonUtils;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.JsonUtils;
+import solo.utils.ResourceUtils;
 
 public class ExmoStockSource extends BaseStockSource
 {
 	final protected String m_strOrdersUrl;
 	final protected String m_strTradesUrl;
+	final protected String m_strTickerUrl;
 	
 	public ExmoStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
 		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
 		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
+		m_strTickerUrl = ResourceUtils.getResource("ticker.url", getStockExchange().getStockProperties());
 				
 		m_aAllRates.add(new RateInfo(Currency.USD, Currency.RUB));
 
@@ -118,6 +121,19 @@ public class ExmoStockSource extends BaseStockSource
 		oRateState.setTrades(oTradeOrders);
 		
 		return oRateState;
+	}
+	
+	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
+	{
+		final Map<RateInfo, RateStateShort> oAllRateState = super.getAllRateState();
+		final Map<String, Object> oAllTickers = RequestUtils.sendGetAndReturnMap(m_strTickerUrl, true, RequestUtils.DEFAULT_TEMEOUT);
+		for(final Entry<String, Object> oRateTickerInfo : oAllTickers.entrySet())
+		{
+			final RateStateShort oRateStateShort = RateStateShort.getFromData(oRateTickerInfo);
+			if (null != oRateStateShort)
+				oAllRateState.put(oRateStateShort.getRateInfo(), oRateStateShort);
+		}
+		return oAllRateState;
 	}
 
 	protected String getRateIdentifier(final RateInfo oRateInfo)
@@ -258,6 +274,7 @@ public class ExmoStockSource extends BaseStockSource
 	{
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		
+        final Date oDateStartGet = new Date();
 		super.getOrder(strOrderId, oRateInfo);
 		
 		int nTryCount = 25;
@@ -273,10 +290,10 @@ public class ExmoStockSource extends BaseStockSource
 				return TradeUtils.makeReveseOrder(oGetOrder);
 			}
 			
-			try { Thread.sleep(250); }
+			try { Thread.sleep((oGetOrder.isException() ? 250 : 100)); }
 			catch (InterruptedException e) { break; }
 			nTryCount -= (oGetOrder.isException() ? 1 : 5);
-			System.out.println("Get order repeat : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getState());
+			System.out.println("Get order repeat [" + nTryCount + "][" + ((new Date()).getTime() - oDateStartGet.getTime()) + "] : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getState() + " " + oGetOrder.getMessage());
 		}
 		
 		return oGetOrder;

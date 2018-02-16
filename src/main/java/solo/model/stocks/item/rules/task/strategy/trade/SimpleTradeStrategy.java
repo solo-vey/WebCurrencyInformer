@@ -38,12 +38,15 @@ public class SimpleTradeStrategy extends BaseTradeStrategy
 		if (!OrderSide.BUY.equals(oOrder.getSide()))
 			return;
 		
-		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
-		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
-		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
+		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();	
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
+		if (oOrder.getVolume().compareTo(nMinTradeVolume) > 0)
 			return;
 		
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
+		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
+		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
+			return;	
+		
 		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) > 0)
 			return;
 		
@@ -65,11 +68,14 @@ public class SimpleTradeStrategy extends BaseTradeStrategy
 			return;
 		
 		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
+		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
+		if (oOrder.getVolume().compareTo(nMinTradeVolume) > 0)
+			return;
+
 		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
 		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
 			return;
 		
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
 		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) > 0)
 			return;
 		

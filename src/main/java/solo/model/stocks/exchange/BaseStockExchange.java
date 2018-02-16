@@ -11,7 +11,7 @@ import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.StockManager;
 import solo.model.stocks.source.IStockSource;
 import solo.transport.MessageLevel;
-import ua.lz.ep.utils.ResourceUtils;
+import solo.utils.ResourceUtils;
 
 public class BaseStockExchange implements IStockExchange
 {

@@ -78,8 +78,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (StringUtils.isNotBlank(m_strCurrentState))
 			strQuickSell += "State [" + m_strCurrentState + "]\r\n";
 		
-		return (getTradeControler().equals(ITradeControler.NULL) ? getType() + "/" : StringUtils.EMPTY) + 
-					(m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + "/" : StringUtils.EMPTY) + 
+		return (getTradeControler().equals(ITradeControler.NULL) ? getType() + " " : StringUtils.EMPTY) + 
+					(m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + " " : StringUtils.EMPTY) + 
 					strGetRateCommand + m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
 					strQuickSell + 
 					" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
@@ -256,7 +256,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return;
 
 		final Date oOrderDateCreate = oGetOrder.getCreated();
-		final Order oRemoveOrder = removeOrder(oGetOrder);
+		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, getRateInfo());
 		if (oRemoveOrder.isException())
 			return;
 		
@@ -317,34 +317,6 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice());
 		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oTrades.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oTrades.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oTrades.get(2).getPrice());
 		m_oTradeInfo.getHistory().addToLog(strLogMessage);
-	}
-
-	protected Order removeOrder(final Order oGetOrder)
-	{
-		int nTryCount = 50;
-		final String strMessage = "Cannot delete order\r\n" + oGetOrder.getInfoShort();
-		Order oRemoveOrder = new Order(Order.ERROR, strMessage);
-		while (nTryCount > 0)
-		{
-			oRemoveOrder = WorkerFactory.getStockSource().removeOrder(oGetOrder.getId());
-			if (oRemoveOrder.isCanceled())
-				return oRemoveOrder;
-
-			if (!oRemoveOrder.isException())
-			{
-				final Order oCheckRemoveOrder = WorkerFactory.getStockSource().getOrder(oGetOrder.getId(), m_oRateInfo);
-				if (oCheckRemoveOrder.isDone() || oCheckRemoveOrder.isCanceled())
-					return oCheckRemoveOrder;
-			}
-			
-			try { Thread.sleep(100); }
-			catch (InterruptedException e) { break; }
-			nTryCount--;
-		}
-
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, strMessage);
-		m_strCurrentState = "removeOrder - " + oRemoveOrder;
-		return oRemoveOrder;
 	}
 
 	protected Order addOrder(final OrderSide oOrderSide, final BigDecimal oVolume, final BigDecimal oPrice)
@@ -408,7 +380,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		m_oTradeInfo.setCriticalPrice(m_oTradeInfo.calculateCriticalPrice());
 		final String strMessage = "Set critical price " + m_oTradeInfo.getCriticalPriceString() + 
 									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(m_oTradeInfo.getAveragedBoughPrice(), m_oTradeInfo.getAveragedBoughPrice())) + 
-									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getMarginValue(m_oTradeInfo.getAveragedBoughPrice()));
+									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getMarginValue(m_oTradeInfo.getAveragedBoughPrice(), m_oTradeInfo.getRateInfo()));
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, strMessage);
 		m_oTradeInfo.addToHistory(strMessage);
 		getTradeControler().buyDone(this);
