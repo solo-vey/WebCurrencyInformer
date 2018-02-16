@@ -24,7 +24,6 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
-import solo.model.stocks.item.rules.task.manager.StockManagesInfo;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.ResourceUtils;
 
@@ -37,7 +36,7 @@ public class TestStockSource extends BaseStockSource
 	{
 		super(oStockExchange);
 		m_oRealStockSource = oRealStockSource;
-		m_oStockSourceData = new TestStockSourceData(oStockExchange.getStockName());
+		m_oStockSourceData = TestStockSourceData.load(oStockExchange);
 	}
 	
 	@Override public RateState getRateState(final RateInfo oRateInfo) throws Exception
@@ -204,12 +203,9 @@ class TestStockSourceData implements Serializable
 	final List<Order> m_oRemoveOrders = new LinkedList<Order>();
 	final List<Order> m_oDoneOrders = new LinkedList<Order>();
 	final Map<RateInfo, Date> m_aLastTradeOrder = new HashMap<RateInfo, Date>();
-	final String m_strStockExchangeName;
 	
-	public TestStockSourceData(final String strStockExchangeName)
+	public TestStockSourceData()
 	{
-		m_strStockExchangeName = strStockExchangeName;
-		load();
 	}
 
 	public Map<RateInfo, List<Order>> getRateOrders()
@@ -258,7 +254,7 @@ class TestStockSourceData implements Serializable
 	{
 		try 
 		{
-	         final FileOutputStream oFileStream = new FileOutputStream(getFileName());
+	         final FileOutputStream oFileStream = new FileOutputStream(getFileName(WorkerFactory.getStockExchange()));
 	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
 	         oStream.writeObject(this);
 	         oStream.close();
@@ -270,27 +266,27 @@ class TestStockSourceData implements Serializable
 		}			
 	}
 
-	public StockManagesInfo load()
+	public static TestStockSourceData load(final IStockExchange oStockExchange)
 	{
 		try 
 		{
-	         final FileInputStream oFileStream = new FileInputStream(getFileName());
+	         final FileInputStream oFileStream = new FileInputStream(getFileName(oStockExchange));
 	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
-	         final StockManagesInfo oStockManagesInfo = (StockManagesInfo) oStream.readObject();
+	         final TestStockSourceData oTestStockSourceData = (TestStockSourceData) oStream.readObject();
 	         oStream.close();
 	         oFileStream.close();
 	         
-	         return oStockManagesInfo;
+	         return oTestStockSourceData;
 		} 
 		catch (final Exception e) 
 		{
 			WorkerFactory.onException("Load test source info exception", e);
-			return new StockManagesInfo();
+			return new TestStockSourceData();
 	    }			
 	}
 
-	String getFileName()
+	static String getFileName(final IStockExchange oStockExchange)
 	{
-		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_strStockExchangeName + "\\TestSource.ser";
+		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + oStockExchange.getStockName() + "\\TestSource.ser";
 	}
 }

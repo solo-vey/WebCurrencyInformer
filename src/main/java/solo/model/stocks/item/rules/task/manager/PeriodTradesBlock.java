@@ -52,7 +52,7 @@ public class PeriodTradesBlock implements Serializable
 	{
 		String strResult = StringUtils.EMPTY;
 		for(final Entry<Integer, CurrencyTradesBlock> oTradesInfo : m_oPeriodTrades.entrySet())
-			strResult += oTradesInfo.getKey() + " - " + oTradesInfo.getValue().toString().replace("\r\n", "\r\n      ") + "\r\n";
+			strResult += "[" + oTradesInfo.getKey() + "]" + oTradesInfo.getValue().toString().replace("\r\n", "\r\n") + "\r\n";
 		return strResult;
 	}
 }

@@ -17,6 +17,7 @@ import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClients;
 
 import solo.CurrencyInformer;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
@@ -91,14 +92,30 @@ public class TelegramTransport implements ITransport
 			
 			final Map<String, String> aParameters = new HashMap<String, String>();
 			aParameters.put("chat_id", (bIsSystem || bIsManager ? m_strSystemUserID : m_strUserID));
-			aParameters.put("text", strText.replace("SYSTEM\r\n", StringUtils.EMPTY));
+			aParameters.put("text", strText.replace("SYSTEM\r\n", StringUtils.EMPTY).replace("BUTTONS\r\n", "\0").split("\0")[0]);
+			
+			if (bIsSystem)
+			{
+				final boolean bHasButtons = strText.contains("BUTTONS\r\n");
+				final String strButtons = (bHasButtons ? strText.replace("BUTTONS\r\n", "\0").split("\0")[1] : StringUtils.EMPTY);
+				aParameters.put("reply_markup", "{\"inline_keyboard\":[" +
+									"[{\"text\":\"Info\",\"callback_data\":\"info\"}," +
+									"{\"text\":\"Rules\",\"callback_data\":\"rules\"}," +
+									"{\"text\":\"Day\",\"callback_data\":\"manager_day\"}," +
+									"{\"text\":\"Rates\",\"callback_data\":\"rate\"}]" + 
+									(StringUtils.isNotBlank(strButtons) ? "," + strButtons : StringUtils.EMPTY) + "]}");
+			}
+			
 			final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 			oResult.put("message", oResult.get("result"));
 			final TelegramMessage oMessage = new TelegramMessage(oResult);
 			saveLastSystemMessageID(bIsSystem, oMessage.getID());
 			return oResult;
 		}
-		catch(final Exception e) {}
+		catch(final Exception e) 
+		{
+			WorkerFactory.onException("Can't send message", e);
+		}
 		
 		return null;
 	}

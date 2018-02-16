@@ -13,6 +13,7 @@ import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
+import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.StockUserInfo;
@@ -47,7 +48,7 @@ public class GetStockInfoCommand extends BaseCommand
 		{		
 			final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
 			
-			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();
+			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();			
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
 				if (oCurrencyInfo.getValue().getBalance().compareTo(new BigDecimal(0.000001)) < 0 && 
@@ -73,8 +74,10 @@ public class GetStockInfoCommand extends BaseCommand
 			
 			BigDecimal oTotalBtcSum = BigDecimal.ZERO;
 			final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
+			final Map<Currency, BigDecimal> aLocked = new HashMap<Currency, BigDecimal>();
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
+				aLocked.put(oCurrencyInfo.getKey(), oCurrencyInfo.getValue().getLocked());
 				if (oCurrencyInfo.getKey().equals(Currency.BTC))
 				{
 					oTotalBtcSum = oTotalBtcSum.add(oCurrencyInfo.getValue().getBalance());
@@ -89,15 +92,23 @@ public class GetStockInfoCommand extends BaseCommand
 				final BigDecimal oSum = oVolume.multiply(oBtcBidPrice);
 				oTotalBtcSum = oTotalBtcSum.add(oSum);
 			}
-	
+			
 			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 			{
 				final BigDecimal oBtcBidPrice = getRateBestBidPrice(oStockExchange, oOrdersInfo.getKey().getCurrencyTo(), oRateHash, oAllRateState);
 				if (null == oBtcBidPrice)
 					continue;
 					
+				BigDecimal nLockedVolume = aLocked.get(oOrdersInfo.getKey().getCurrencyFrom());
+				BigDecimal nLockedSum = aLocked.get(oOrdersInfo.getKey().getCurrencyTo());
 				for(final Order oOrder : oOrdersInfo.getValue())
 				{
+					if (OrderSide.SELL.equals(oOrder.getSide()))
+						nLockedVolume = nLockedVolume.add(oOrder.getVolume().negate());
+					
+					if (OrderSide.BUY.equals(oOrder.getSide()))
+						nLockedSum = nLockedSum.add(oOrder.getSum().negate());
+
 					if (oOrdersInfo.getKey().getCurrencyFrom().equals(Currency.BTC))
 					{
 						oTotalBtcSum = oTotalBtcSum.add(oOrder.getVolume());
@@ -107,6 +118,29 @@ public class GetStockInfoCommand extends BaseCommand
 					final BigDecimal oSum = oOrder.getSum().multiply(oBtcBidPrice);
 					oTotalBtcSum = oTotalBtcSum.add(oSum);
 				}
+				
+				aLocked.put(oOrdersInfo.getKey().getCurrencyFrom(), nLockedVolume);
+				aLocked.put(oOrdersInfo.getKey().getCurrencyTo(), nLockedSum);
+			}
+			
+			for(final Entry<Currency, BigDecimal> oLockedInfo : aLocked.entrySet())
+			{
+				if (oLockedInfo.getValue().compareTo(BigDecimal.ZERO) == 0)
+					continue;
+				
+				if (oLockedInfo.getKey().equals(Currency.BTC))
+				{
+					oTotalBtcSum = oTotalBtcSum.add(oLockedInfo.getValue());
+					continue;
+				}
+				
+				final BigDecimal oBtcBidPrice = getRateBestBidPrice(oStockExchange, oLockedInfo.getKey(), oRateHash, oAllRateState);
+				if (null == oBtcBidPrice)
+					continue;
+						
+				final BigDecimal oVolume = oLockedInfo.getValue();
+				final BigDecimal oSum = oVolume.multiply(oBtcBidPrice);
+				oTotalBtcSum = oTotalBtcSum.add(oSum);
 			}
 			
 			strMessage += "Total BTC = " + MathUtils.toCurrencyStringEx3(oTotalBtcSum) + "\r\n";

@@ -16,10 +16,20 @@ public class TelegramMessage implements ITransportMessage
 	@SuppressWarnings("unchecked")
 	public TelegramMessage(final Map<String, Object> oData)
 	{
-    	m_oMessage =  (Map<String, Object> )(null != oData.get("message") ?oData.get("message") : oData.get("channel_post"));
-   		m_strText = (null != m_oMessage && null != m_oMessage.get("text") ? m_oMessage.get("text").toString() : StringUtils.EMPTY);
-		m_strID = (null != m_oMessage && null != m_oMessage.get("message_id") ? m_oMessage.get("message_id").toString() : StringUtils.EMPTY);
+		Map<String, Object> oMessage = (Map<String, Object> )(null != oData.get("message") ?oData.get("message") : oData.get("channel_post"));
 		m_strUpdateID = (null != oData.get("update_id") ? oData.get("update_id").toString() : StringUtils.EMPTY);
+   		String strText = (null != oMessage && null != oMessage.get("text") ? oMessage.get("text").toString() : StringUtils.EMPTY);
+		
+		if (null != oData.get("callback_query"))
+		{
+			final Map<String, Object> oCallbackQuery = (Map<String, Object>)oData.get("callback_query");
+			oMessage = (Map<String, Object> )(null != oCallbackQuery.get("message") ? oCallbackQuery.get("message") : oMessage);
+			strText = (null != oCallbackQuery && null != oCallbackQuery.get("data") ? oCallbackQuery.get("data").toString() : strText);
+		}
+		
+		m_oMessage = oMessage;
+   		m_strText = strText;
+		m_strID = (null != oMessage && null != oMessage.get("message_id") ? oMessage.get("message_id").toString() : StringUtils.EMPTY);
 	}
 	
 	@Override public String getText()

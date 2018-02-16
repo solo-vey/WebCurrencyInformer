@@ -21,7 +21,9 @@ public class GetManagerInfoCommand extends BaseCommand
 		
 		final String strType = getParameter(TYPE_PARAMETER);
 		
-		final String strMessage = WorkerFactory.getStockExchange().getManager().getInfo().asString(strType);
+		final String strMessage = WorkerFactory.getStockExchange().getManager().getInfo().asString(strType) +
+			"BUTTONS\r\n[{\"text\":\"Days\",\"callback_data\":\"manager_days\"},{\"text\":\"Hours\",\"callback_data\":\"manager_hours\"}," +
+			"{\"text\":\"Months\",\"callback_data\":\"manager_months\"}, {\"text\":\"All\",\"callback_data\":\"manager\"}]";
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }
