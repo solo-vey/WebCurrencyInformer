@@ -2,8 +2,6 @@ package solo.model.stocks.exchange;
 
 import org.apache.commons.lang.StringUtils;
 
-import solo.model.stocks.analyse.IStateAnalysis;
-import solo.model.stocks.analyse.SimpleStateAnalysis;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.analyse.StockCandlestick;
@@ -24,7 +22,6 @@ public class BaseStockExchange implements IStockExchange
 	protected IStockSource m_oStockSource;
 	final protected Rules m_oRules;
 	final StateAnalysisResult m_oLastAnalysisResult;
-	final IStateAnalysis m_oStateAnalysis = new SimpleStateAnalysis();
 	final IStockManager m_oStockManager;
 	final StockCandlestick m_oStockCandlestick;
 
@@ -64,11 +61,6 @@ public class BaseStockExchange implements IStockExchange
 	public StockCandlestick getStockCandlestick()
 	{
 		return m_oStockCandlestick;
-	}
-	
-	public IStateAnalysis getAnalysis()
-	{
-		return m_oStateAnalysis;
 	}
 	
 	public Rules getRules()

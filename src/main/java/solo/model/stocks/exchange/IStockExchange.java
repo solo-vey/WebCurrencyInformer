@@ -1,6 +1,5 @@
 package solo.model.stocks.exchange;
 
-import solo.model.stocks.analyse.IStateAnalysis;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.analyse.StockCandlestick;
@@ -16,7 +15,6 @@ public interface IStockExchange
 	StockCandlestick getStockCandlestick();
 	Rules getRules();
 	StateAnalysisResult getLastAnalysisResult();
-	IStateAnalysis getAnalysis();
 	MessageLevel getMessageLevel();
 	void setParameter(String strName, String strValue);
 	String getParameter(String strName);
