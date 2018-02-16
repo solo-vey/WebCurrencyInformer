@@ -152,8 +152,6 @@ public class TestStockSource extends BaseStockSource
 	{
 		try
 		{
-			checkOrderParameters(oSide, oRateInfo, nPrice);
-
 			final Order oOrder = new Order();
 			oOrder.setId("" + (new Date().getTime()));
 			oOrder.setSide(oSide);

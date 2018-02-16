@@ -23,26 +23,31 @@ public class CurrencyTradesBlock implements Serializable
 	
 	public void addTrade(final TaskTrade oTaskTrade)
 	{
-		final Currency oCurrency = oTaskTrade.getTradeInfo().getRateInfo().getCurrencyTo();
+		addTrade(oTaskTrade.getTradeInfo());
+	}
+	
+	public void addTrade(final TradeInfo oTradeInfo)
+	{
+		final Currency oCurrency = oTradeInfo.getRateInfo().getCurrencyTo();
 		if (!m_oCurrencyTrades.containsKey(oCurrency))
 			m_oCurrencyTrades.put(oCurrency, new TradesBlock());
-		m_oCurrencyTrades.get(oCurrency).addTrade(oTaskTrade.getTradeInfo());
+		m_oCurrencyTrades.get(oCurrency).addTrade(oTradeInfo);
 		
 		final RateInfo oRateInfo = new RateInfo(oCurrency, Currency.BTC);
 		final RateAnalysisResult oBtcToCurrencyRate = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oRateInfo);
 		if (null != oBtcToCurrencyRate)
 		{
-			BigDecimal nSpendSumInCurrency = oTaskTrade.getTradeInfo().getSpendSum();
-			final BigDecimal nNeedSellVolume = oTaskTrade.getTradeInfo().getNeedSellVolume();
+			BigDecimal nSpendSumInCurrency = oTradeInfo.getSpendSum();
+			final BigDecimal nNeedSellVolume = oTradeInfo.getNeedSellVolume();
 			if (nNeedSellVolume.compareTo(BigDecimal.ZERO) > 0)
 			{
-				final BigDecimal nNeedSellSum = nNeedSellVolume.multiply(oTaskTrade.getTradeInfo().getAveragedBoughPrice());
+				final BigDecimal nNeedSellSum = nNeedSellVolume.multiply(oTradeInfo.getAveragedBoughPrice());
 				nSpendSumInCurrency = nSpendSumInCurrency.add(nNeedSellSum.negate());
 			}
 			
 			final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBestBidPrice();
 			final BigDecimal nSpendSum = nSpendSumInCurrency.multiply(oBtcBidPrice);
-			final BigDecimal nReceivedSum = oTaskTrade.getTradeInfo().getReceivedSum().multiply(oBtcBidPrice);
+			final BigDecimal nReceivedSum = oTradeInfo.getReceivedSum().multiply(oBtcBidPrice);
 			final TradeInfo oBtcTradeInfo = new TradeInfo(oRateInfo, -1);
 			oBtcTradeInfo.addBuy(nSpendSum, BigDecimal.ZERO);
 			oBtcTradeInfo.addSell(nReceivedSum, BigDecimal.ZERO);
