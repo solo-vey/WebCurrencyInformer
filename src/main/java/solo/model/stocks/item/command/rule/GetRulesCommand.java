@@ -1,6 +1,9 @@
 package solo.model.stocks.item.command.rule;
 
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -8,10 +11,13 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.telegram.TelegramTransport;
 
 /** Формат комманды 
  */
@@ -28,7 +34,7 @@ public class GetRulesCommand extends BaseCommand
 	{
 		super.execute();
 		
-		final Map<String, String> aRulesByRate = new HashMap<String, String>();
+		final Map<String, List<IRule>> aRulesByRate = new HashMap<String, List<IRule>>();
 		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
 			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRuleInfo.getValue());
@@ -39,19 +45,21 @@ public class GetRulesCommand extends BaseCommand
 			final String strRate = (null != oTradeTask ? oTradeTask.getRateInfo().toString() : 
 									(null != oTradeControler ? oTradeControler.getTradesInfo().getRateInfo().toString() : StringUtils.EMPTY));
 			if (!aRulesByRate.containsKey(strRate))
-				aRulesByRate.put(strRate, StringUtils.EMPTY);
+				aRulesByRate.put(strRate, new LinkedList<IRule>());
 			
-			final String strRateRules = aRulesByRate.get(strRate) + oRuleInfo.getValue().getInfo() + "\r\n";
-			aRulesByRate.put(strRate, strRateRules);
+			aRulesByRate.get(strRate).add(oRuleInfo.getValue());
 		}
 		
-		String strMessage = StringUtils.EMPTY;
-		for(final Entry<String, String> oRateRules : aRulesByRate.entrySet())
-			strMessage += oRateRules.getValue();
-
-		if (StringUtils.isBlank(strMessage))
-			strMessage += "No rules";
+	   	final List<List<String>> aButtons = new LinkedList<List<String>>();
+		for(final Entry<String, List<IRule>> oRateRules : aRulesByRate.entrySet())
+    	{
+			for(final IRule oRule : oRateRules.getValue())
+			{
+				final String strRuleInfo = oRule.getInfo();
+				aButtons.add(Arrays.asList(strRuleInfo + "=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRule.getID())));
+			}
+     	}
 			
-		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
+		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + aButtons.size() + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}
 }

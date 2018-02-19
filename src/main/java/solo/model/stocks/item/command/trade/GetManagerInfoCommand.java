@@ -1,7 +1,10 @@
 package solo.model.stocks.item.command.trade;
 
+import java.util.Arrays;
+
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.telegram.TelegramTransport;
 
 /** Формат комманды 
  */
@@ -15,6 +18,7 @@ public class GetManagerInfoCommand extends BaseCommand
 		super(strСommandLine, TYPE_PARAMETER);
 	}
 	
+	@SuppressWarnings("unchecked")
 	public void execute() throws Exception
 	{
 		super.execute();
@@ -22,8 +26,7 @@ public class GetManagerInfoCommand extends BaseCommand
 		final String strType = getParameter(TYPE_PARAMETER);
 		
 		final String strMessage = WorkerFactory.getStockExchange().getManager().getInfo().asString(strType) +
-			"BUTTONS\r\n[{\"text\":\"Days\",\"callback_data\":\"manager_days\"},{\"text\":\"Hours\",\"callback_data\":\"manager_hours\"}," +
-			"{\"text\":\"Months\",\"callback_data\":\"manager_months\"}, {\"text\":\"All\",\"callback_data\":\"manager\"}]";
+			"BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months", "All=manager")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }

@@ -39,7 +39,7 @@ public class RemoveRuleCommand extends BaseCommand
 		{
 			WorkerFactory.getStockExchange().getRules().removeRule(m_nRuleID);
 			if (!m_bIsSilent)
-				WorkerFactory.getMainWorker().sendSystemMessage("Rule " + m_nRuleID + " deleted. " + BaseCommand.getCommand(GetRulesCommand.NAME));
+				WorkerFactory.getMainWorker().sendSystemMessage("Rule " + m_nRuleID + " deleted");
 		}
 	}
 }

@@ -11,11 +11,7 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.command.base.CommandFactory;
-import solo.model.stocks.item.command.rule.RemoveRuleCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
-import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
-import solo.model.stocks.item.command.trade.RemoveOrderCommand;
-import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
@@ -66,24 +62,10 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 
 				CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + " " : StringUtils.EMPTY);
 
-		String strQuickSell = CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID, 
-											GetTradeInfoCommand.FULL_PARAMETER, "true") + "\r\n";
-		if (getTradeInfo().getTaskSide().equals(OrderSide.SELL))
-		{
-			strQuickSell += CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-					SetTaskParameterCommand.NAME_PARAMETER, TaskTrade.CRITICAL_PRICE_PARAMETER, 
-					SetTaskParameterCommand.VALUE_PARAMETER, getTradeInfo().getCriticalPriceString().split("\\.")[0]) + "\r\n";
-		}
-		
-		if (StringUtils.isNotBlank(m_strCurrentState))
-			strQuickSell += "State [" + m_strCurrentState + "]\r\n";
-		
 		return (getTradeControler().equals(ITradeControler.NULL) ? getType() + " " : StringUtils.EMPTY) + 
 					(m_oTradeInfo.getOrder().equals(Order.NULL) ?  m_oTradeInfo.getTaskSide() + " " : StringUtils.EMPTY) + 
 					strGetRateCommand + m_oTradeInfo.getOrder().getInfoShort() + "\r\n" + 
-					strQuickSell + 
-					" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, m_oTradeInfo.getOrder().getId()) + 
-					" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);   
+					(StringUtils.isNotBlank(m_strCurrentState) ? "State [" + m_strCurrentState + "]\r\n" : StringUtils.EMPTY);   
 	}
 
 	@Override public void check(final StateAnalysisResult oStateAnalysisResult)

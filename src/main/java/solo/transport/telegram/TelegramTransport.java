@@ -1,7 +1,9 @@
 package solo.transport.telegram;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.apache.commons.io.IOUtils;
@@ -19,7 +21,6 @@ import org.apache.http.impl.client.HttpClients;
 import solo.CurrencyInformer;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.ITransport;
-import solo.transport.ITransportMessage;
 import solo.transport.ITransportMessages;
 import solo.utils.JsonUtils;
 import solo.utils.RequestUtils;
@@ -27,6 +28,10 @@ import solo.utils.ResourceUtils;
 
 public class TelegramTransport implements ITransport
 {
+	private static final String SYSTEM_MESSGE = "SYSTEM";
+
+	private static final String MANAGER_MESSGE = "MANAGER";
+
 	protected final static String API_URL = "https://api.telegram.org/bot#ACCESS_TOKEN#/METHOD_NAME";
 	
 	final protected String m_strBotName;
@@ -86,25 +91,17 @@ public class TelegramTransport implements ITransport
 		
 		try
 		{
-			final boolean bIsSystem = strText.startsWith("SYSTEM\r\n");
-			final boolean bIsManager = strText.startsWith("MANAGER\r\n");
+			final String strType = getMessageType(strText);
+			final boolean bIsSystem = SYSTEM_MESSGE.equalsIgnoreCase(strType);
 			deleteLastSystemMessage(bIsSystem);
 			
 			final Map<String, String> aParameters = new HashMap<String, String>();
-			aParameters.put("chat_id", (bIsSystem || bIsManager ? m_strSystemUserID : m_strUserID));
-			aParameters.put("text", strText.replace("SYSTEM\r\n", StringUtils.EMPTY).replace("BUTTONS\r\n", "\0").split("\0")[0]);
+			aParameters.put("chat_id", (StringUtils.isNotBlank(strType) ? m_strSystemUserID : m_strUserID));
+			aParameters.put("text", getMessageText(strText));
 			
-			if (bIsSystem)
-			{
-				final boolean bHasButtons = strText.contains("BUTTONS\r\n");
-				final String strButtons = (bHasButtons ? strText.replace("BUTTONS\r\n", "\0").split("\0")[1] : StringUtils.EMPTY);
-				aParameters.put("reply_markup", "{\"inline_keyboard\":[" +
-									"[{\"text\":\"Info\",\"callback_data\":\"info\"}," +
-									"{\"text\":\"Rules\",\"callback_data\":\"rules\"}," +
-									"{\"text\":\"Day\",\"callback_data\":\"manager_day\"}," +
-									"{\"text\":\"Rates\",\"callback_data\":\"rate\"}]" + 
-									(StringUtils.isNotBlank(strButtons) ? "," + strButtons : StringUtils.EMPTY) + "]}");
-			}
+			final String strButtons = getMessageButtons(strText);
+			if (StringUtils.isNotBlank(strButtons))
+				aParameters.put("reply_markup", strButtons);
 			
 			final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 			oResult.put("message", oResult.get("result"));
@@ -118,6 +115,79 @@ public class TelegramTransport implements ITransport
 		}
 		
 		return null;
+	}
+    
+	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
+    { 
+		deleteLastSystemMessage(true);
+    	 
+		final MultipartEntityBuilder oBuilder = MultipartEntityBuilder.create(); 
+		oBuilder.addTextBody("chat_id", m_strSystemUserID, ContentType.TEXT_PLAIN); 
+		oBuilder.addBinaryBody("photo", oPhoto, ContentType.APPLICATION_OCTET_STREAM, oPhoto.getName()); 
+    	if (null != strCaption) 
+    		oBuilder.addTextBody("caption", getMessageText(strCaption), ContentType.TEXT_PLAIN);
+    	
+		final String strButtons = getMessageButtons("SYSTEM\r\n" + strCaption);
+		if (StringUtils.isNotBlank(strButtons))
+			oBuilder.addTextBody("reply_markup", strButtons);
+   	  
+    	final String strResult = uploadFileRequest(getSendPhotoUrl(), oBuilder, false);
+    	final Map<String, Object> oResult = JsonUtils.json2Map(strResult);
+    	oResult.put("message", oResult.get("result"));
+    	final TelegramMessage oMessage = new TelegramMessage(oResult);
+    	
+    	saveLastSystemMessageID(true, oMessage.getID());
+  	}	
+	
+	protected String getMessageType(final String strMessage)
+	{
+		if (strMessage.startsWith("SYSTEM\r\n"))
+			return SYSTEM_MESSGE;
+		
+		if (strMessage.startsWith("MANAGER\r\n"))
+			return MANAGER_MESSGE;
+		
+		return StringUtils.EMPTY;
+	}
+	
+	protected String getMessageText(final String strMessage)
+	{
+		return strMessage.replace("SYSTEM\r\n", StringUtils.EMPTY).replace("BUTTONS\r\n", "\0").split("\0")[0];
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected String getMessageButtons(final String strMessage)
+	{
+		if (!SYSTEM_MESSGE.equalsIgnoreCase(getMessageType(strMessage)))
+			return StringUtils.EMPTY;
+		
+		final boolean bHasButtons = strMessage.contains("BUTTONS\r\n");
+		final String strButtons = (bHasButtons ? strMessage.replace("BUTTONS\r\n", "\0").split("\0")[1] : StringUtils.EMPTY);
+		final String strSystemButtons = getButtons(Arrays.asList(Arrays.asList("Info=info", "Rules=rules", "Day=manager_day", "Rates=rate")));
+		return "{\"inline_keyboard\":[" + strSystemButtons + 
+						(StringUtils.isNotBlank(strButtons) ? "," + strButtons : StringUtils.EMPTY) + "]}";
+	}
+	
+	static public String getButtons(final List<List<String>> aButtons)
+	{
+		String strButtons = StringUtils.EMPTY;
+		boolean bIsFirstLine = true;
+		for(final List<String> oLine : aButtons)
+		{
+			strButtons += (bIsFirstLine ? StringUtils.EMPTY : ",") + "[";
+			boolean bIsFirstButton = true;
+			for(final String strButtonInfo : oLine)
+			{
+				final String[] aButtonParts = strButtonInfo.split("=", 2);
+				if (aButtonParts.length != 2)
+					continue;
+				strButtons += (bIsFirstButton ? StringUtils.EMPTY : ",") + "{\"text\":\"" + aButtonParts[0] + "\",\"callback_data\":\"" + aButtonParts[1] + "\"}";
+				bIsFirstButton = false;
+			}
+			strButtons += "]";
+			bIsFirstLine = false;
+		}
+		return strButtons;
 	}
 	
 	@Override public void deleteMessage(final String strMessageID) throws Exception
@@ -134,23 +204,6 @@ public class TelegramTransport implements ITransport
 		}
 		catch(final Exception e) {}
 	}	
-    
-	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
-    { 
-		deleteLastSystemMessage(true);
-    	 
-		MultipartEntityBuilder builder = MultipartEntityBuilder.create(); 
-    	builder.addTextBody("chat_id", m_strSystemUserID, ContentType.TEXT_PLAIN); 
-    	builder.addBinaryBody("photo", oPhoto, ContentType.APPLICATION_OCTET_STREAM, oPhoto.getName()); 
-    	if (null != strCaption) 
-    		builder.addTextBody("caption", strCaption, ContentType.TEXT_PLAIN);
-    	  
-    	final String strResult = uploadFileRequest(getSendPhotoUrl(), builder, false);
-    	final Map<String, Object> oResult = JsonUtils.json2Map(strResult);
-    	oResult.put("message", oResult.get("result"));
-    	final TelegramMessage oMessage = new TelegramMessage(oResult);
-    	saveLastSystemMessageID(true, oMessage.getID());
-  	 }
 
 	void deleteLastSystemMessage(final boolean bIsSystem) throws Exception
 	{
@@ -205,9 +258,6 @@ public class TelegramTransport implements ITransport
 		
 		final String strLastMessageID = oMessages.getMessages().get(oMessages.getMessages().size() - 1).getUpdateID();
 		m_nNextMessageID = Integer.parseInt(strLastMessageID) + 1;
-		
-		for(final ITransportMessage oMessage : oMessages.getMessages())
-			deleteMessage(oMessage.getID());
 		return oMessages;
 	}
 

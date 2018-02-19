@@ -157,6 +157,7 @@ public class TestStockSource extends BaseStockSource
 			oOrder.setVolume(nVolume);
 			oOrder.setPrice(nPrice);
 			oOrder.setState(Order.WAIT);
+			oOrder.setCreated(new Date());
 
 			m_oStockSourceData.getRateOrders(oRateInfo).add(oOrder);
 			

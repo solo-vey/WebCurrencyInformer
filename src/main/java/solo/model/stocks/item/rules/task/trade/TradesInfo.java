@@ -155,7 +155,7 @@ public class TradesInfo extends BaseObject implements Serializable
 		if (StringUtils.isBlank(m_strCurrentState))
 			return StringUtils.EMPTY;
 		
-		return "State [" + m_strCurrentState + "]";
+		return " State [" + m_strCurrentState + "]";
 	}
 	
 	public void addBuy(BigDecimal nSpendSum, BigDecimal nBuyVolume)

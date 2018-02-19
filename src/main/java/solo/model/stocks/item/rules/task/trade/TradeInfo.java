@@ -361,7 +361,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	@Override public String toString()
 	{
 		String strResult = StringUtils.EMPTY;
-		strResult += m_oRateInfo + "\r\n";
+		strResult += m_oRateInfo + " [" + m_nRuleID + "]\r\n";
 		
 		strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "\r\n";
 		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";

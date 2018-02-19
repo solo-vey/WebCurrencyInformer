@@ -2,6 +2,7 @@ package solo.model.stocks.item.command.system;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -11,10 +12,10 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.telegram.TelegramTransport;
 import solo.utils.MathUtils;
 
 /** Формат комманды 
@@ -41,15 +42,28 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
     	
     	final List<RateInfo> aRates = (null != m_oRateInfo ? Arrays.asList(m_oRateInfo) : WorkerFactory.getStockSource().getRates());
     	
-    	String strMessage = StringUtils.EMPTY;
+    	String strMessage = StringUtils.EMPTY;	     	
+    	final List<List<String>> aButtons = new LinkedList<List<String>>();
+    	List<String> aLine = new LinkedList<String>();
     	for(final RateInfo oRateInfo : aRates)
     	{
 			final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
-			strMessage += CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateChartCommand.RATE_PARAMETER, oRateInfo) + "\r\n"; 
 			strMessage += getRateData(oRateInfo, oAnalysisResult) + "\r\n";
-    	}
+    		
+    		if (aLine.size() == 4)
+    		{
+    			aButtons.add(aLine);
+    			aLine = new LinkedList<String>();
+    		}
+    		
+    		aLine.add(oRateInfo.toString().toUpperCase() + "=" + GetRateChartCommand.NAME + "_" + oRateInfo);
+     	}
+
+    	if (aLine.size() > 0)
+			aButtons.add(aLine);
 		
-    	WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
+    	WorkerFactory.getMainWorker().sendSystemMessage(strMessage + 
+    			"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}
 
 	public static String getRateData(final RateInfo oRateInfo, final RateAnalysisResult oAnalysisResult)
@@ -72,7 +86,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 		String strData = MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
 						MathUtils.toCurrencyStringEx3(nBidPrice) + " / " +  
 						MathUtils.toCurrencyStringEx3(nTradePrice) + "[" + strTradeType + "]\r\n";
-		strData += MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
+		strData += "[" + oRateInfo + "] " + MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
 					MathUtils.toCurrencyStringEx3(nCommisionAndMargin) + " / " + 
 					MathUtils.toCurrencyStringEx3(nDelta.add(nCommisionAndMargin.negate())) + "\r\n";
 		return strData;

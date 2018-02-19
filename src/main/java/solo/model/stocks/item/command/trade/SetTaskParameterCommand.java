@@ -3,9 +3,7 @@ package solo.model.stocks.item.command.trade;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.HasParameters;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -14,7 +12,7 @@ import solo.utils.CommonUtils;
 
 /** Формат комманды 
  */
-public class SetTaskParameterCommand extends BaseCommand implements IHistoryCommand
+public class SetTaskParameterCommand extends BaseCommand
 {
 	final static public String NAME = "taskParam";
 	final static public String RULE_ID_PARAMETER = "#ruleID#";
@@ -51,15 +49,13 @@ public class SetTaskParameterCommand extends BaseCommand implements IHistoryComm
 		if (null != oTradeTask && oTradeTask instanceof HasParameters)
 		{
 			((HasParameters)oTradeTask).setParameter(m_strName, m_strValue);
-			WorkerFactory.getMainWorker().sendSystemMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
-					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
+			WorkerFactory.getMainWorker().addCommand(new GetTradeInfoCommand(m_nRuleID.toString()));
 		}
 		else
 		if (null != oTradeControler && oTradeControler instanceof HasParameters)
 		{
 			((HasParameters)oTradeControler).setParameter(m_strName, m_strValue);
-			WorkerFactory.getMainWorker().sendSystemMessage("[" + m_strName + "] = [" + m_strValue + "]\r\n" + 
-					CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nRuleID, GetTradeInfoCommand.FULL_PARAMETER, true));
+			WorkerFactory.getMainWorker().addCommand(new GetTradeInfoCommand(m_nRuleID.toString()));
 		}
 		else
 			WorkerFactory.getMainWorker().sendSystemMessage(oRule.getInfo());

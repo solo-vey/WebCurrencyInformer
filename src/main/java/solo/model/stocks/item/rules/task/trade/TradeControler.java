@@ -1,6 +1,7 @@
 package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -12,20 +13,14 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RulesFactory;
-import solo.model.stocks.item.command.base.CommandFactory;
-import solo.model.stocks.item.command.rule.RemoveRuleCommand;
-import solo.model.stocks.item.command.system.GetRateChartCommand;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
-import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
-import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
-import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
+import solo.transport.telegram.TelegramTransport;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 
@@ -93,16 +88,15 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	public String getInfo()
 	{
-		String strInfo = "[" + getRateInfo() + "] ";  		
+		String strInfo = "[" + getRateInfo() + "] [" + m_nID + "]";  		
 		for(final ITradeTask oTaskTrade : getTaskTrades())
 		{
 			final String strOrderSide = (null == oTaskTrade.getTradeInfo().getOrder().getSide() ? "None" : oTaskTrade.getTradeInfo().getOrder().getSide().toString());
-			strInfo += strOrderSide + ";";  
+			strInfo += strOrderSide + " [" + MathUtils.toCurrencyStringEx3(oTaskTrade.getTradeInfo().getTradeSum()) + "];";  
 		}
-		strInfo += "[" + m_nMaxTrades + "] ";
+		strInfo += "[" + (m_nMaxTrades > 0 ? m_nMaxTrades.toString() : (m_nMaxTrades <= -1 ? "Stoppped" : "Wait")) + "]";
 		
 		return strInfo + 
-			" " + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, m_nID) + 
 			getTradesInfo().getCurrentState();   
 	}
 	
@@ -111,22 +105,19 @@ public class TradeControler extends TaskBase implements ITradeControler
 		String strInfo = StringUtils.EMPTY;
 		
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		final List<List<String>> aButtons = new LinkedList<List<String>>();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
-			strInfo += oTaskTrade.getInfo() + " " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID) + "\r\n"; 
+		{
+			final List<String> aTradeButtons = Arrays.asList(oTaskTrade.getInfo() + "=trade_" + oTaskTrade.getID());
+			aButtons.add(aTradeButtons);
+		}
 		
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult();
     	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
-    	strInfo += "\r\n" + GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult) + 
-    		CommandFactory.makeCommandLine(GetRateChartCommand.class, GetRateInfoCommand.RATE_PARAMETER, getRateInfo()) + "\r\n";
-		
-		strInfo += "\r\n[" + getTradeStrategy().getName() + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-				SetTaskParameterCommand.NAME_PARAMETER, TRADE_STRATEGY_PARAMETER, SetTaskParameterCommand.VALUE_PARAMETER, 
-					(getTradeStrategy().getName().equals(SimpleTradeStrategy.NAME) ? DropSellTradeStrategy.NAME : SimpleTradeStrategy.NAME)) + "\r\n";
-		strInfo += "[" + m_nMaxTrades + "] " + CommandFactory.makeCommandLine(SetTaskParameterCommand.class, SetTaskParameterCommand.RULE_ID_PARAMETER, m_nID, 
-				SetTaskParameterCommand.NAME_PARAMETER, TRADE_COUNT_PARAMETER, SetTaskParameterCommand.VALUE_PARAMETER, (m_nMaxTrades > 0 ? "0" : "1")) + "\r\n";
-		
-		return getTradesInfo().getInfo() + "\r\n" + strInfo + 
-				" " + CommandFactory.makeCommandLine(RemoveRuleCommand.class, RemoveRuleCommand.ID_PARAMETER, m_nID);
+    	strInfo += GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
+ 		
+		return getTradesInfo().getInfo() + "[" + getTradeStrategy().getName() + "][" + m_nMaxTrades + "]\r\n\r\n" + strInfo +
+				"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons);
 	}
 	
 	public RateInfo getRateInfo()
