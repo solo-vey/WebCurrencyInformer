@@ -148,6 +148,9 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
 				nBtcVolume = nVolume;
 		}
 		
+		if (nBtcVolume.compareTo(new BigDecimal(10)) < 0)
+			return StringUtils.EMPTY;
+		
 		final BigDecimal nDelta = nAskPrice.add(nBidPrice.negate());
 		final BigDecimal nCommission = TradeUtils.getCommisionValue(nAskPrice, nBidPrice);
 		final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nDelta.add(nCommission.negate()).doubleValue() / nAskPrice.doubleValue() * 100, 2);

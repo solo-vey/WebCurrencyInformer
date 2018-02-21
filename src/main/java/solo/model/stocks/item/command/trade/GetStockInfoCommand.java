@@ -67,9 +67,8 @@ public class GetStockInfoCommand extends BaseCommand
 			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();	
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
-				if (oCurrencyInfo.getValue().getBalance().compareTo(new BigDecimal(0.000001)) < 0 && 
-					oCurrencyInfo.getValue().getLocked().compareTo(new BigDecimal(0.000001)) < 0)
-						continue;
+				if (oCurrencyInfo.getValue().getBalance().compareTo(new BigDecimal(0.000001)) < 0)
+					continue;
 				
 				BigDecimal nFreeVolum = oCurrencyInfo.getValue().getBalance();
 				for(final IRule oRule : oRules.getRules().values())
@@ -82,14 +81,19 @@ public class GetStockInfoCommand extends BaseCommand
 					if (null == oOrder)
 						continue;
 					
+					if (!oTradeTask.getRateInfo().getCurrencyFrom().equals(oCurrencyInfo.getKey()) && 
+						!oTradeTask.getRateInfo().getCurrencyTo().equals(oCurrencyInfo.getKey()))
+						continue;
+					
 					if (OrderSide.BUY.equals(oOrder.getSide()) && oTradeTask.getRateInfo().getCurrencyFrom().equals(oCurrencyInfo.getKey()))
 						nFreeVolum = nFreeVolum.add(oTradeTask.getTradeInfo().getBoughtVolume().negate());
 					
 					if (OrderSide.SELL.equals(oOrder.getSide()) && oTradeTask.getRateInfo().getCurrencyTo().equals(oCurrencyInfo.getKey()))
 						nFreeVolum = nFreeVolum.add(oTradeTask.getTradeInfo().getReceivedSum().negate());
 				}
+				
 				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
-								"/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + "\r\n";
+							"/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + "\r\n";
 				
 				if (nFreeVolum.compareTo(BigDecimal.ZERO) > 0)
 				{

@@ -74,7 +74,7 @@ public class TestStockSource extends BaseStockSource
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
 						oOrder.setState(Order.DONE);
-						oTradeOrder.setVolume(nOrderVolumeDelta.negate());
+						oTradeOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
 					}
 					else
@@ -90,7 +90,7 @@ public class TestStockSource extends BaseStockSource
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
 						oOrder.setState(Order.DONE);
-						oTradeOrder.setVolume(nOrderVolumeDelta.negate());
+						oTradeOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
 					}
 					else

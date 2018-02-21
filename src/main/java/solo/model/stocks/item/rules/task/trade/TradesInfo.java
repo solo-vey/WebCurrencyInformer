@@ -246,7 +246,7 @@ public class TradesInfo extends BaseObject implements Serializable
 		return  "Count: " + getTradeCount() + " [" + getRateInfo().toString() + "]\r\n" + 
 				"Money: " + MathUtils.toCurrencyStringEx3(getSum()) + "/" + MathUtils.toCurrencyStringEx3(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx3(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx3(getSumToSell()) + "\r\n" + 
 				"Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n" + 
-				"Trades: " + MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + "\r\n" + 
+				MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + "\r\n" + 
 				getCurrentState();
 	}
 	

@@ -94,7 +94,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			final String strOrderSide = (null == oTaskTrade.getTradeInfo().getOrder().getSide() ? "None" : oTaskTrade.getTradeInfo().getOrder().getSide().toString());
 			strInfo += strOrderSide + " [" + MathUtils.toCurrencyStringEx3(oTaskTrade.getTradeInfo().getTradeSum()) + "];";  
 		}
-		strInfo += "[" + (m_nMaxTrades > 0 ? m_nMaxTrades.toString() : (m_nMaxTrades <= -1 ? "Stoppped" : "Wait")) + "]";
+		strInfo += "[" + (m_nMaxTrades > 0 ? m_nMaxTrades.toString() : (m_nMaxTrades <= -1 ? "Stopped" : "Wait")) + "]";
 		
 		return strInfo + 
 			getTradesInfo().getCurrentState();   
