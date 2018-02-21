@@ -45,7 +45,8 @@ public class StockManager implements IStockManager
 			return;
 		
 		final BigDecimal nTradeDelta = oTaskTrade.getTradeInfo().getDelta();
-		if (nTradeDelta.compareTo(BigDecimal.ZERO) < 0)
+		final BigDecimal nMargin = TradeUtils.getMarginValue(oTaskTrade.getTradeInfo().getReceivedSum(), oTaskTrade.getTradeInfo().getRateInfo());
+		if (nTradeDelta.compareTo(nMargin) < 0)
 			stopControler(oTaskTrade.getTradeInfo().getRateInfo(), oTaskTrade);
 		else
 			startAllControlers(oTaskTrade.getTradeInfo().getRateInfo(), oTaskTrade);

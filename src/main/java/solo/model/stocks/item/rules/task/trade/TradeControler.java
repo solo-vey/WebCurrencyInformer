@@ -117,7 +117,7 @@ public class TradeControler extends TaskBase implements ITradeControler
     	strInfo += GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
  		
 		return getTradesInfo().getInfo() + "[" + getTradeStrategy().getName() + "][" + m_nMaxTrades + "]\r\n\r\n" + strInfo +
-				"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons);
+				(aButtons.size() > 0 ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
 	}
 	
 	public RateInfo getRateInfo()

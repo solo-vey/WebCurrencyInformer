@@ -1,7 +1,9 @@
 package solo.model.stocks.item.command.trade;
 
 import java.math.BigDecimal;
+import java.util.Arrays;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -12,15 +14,19 @@ import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
+import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.telegram.TelegramTransport;
 import solo.utils.MathUtils;
 
 /** Формат комманды 
@@ -39,38 +45,77 @@ public class GetStockInfoCommand extends BaseCommand
 	{
 		super.execute();
 		
-		String strMessage = StringUtils.EMPTY;
-		WorkerFactory.getMainWorker().sendSystemMessage("Calculate stock info ...");
-		
+		String strMessage = StringUtils.EMPTY;		
 		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockExchange().getStockSource().getAllRateState();
 		
 		try
 		{		
+			final Rules oRules = WorkerFactory.getStockExchange().getRules();
 			final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
 			
-			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();			
+		   	final List<List<String>> aButtons = new LinkedList<List<String>>();
+			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
+			{
+				for(final Order oOrder : oOrdersInfo.getValue())
+				{
+					final String strOrderInfo = oOrdersInfo.getKey() + "/" + oOrder.getSide() + "/" + MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + 
+													"/" + MathUtils.toCurrencyStringEx3(oOrder.getSum());
+					aButtons.add(Arrays.asList(strOrderInfo + " [X]=" + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, oOrder.getId())));
+				}
+			}
+			
+			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();	
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
 				if (oCurrencyInfo.getValue().getBalance().compareTo(new BigDecimal(0.000001)) < 0 && 
 					oCurrencyInfo.getValue().getLocked().compareTo(new BigDecimal(0.000001)) < 0)
 						continue;
 				
+				BigDecimal nFreeVolum = oCurrencyInfo.getValue().getBalance();
+				for(final IRule oRule : oRules.getRules().values())
+				{
+					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+					if (null == oTradeTask)
+						continue;
+					
+					final Order oOrder = oTradeTask.getTradeInfo().getOrder();
+					if (null == oOrder)
+						continue;
+					
+					if (OrderSide.BUY.equals(oOrder.getSide()) && oTradeTask.getRateInfo().getCurrencyFrom().equals(oCurrencyInfo.getKey()))
+						nFreeVolum = nFreeVolum.add(oTradeTask.getTradeInfo().getBoughtVolume().negate());
+					
+					if (OrderSide.SELL.equals(oOrder.getSide()) && oTradeTask.getRateInfo().getCurrencyTo().equals(oCurrencyInfo.getKey()))
+						nFreeVolum = nFreeVolum.add(oTradeTask.getTradeInfo().getReceivedSum().negate());
+				}
 				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
-								(oCurrencyInfo.getValue().getLocked().compareTo(BigDecimal.ZERO) != 0 ? "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getLocked()) : StringUtils.EMPTY)
-								+ "\r\n";
+								"/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + "\r\n";
+				
+				if (nFreeVolum.compareTo(BigDecimal.ZERO) > 0)
+				{
+					for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
+					{
+						if (!oShortRateInfo.getKey().getCurrencyFrom().equals(oCurrencyInfo.getKey()))
+							continue;
+						
+						if (TradeUtils.getMinTradeVolume(oShortRateInfo.getKey()).compareTo(nFreeVolum) > 0)
+							continue;
+						
+						if (!oUserInfo.getMoney().containsKey(oShortRateInfo.getKey().getCurrencyTo()))
+							continue;
+						
+						final BigDecimal nPrice = oShortRateInfo.getValue().getAskPrice();
+						final BigDecimal nSum = nPrice.multiply(nFreeVolum);
+						aButtons.add(Arrays.asList(oShortRateInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + 
+								"/" + MathUtils.toCurrencyStringEx3(nPrice) + "/" + MathUtils.toCurrencyStringEx3(nSum) + " [+]=" + 
+							CommandFactory.makeCommandLine(AddOrderCommand.class, AddOrderCommand.SIDE_PARAMETER, OrderSide.SELL,
+									AddOrderCommand.RATE_PARAMETER, oShortRateInfo.getKey(), 
+									AddOrderCommand.PRICE_PARAMETER, MathUtils.toCurrencyStringEx3(nPrice).replace(",", StringUtils.EMPTY), 
+									AddOrderCommand.VOLUME_PARAMETER,  MathUtils.toCurrencyStringEx3(nFreeVolum))));
+					}
+				}
 			}
 			strMessage += "\r\n";
-	
-			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
-			{
-				for(final Order oOrder : oOrdersInfo.getValue())
-					strMessage += oOrdersInfo.getKey() + "/" + oOrder.getSide() + "/" + MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + 
-						"/" + MathUtils.toCurrencyStringEx3(oOrder.getVolume()) + "/" + MathUtils.toCurrencyStringEx3(oOrder.getSum()) +
-						(StringUtils.isNotBlank(oOrder.getMessage()) ? " " + oOrder.getMessage() : StringUtils.EMPTY) + 
-						" " + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, oOrder.getId()) + "\r\n";
-			}
-			strMessage += "\r\n";
-			WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 			
 			BigDecimal oTotalBtcSum = BigDecimal.ZERO;
 			final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
@@ -92,7 +137,7 @@ public class GetStockInfoCommand extends BaseCommand
 				final BigDecimal oSum = oVolume.multiply(oBtcBidPrice);
 				oTotalBtcSum = oTotalBtcSum.add(oSum);
 			}
-			
+
 			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 			{
 				final BigDecimal oBtcBidPrice = getRateBestBidPrice(oStockExchange, oOrdersInfo.getKey().getCurrencyTo(), oRateHash, oAllRateState);
@@ -151,6 +196,7 @@ public class GetStockInfoCommand extends BaseCommand
 				final BigDecimal oTotalUahSum = MathUtils.getBigDecimal(oTotalBtcSum.doubleValue() / oBtcBidPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
 				strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
 			}
+			strMessage += (aButtons.size() > 0 ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
 		}
 		catch(final Exception e)
 		{

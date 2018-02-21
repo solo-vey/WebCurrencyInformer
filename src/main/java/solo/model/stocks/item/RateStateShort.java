@@ -13,12 +13,14 @@ public class RateStateShort extends BaseObject
 	final protected RateInfo m_oRateInfo;
 	final protected BigDecimal m_nBidPrice;
 	final protected BigDecimal m_nAskPrice;
+	final protected BigDecimal m_nVolume;
 	
-	public RateStateShort(final RateInfo oRateInfo, final BigDecimal nBidPrice, final BigDecimal nAskPrice)
+	public RateStateShort(final RateInfo oRateInfo, final BigDecimal nBidPrice, final BigDecimal nAskPrice, final BigDecimal nVolume)
 	{
 		m_oRateInfo = oRateInfo;
 		m_nBidPrice = nBidPrice;
 		m_nAskPrice = nAskPrice;
+		m_nVolume = nVolume;
 	}
 
 	public RateInfo getRateInfo()
@@ -36,6 +38,11 @@ public class RateStateShort extends BaseObject
 		return m_nBidPrice;
 	}
 	
+	public BigDecimal getVolume()
+	{
+		return m_nVolume;
+	}
+	
 	@SuppressWarnings("unchecked")
 	static public RateStateShort getFromData(final Entry<String, Object> oRateData)
 	{
@@ -49,8 +56,9 @@ public class RateStateShort extends BaseObject
 			final Map<String, Object> oInfoData = (Map<String, Object>) oRateData.getValue();
 			final BigDecimal nBidPrice = MathUtils.fromString(oInfoData.get("buy_price").toString());
 			final BigDecimal nAskPrice = MathUtils.fromString(oInfoData.get("sell_price").toString());
+			final BigDecimal nVolume = MathUtils.fromString(oInfoData.get("vol").toString());
 			
-			return new RateStateShort(oRateInfo, nBidPrice, nAskPrice);
+			return new RateStateShort(oRateInfo, nBidPrice, nAskPrice, nVolume);
 		}
 		catch(final Exception e) {}
 		

@@ -3,6 +3,7 @@ package solo.utils;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -226,7 +227,7 @@ public class RequestUtils
 		final ArrayList<NameValuePair> aPostParameters = new ArrayList<NameValuePair>();
 		for(final Entry<String, String> oParameter : aParameters.entrySet())
 			aPostParameters.add(new BasicNameValuePair(oParameter.getKey(), oParameter.getValue()));
-		oPost.setEntity(new UrlEncodedFormEntity(aPostParameters));
+		oPost.setEntity(new UrlEncodedFormEntity(aPostParameters, Charset.forName("UTF-8")));
 
 		if (null != aHeaders)
 		{

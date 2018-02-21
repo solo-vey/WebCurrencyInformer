@@ -32,6 +32,6 @@ public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 		final IRule oRule = RulesFactory.getRule(m_strRuleInfo);
 		WorkerFactory.getStockExchange().getRules().addRule(oRule);
 		
-		WorkerFactory.getMainWorker().sendSystemMessage("Rule " + getInfo() + " add. " + BaseCommand.getCommand(GetRulesCommand.NAME));
+		WorkerFactory.getMainWorker().sendSystemMessage("Rule " + getInfo() + " add");
 	}
 }
