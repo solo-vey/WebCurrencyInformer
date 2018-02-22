@@ -73,11 +73,14 @@ public class TestStockSource extends BaseStockSource implements ITest
 				if (!Order.WAIT.equals(oOrder.getState()))
 					continue;
 				
+				System.err.println(oRateInfo + " TRADE " + oTradeOrder.getInfoShort());
+				System.err.println("      " + " Order " + oOrder.getInfoShort());
 				if (OrderSide.BUY.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) >= 0)
 				{
 					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
+						System.out.println("Done order [" + oOrder.getId() + "] buy [" + oOrder.getVolume() + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setState(Order.DONE);
 						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
@@ -85,6 +88,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 					}
 					else
 					{
+						System.out.println("Order [" + oOrder.getId() + "] buy [" + nTradeOrderVolume + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setVolume(nOrderVolumeDelta);
 						nTradeOrderVolume = BigDecimal.ZERO;
 					}
@@ -95,6 +99,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
+						System.out.println("Done order [" + oOrder.getId() + "] sell [" + oOrder.getVolume() + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setState(Order.DONE);
 						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
@@ -102,6 +107,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 					}
 					else
 					{
+						System.out.println("Order [" + oOrder.getId() + "] sell [" + nTradeOrderVolume + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setVolume(nOrderVolumeDelta);
 						nTradeOrderVolume = BigDecimal.ZERO;
 					}

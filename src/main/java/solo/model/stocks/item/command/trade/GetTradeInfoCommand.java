@@ -77,7 +77,7 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 			
 			final List<List<String>> aButtons = Arrays.asList(
 								Arrays.asList("Chart=chart_" + oTradeControler.getTradesInfo().getRateInfo(), 
-										(nMaxTrades > 0 ? "Wait=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_0" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
+										(nMaxTrades > 0 ? "Stop=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_-1" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
 										strNewStrategy + "=" + strSetParam + TradeControler.TRADE_STRATEGY_PARAMETER + "_" + strNewStrategy, 
 										"Remove=/removerule_" + m_nRuleID));
 			

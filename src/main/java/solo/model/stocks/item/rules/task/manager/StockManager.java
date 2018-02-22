@@ -76,7 +76,7 @@ public class StockManager implements IStockManager
 		if (aWorkingControler.size() > 1)
 		{
 			oTaskTrade.getTradeControler().setParameter(TradeControler.TRADE_COUNT_PARAMETER, "0");
-			WorkerFactory.getTransport().sendMessage("MANAGER\r\nStop controler [" + oRateInfo + "]");
+			//WorkerFactory.getTransport().sendMessage("MANAGER\r\nStop controler [" + oRateInfo + "]");
 		}
 	}
 		
@@ -100,8 +100,8 @@ public class StockManager implements IStockManager
 			oControler.setParameter(TradeControler.TRADE_COUNT_PARAMETER, oControler.getParameter(TradeControler.MAX_TARDES));
 		}
 		
-		if (StringUtils.isNotBlank(strMessage))
-			WorkerFactory.getTransport().sendMessage("MANAGER\r\n" + strMessage);
+		//if (StringUtils.isNotBlank(strMessage))
+		//	WorkerFactory.getTransport().sendMessage("MANAGER\r\n" + strMessage);
 	}
 
 	@Override public StockManagesInfo getInfo()
