@@ -54,9 +54,9 @@ public class BtcTradeStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	public RateState getRateState(final RateInfo oRateInfo) throws Exception
+	@Override protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception
 	{
-		final RateState oRateState = super.getRateState(oRateInfo);
+		super.loadRate(oRateInfo, oRateState);
 		
 		final String strOrderBuyUrl = m_strBuyUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final Map<String, Object> oBuyOrders = RequestUtils.sendGetAndReturnMap(strOrderBuyUrl, true, RequestUtils.DEFAULT_TEMEOUT);
@@ -76,8 +76,6 @@ public class BtcTradeStockSource extends BaseStockSource
 			if (oTradeOrder.getSide().equals(OrderSide.BUY))
 				oRateState.getTrades().add(oTradeOrder);
 		}
-		
-		return oRateState;
 	}
 
 	protected String getRateIdentifier(final RateInfo oRateInfo)

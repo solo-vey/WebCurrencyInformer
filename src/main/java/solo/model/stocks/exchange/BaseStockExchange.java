@@ -8,6 +8,7 @@ import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.StockManager;
 import solo.model.stocks.source.IStockSource;
+import solo.model.stocks.source.TestStockSource;
 import solo.transport.MessageLevel;
 import solo.utils.ResourceUtils;
 
@@ -20,6 +21,7 @@ public class BaseStockExchange implements IStockExchange
 	final protected String m_strStockName;
 	final protected String m_strStockProperies;
 	protected IStockSource m_oStockSource;
+	protected IStockSource m_oStockTestSource;
 	final protected Rules m_oRules;
 	final StateAnalysisResult m_oLastAnalysisResult;
 	final IStockManager m_oStockManager;
@@ -51,6 +53,14 @@ public class BaseStockExchange implements IStockExchange
 	public IStockSource getStockSource()
 	{
 		return m_oStockSource;
+	}
+		
+	public IStockSource getStockTestSource()
+	{
+		if (null == m_oStockTestSource)
+			m_oStockTestSource = new TestStockSource(this, m_oStockSource);
+
+		return m_oStockTestSource;
 	}
 	
 	public StateAnalysisResult getLastAnalysisResult()

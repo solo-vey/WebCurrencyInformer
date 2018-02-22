@@ -46,12 +46,12 @@ public class GetStockInfoCommand extends BaseCommand
 		super.execute();
 		
 		String strMessage = StringUtils.EMPTY;		
-		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockExchange().getStockSource().getAllRateState();
+		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
 		
 		try
 		{		
 			final Rules oRules = WorkerFactory.getStockExchange().getRules();
-			final StockUserInfo oUserInfo = WorkerFactory.getStockExchange().getStockSource().getUserInfo(null);
+			final StockUserInfo oUserInfo = WorkerFactory.getStockSource().getUserInfo(null);
 			
 		   	final List<List<String>> aButtons = new LinkedList<List<String>>();
 			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())

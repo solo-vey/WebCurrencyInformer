@@ -41,9 +41,9 @@ public class KunaStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	public RateState getRateState(final RateInfo oRateInfo) throws Exception
+	@Override protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception
 	{
-		final RateState oRateState = super.getRateState(oRateInfo);
+		super.loadRate(oRateInfo, oRateState);
 		
 		final String strOrderBookUrl = m_strOrdersUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final Map<String, Object> oAllOrders = RequestUtils.sendGetAndReturnMap(strOrderBookUrl, true, RequestUtils.DEFAULT_TEMEOUT);
@@ -56,8 +56,6 @@ public class KunaStockSource extends BaseStockSource
 		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strTradesUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oTrades = convert2Orders(oInputTrades);
 		oRateState.setTrades(oTrades);
-		
-		return oRateState;
 	}
 
 	protected String getRateIdentifier(final RateInfo oRateInfo)

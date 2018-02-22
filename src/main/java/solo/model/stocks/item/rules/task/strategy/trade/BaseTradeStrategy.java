@@ -8,6 +8,7 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 
@@ -44,7 +45,8 @@ public class BaseTradeStrategy implements ITradeStrategy
 	
 	protected void removeBuyOrder(final ITradeTask oTaskTrade, final Order oGetOrder, final String strMessagePrefix)
 	{
-		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
+		final IStockSource oStockSource = WorkerFactory.getStockSource(oTaskTrade);
+		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo(), oStockSource);
 		if (oRemoveOrder.isException())
 			return;
 		
@@ -62,7 +64,8 @@ public class BaseTradeStrategy implements ITradeStrategy
 
 	protected void removeSellOrder(final ITradeTask oTaskTrade, final Order oGetOrder, final String strMessagePrefix)
 	{
-		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo());
+		final IStockSource oStockSource = WorkerFactory.getStockSource(oTaskTrade);
+		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, oTaskTrade.getTradeInfo().getRateInfo(), oStockSource);
 		if (oRemoveOrder.isException())
 			return;
 		

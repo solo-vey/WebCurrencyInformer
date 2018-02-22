@@ -7,6 +7,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.exchange.Stocks;
+import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.source.IStockSource;
 import solo.transport.ITransport;
 import solo.transport.MessageLevel;
@@ -35,6 +36,16 @@ public class WorkerFactory
 	public static IStockSource getStockSource()
 	{
 		return getStockExchange().getStockSource();
+	}
+	
+	public static IStockSource getStockTestSource()
+	{
+		return getStockExchange().getStockTestSource();
+	}
+	
+	public static IStockSource getStockSource(final Object oTradeObject)
+	{
+		return (oTradeObject instanceof ITest ?  getStockTestSource() : getStockSource());
 	}
 	
 	static public void registerMainWorkerThread(final Long nThreadID, final MainWorker oWorker)

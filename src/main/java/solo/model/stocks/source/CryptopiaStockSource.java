@@ -43,9 +43,9 @@ public class CryptopiaStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Override public RateState getRateState(final RateInfo oRateInfo) throws Exception
+	@Override protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception
 	{
-		final RateState oRateState = super.getRateState(oRateInfo);
+		super.loadRate(oRateInfo, oRateState);
 		
 		final String strMarket = getRateIdentifier(oRateInfo); 
 		final String strOrderBookUrl = m_strOrdersUrl.replace("#rate#", strMarket);
@@ -61,8 +61,6 @@ public class CryptopiaStockSource extends BaseStockSource
 		final List<Object> oRateTrades = (List<Object>) oTrades.get("Data");
 		final List<Order> oTradeOrders = convert2Orders(oRateTrades);
 		oRateState.setTrades(oTradeOrders);
-		
-		return oRateState;
 	}
 
 	protected String getRateIdentifier(final RateInfo oRateInfo)

@@ -161,7 +161,7 @@ public class TelegramTransport implements ITransport
 		if (!SYSTEM_MESSGE.equalsIgnoreCase(getMessageType(strMessage)))
 			return StringUtils.EMPTY;
 		
-		final boolean bHasButtons = strMessage.contains("BUTTONS\r\n");
+		final boolean bHasButtons = (strMessage.replace("BUTTONS\r\n", "\0").split("\0").length > 1);
 		final String strButtons = (bHasButtons ? strMessage.replace("BUTTONS\r\n", "\0").split("\0")[1] : StringUtils.EMPTY);
 		final String strSystemButtons = getButtons(Arrays.asList(Arrays.asList("Info=info", "Rules=rules", "Day=manager_day", "Rates=rate")));
 		return "{\"inline_keyboard\":[" + strSystemButtons + 

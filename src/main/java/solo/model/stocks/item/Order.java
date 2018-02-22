@@ -172,7 +172,7 @@ public class Order extends BaseObject implements Serializable
 	
 	public String getMessage()
 	{
-		return m_strMessage;
+		return (null != m_strMessage ? m_strMessage : StringUtils.EMPTY);
 	}
 
 	public String getInfoShort()
@@ -182,7 +182,7 @@ public class Order extends BaseObject implements Serializable
 			 	+ (StringUtils.isNotBlank(getState()) ? ". State [" + getState() + "]" : StringUtils.EMPTY);
 		
 		return getSide() + "/" + MathUtils.toCurrencyStringEx3(getPrice()) + 
-			"/" + MathUtils.toCurrencyStringEx3(getVolume()) + "/" + MathUtils.toCurrencyStringEx3(getSum()) +
+			"/" + MathUtils.toCurrencyStringEx3(getSum()) +
 			(StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY);
 	}
 	

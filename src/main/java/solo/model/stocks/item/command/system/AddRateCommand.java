@@ -21,7 +21,7 @@ public class AddRateCommand extends BaseCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		WorkerFactory.getMainWorker().getStockExchange().getStockSource().registerRate(m_oRateInfo);
+		WorkerFactory.getStockSource().registerRate(m_oRateInfo);
 		WorkerFactory.getMainWorker().getStockWorker().startRateWorker(m_oRateInfo);
 		
 		WorkerFactory.getMainWorker().sendSystemMessage("Stock rate worker [" + m_oRateInfo + "] started");

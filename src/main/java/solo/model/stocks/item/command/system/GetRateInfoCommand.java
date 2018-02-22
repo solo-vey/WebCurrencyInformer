@@ -65,7 +65,7 @@ public class GetRateInfoCommand extends BaseCommand implements IHistoryCommand
      	}
     		
     	final Map<BigDecimal, RateInfo> aExtraDeltaRates = new TreeMap<BigDecimal, RateInfo>();
-		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockExchange().getStockSource().getAllRateState();
+		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
 		for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
 		{
 			if (aRates.contains(oShortRateInfo.getKey()))

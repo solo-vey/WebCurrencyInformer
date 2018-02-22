@@ -34,7 +34,7 @@ public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
 		super.execute();
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange(); 
-    	final Candlestick oCandlestick = oStockExchange.getStockCandlestick().get(m_oRateInfo);
+		final Candlestick oCandlestick = oStockExchange.getStockCandlestick().get(m_oRateInfo);
     	final String strFileName = oCandlestick.makeChartImage(50);
     	
     	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
@@ -43,7 +43,7 @@ public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
     	
     	final List<List<String>> aButtons = new LinkedList<List<String>>();
     	List<String> aLine = new LinkedList<String>();
-    	for(final RateInfo oRateInfo : oStockExchange.getStockSource().getRates())
+    	for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
     	{
     		if (oRateInfo.equals(m_oRateInfo))
     			continue;

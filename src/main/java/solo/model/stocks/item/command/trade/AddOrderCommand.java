@@ -37,7 +37,7 @@ public class AddOrderCommand extends BaseCommand implements IHistoryCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		final Order oOrder = WorkerFactory.getStockExchange().getStockSource().addOrder(m_oSide, m_oRateInfo, m_nVolume, m_nPrice);
+		final Order oOrder = WorkerFactory.getStockSource().addOrder(m_oSide, m_oRateInfo, m_nVolume, m_nPrice);
 		
 		if (oOrder.isNull())
 			WorkerFactory.getMainWorker().sendSystemMessage("Can't add order. " + oOrder.getInfo() + " " + BaseCommand.getCommand(GetStockInfoCommand.NAME));

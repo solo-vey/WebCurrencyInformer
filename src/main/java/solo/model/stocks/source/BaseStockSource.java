@@ -42,6 +42,8 @@ public class BaseStockSource implements IStockSource
 	final protected String m_strPublicKey;
 	final protected String m_strSecretKey;
 	
+	final protected Map<RateInfo, RateState> m_oRateStateCache = new HashMap<RateInfo, RateState>();
+	
 	public BaseStockSource(final IStockExchange oStockExchange)
 	{
 		m_oStockExchange = oStockExchange;
@@ -64,11 +66,23 @@ public class BaseStockSource implements IStockSource
 		return m_oStockExchange;
 	}
 	
-	public RateState getRateState(RateInfo oRateInfo) throws Exception
+	public RateState getRateState(final RateInfo oRateInfo) throws Exception
 	{
-		return new RateState(oRateInfo);
+		final RateState oRateState = new RateState(oRateInfo);
+		loadRate(oRateInfo, oRateState);
+		m_oRateStateCache.put(oRateInfo, oRateState);
+		return oRateState; 
+	}
+		
+	protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception
+	{
 	}
 	
+	public RateState getCachedRateState(final RateInfo oRateInfo) throws Exception
+	{
+		return m_oRateStateCache.get(oRateInfo);
+	}
+
 	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
 	{
 		return new HashMap<RateInfo, RateStateShort>();

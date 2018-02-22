@@ -11,6 +11,7 @@ public interface IStockExchange
 {
 	String getStockName();
 	IStockSource getStockSource();
+	IStockSource getStockTestSource();
 	String getStockProperties();
 	StockCandlestick getStockCandlestick();
 	Rules getRules();

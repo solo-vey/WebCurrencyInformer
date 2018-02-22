@@ -78,7 +78,7 @@ public class BaseWorker extends Thread implements IWorker
 			}
 			
 			oCommand.execute();
-			System.err.printf(Thread.currentThread().getName() +  "[" + getStock() + "] Execute command [" + CommandFactory.getCommandName(oCommand.getClass()) + "] complete. " + (new Date()) + " Info [" + oCommand.getInfo() + "]. Queue size [" + m_oCommandQueue.size() + "]\r\n");
+//			System.err.printf(Thread.currentThread().getName() +  "[" + getStock() + "] Execute command [" + CommandFactory.getCommandName(oCommand.getClass()) + "] complete. " + (new Date()) + " Info [" + oCommand.getInfo() + "]. Queue size [" + m_oCommandQueue.size() + "]\r\n");
 		}
 	}
 	

@@ -3,6 +3,8 @@ package solo.model.stocks.item.command.trade;
 import java.util.Arrays;
 import java.util.List;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
@@ -58,10 +60,11 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 			strMessage = oTradeTask.getTradeInfo() + "\r\n" + oTradeTask.getTradeInfo().getInfo();
 			final List<List<String>> aButtons = Arrays.asList(
 								Arrays.asList("Controler=trade_" + oTradeTask.getTradeControler().getTradesInfo().getRuleID(), 
-										"DelOrder=/removeorder_" + oTradeTask.getTradeInfo().getOrder().getId(), 
+										(!oTradeTask.getTradeInfo().getOrder().isNull() ? "DelOrder=/removeorder_" + oTradeTask.getTradeInfo().getOrder().getId() : StringUtils.EMPTY), 
 										"DelTrade=/removerule_" + m_nRuleID));
 			
-			strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons);		}
+			strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons);
+		}
 		else
 		if (null != oTradeControler)
 		{
@@ -74,7 +77,7 @@ public class GetTradeInfoCommand extends BaseCommand implements IHistoryCommand
 			
 			final List<List<String>> aButtons = Arrays.asList(
 								Arrays.asList("Chart=chart_" + oTradeControler.getTradesInfo().getRateInfo(), 
-										(nMaxTrades > 0 ? "Stop=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_-1" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
+										(nMaxTrades > 0 ? "Wait=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_0" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
 										strNewStrategy + "=" + strSetParam + TradeControler.TRADE_STRATEGY_PARAMETER + "_" + strNewStrategy, 
 										"Remove=/removerule_" + m_nRuleID));
 			

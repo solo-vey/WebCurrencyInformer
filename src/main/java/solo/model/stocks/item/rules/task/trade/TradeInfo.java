@@ -40,15 +40,12 @@ public class TradeInfo extends BaseObject implements Serializable
 	protected BigDecimal m_nReceivedSum = BigDecimal.ZERO;
 	protected BigDecimal m_nSoldVolume = BigDecimal.ZERO;
 	
-	protected boolean m_bIsTest = false;
-	
 	public TradeInfo(final RateInfo oRateInfo, final int nRuleID)
 	{
 		m_oRateInfo = oRateInfo;
 		m_oBuyStrategy = TradeUtils.getBuyStrategy(m_oRateInfo);
 		m_oSellStrategy = TradeUtils.getSellStrategy(m_oRateInfo);
 		m_nRuleID = nRuleID;
-		addToHistory("Create trade");
 	}
 	
 	public RateInfo getRateInfo()
@@ -84,11 +81,6 @@ public class TradeInfo extends BaseObject implements Serializable
 	public Integer getRuleID()
 	{
 		return m_nRuleID;
-	}
-		
-	public boolean getIsTest()
-	{
-		return m_bIsTest;
 	}
 	
 	public TradeHistory getHistory()
@@ -208,11 +200,6 @@ public class TradeInfo extends BaseObject implements Serializable
 		return m_nSoldVolume;
 	}
 	
-	public void setIsTest(final boolean bIsTest)
-	{
-		m_bIsTest = bIsTest;
-	}
-	
 	public void setOrder(Order oOrder)
 	{
 		final Date oOrderDateCreate = m_oOrder.getCreated();
@@ -320,6 +307,9 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public void setTaskSide(OrderSide oTaskSide)
 	{
+		if (oTaskSide.equals(m_oTaskSide))
+			return;
+		
 		m_oTaskSide = oTaskSide;
 		addToHistory("Set task side : " + oTaskSide); 
 	}

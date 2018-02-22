@@ -243,10 +243,8 @@ public class TradeUtils
 		return oReverseOrder;
 	}
 	
-	public static Order removeOrder(final Order oGetOrder, final RateInfo oRateInfo)
+	public static Order removeOrder(final Order oGetOrder, final RateInfo oRateInfo, final IStockSource oStockSource)
 	{
-		final IStockSource oStockSource = WorkerFactory.getMainWorker().getStockExchange().getStockSource();
-		
 		int nTryCount = 50;
 		final String strMessage = "Cannot delete order\r\n" + oGetOrder.getInfoShort();
 		Order oRemoveOrder = new Order(Order.ERROR, strMessage);

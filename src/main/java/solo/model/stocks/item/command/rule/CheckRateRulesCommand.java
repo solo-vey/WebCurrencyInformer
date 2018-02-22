@@ -46,7 +46,8 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		
-		final RateState oRateState = oStockExchange.getStockSource().getRateState(m_oRateInfo);
+		final RateState oRateState = WorkerFactory.getStockSource().getRateState(m_oRateInfo);
+		WorkerFactory.getStockTestSource().getRateState(m_oRateInfo);
 		oStockExchange.getLastAnalysisResult().analyse(oRateState, oStockExchange, m_oRateInfo);
 		
 		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateState.getRateInfo());

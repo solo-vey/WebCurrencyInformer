@@ -11,6 +11,7 @@ import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
+import solo.model.stocks.item.Order;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
@@ -18,6 +19,7 @@ import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
+import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.transport.telegram.TelegramTransport;
@@ -28,6 +30,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 {
 	private static final long serialVersionUID = 2548242566461334806L;
 	
+	public static final String NAME = "CONTROLER";
+
 	public static final String TRADE_SUM_PARAMETER = "tradeSum";
 	public static final String TRADE_COUNT_PARAMETER = "tradeCount";
 	public static final String TRADE_STRATEGY_PARAMETER = "tradeStrategy";
@@ -72,6 +76,11 @@ public class TradeControler extends TaskBase implements ITradeControler
 		getTradesInfo().setRuleID(nID);
 	}
 	
+	protected IStockSource getStockSource()
+	{
+		return WorkerFactory.getStockSource(this);
+	}
+	
 	public void setDefaultTradeStrategy()
 	{
 		setTradeStrategy(getParameterAsTradeStrategy(STRATEGY, TradeUtils.getTradeStrategy(m_oRateInfo)));
@@ -88,11 +97,16 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	public String getInfo()
 	{
-		String strInfo = "[" + getRateInfo() + "] [" + m_nID + "]";  		
+		String strInfo = "[" + getRateInfo() + "]";  		
 		for(final ITradeTask oTaskTrade : getTaskTrades())
 		{
-			final String strOrderSide = (null == oTaskTrade.getTradeInfo().getOrder().getSide() ? "None" : oTaskTrade.getTradeInfo().getOrder().getSide().toString());
-			strInfo += strOrderSide + " [" + MathUtils.toCurrencyStringEx3(oTaskTrade.getTradeInfo().getTradeSum()) + "];";  
+			final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
+			if (null == oOrder)
+				continue;
+			
+			strInfo += (null == oOrder.getSide() ? "None" : oOrder.getSide().toString()) + "/" + 
+					(null == oOrder.getPrice() ? StringUtils.EMPTY : MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + "/") + 
+					MathUtils.toCurrencyStringEx3(oTaskTrade.getTradeInfo().getTradeSum()) + ";";  
 		}
 		strInfo += "[" + (m_nMaxTrades > 0 ? m_nMaxTrades.toString() : (m_nMaxTrades <= -1 ? "Stopped" : "Wait")) + "]";
 		
@@ -220,7 +234,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			}
 				
 			BigDecimal nBuySum = MathUtils.getRoundedBigDecimal(nTotalSum.doubleValue() / m_nMaxTrades, TradeUtils.getVolumePrecision(getRateInfo()));
-			final CurrencyAmount oCurrencyAmount = WorkerFactory.getStockSource().getUserInfo(getRateInfo()).getMoney().get(getRateInfo().getCurrencyTo());
+			final CurrencyAmount oCurrencyAmount = getStockSource().getUserInfo(getRateInfo()).getMoney().get(getRateInfo().getCurrencyTo());
 			if (null != oCurrencyAmount && oCurrencyAmount.getBalance().compareTo(nBuySum) < 0)
 				nBuySum = oCurrencyAmount.getBalance();
 
@@ -244,7 +258,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 				nBuySum = nBuySum.add(nNeedSellVolumeSum);
 			}
 			
-			final String strRuleInfo = "trade" + "_" + getRateInfo() + "_" + nBuySum;
+			final String strRuleInfo = getTraderName() + "_" + getRateInfo() + "_" + nBuySum;
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			final TaskTrade oTaskTrade = ((TaskTrade)oRule);
 			
@@ -262,6 +276,11 @@ public class TradeControler extends TaskBase implements ITradeControler
 			getTradesInfo().setCurrentState(Thread.currentThread().getName() +  " Thread exception : " + CommonUtils.getExceptionMessage(e));
 			System.err.printf(getTradesInfo().getCurrentState() + "\r\n");
 		}
+	}
+
+	protected String getTraderName()
+	{
+		return TaskTrade.NAME;
 	}
 
 	public void remove()

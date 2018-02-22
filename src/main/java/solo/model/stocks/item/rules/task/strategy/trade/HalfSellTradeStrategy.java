@@ -36,7 +36,7 @@ public class HalfSellTradeStrategy extends BaseTradeStrategy
 			return;
 		
 		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
-		final Order oGetOrder = WorkerFactory.getStockSource().getOrder(oOrder.getId(), oRateInfo);
+		final Order oGetOrder = WorkerFactory.getStockSource(oTaskTrade).getOrder(oOrder.getId(), oRateInfo);
 		if (oGetOrder.isDone() || oGetOrder.isCanceled() || oGetOrder.isError() || oGetOrder.isException() || oGetOrder.isNull())
 			return;
 		

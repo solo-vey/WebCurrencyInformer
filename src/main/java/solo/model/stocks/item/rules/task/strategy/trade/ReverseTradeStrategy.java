@@ -18,6 +18,7 @@ import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.item.rules.task.trade.TradesInfo;
+import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 
 public class ReverseTradeStrategy extends SimpleTradeStrategy
@@ -63,7 +64,8 @@ public class ReverseTradeStrategy extends SimpleTradeStrategy
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
 			final Order oOrder = oTaskTrade.getTradeInfo().getOrder();
-			TradeUtils.removeOrder(oOrder, oTradesInfo.getRateInfo());
+			final IStockSource oStockSource = WorkerFactory.getStockSource(oTaskTrade);
+			TradeUtils.removeOrder(oOrder, oTradesInfo.getRateInfo(), oStockSource);
 			oTaskTrade.setTradeControler(ITradeControler.NULL);
 			oTradeControler.tradeDone((TaskTrade)oTaskTrade);
 			WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);

@@ -14,7 +14,8 @@ import solo.model.stocks.item.StockUserInfo;
 
 public interface IStockSource
 {
-	RateState getRateState(RateInfo oRateInfo) throws Exception;
+	RateState getRateState(final RateInfo oRateInfo) throws Exception;
+	RateState getCachedRateState(final RateInfo oRateInfo) throws Exception;
 	Map<RateInfo, RateStateShort> getAllRateState() throws Exception;
 	IStockExchange getStockExchange();
 	List<RateInfo> getRates();

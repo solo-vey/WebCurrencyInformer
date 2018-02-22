@@ -101,9 +101,9 @@ public class ExmoStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	@Override public RateState getRateState(final RateInfo oRateInfo) throws Exception
+	@Override protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception
 	{
-		final RateState oRateState = super.getRateState(oRateInfo);
+		super.loadRate(oRateInfo, oRateState);
 		
 		final String strMarket = getRateIdentifier(oRateInfo); 
 		final String strOrderBookUrl = m_strOrdersUrl.replace("#rate#", strMarket);
@@ -119,8 +119,6 @@ public class ExmoStockSource extends BaseStockSource
 		final List<Object> oRateTrades = (List<Object>) oTrades.get(strMarket);
 		final List<Order> oTradeOrders = convert2Orders(oRateTrades);
 		oRateState.setTrades(oTradeOrders);
-		
-		return oRateState;
 	}
 	
 	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception

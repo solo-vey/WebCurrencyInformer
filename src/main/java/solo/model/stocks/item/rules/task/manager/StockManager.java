@@ -17,6 +17,7 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
@@ -54,6 +55,9 @@ public class StockManager implements IStockManager
 	
 	private void stopControler(final RateInfo oRateInfo, final TaskTrade oTaskTrade)
 	{
+		if (oTaskTrade.getTradeControler() instanceof ITest)
+			return;
+		
 		final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
 		final List<ITradeControler> aWorkingControler = new LinkedList<ITradeControler>();
 		for(final Entry<Integer, IRule> oRuleInfo : oRules)
@@ -107,34 +111,39 @@ public class StockManager implements IStockManager
 	
 	@Override public void tradeStart(final TaskTrade oTaskTrade) 
 	{
+		if (oTaskTrade instanceof ITest)
+			return;
+		
 		m_oStockManagesInfo.tradeStart(oTaskTrade);
 		save();
 	}
 	
 	@Override public void tradeDone(final TaskTrade oTaskTrade) 
 	{
+		trackTrades(oTaskTrade);
+		
+		if (oTaskTrade instanceof ITest)
+			return;
+		
 		m_oStockManagesInfo.tradeDone(oTaskTrade);
 		save();
-		
-		trackTrades(oTaskTrade);
 	}
 
 	@Override public void buyDone(final TaskTrade oTaskTrade) 
 	{
+		if (oTaskTrade instanceof ITest)
+			return;
+		
 		m_oStockManagesInfo.buyDone(oTaskTrade);
 		save();
 	}
 	
 	@Override public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
 	{
-		m_oStockManagesInfo.addBuy(nSpendSum, nBuyVolume);
-		save();
 	}
 	
 	@Override public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) 
 	{
-		m_oStockManagesInfo.addSell(nReceiveSum, nSoldVolume);
-		save();
 	} 
 	
 	public void save()

@@ -24,10 +24,11 @@ import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
+import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.ResourceUtils;
 
-public class TestStockSource extends BaseStockSource
+public class TestStockSource extends BaseStockSource implements ITest
 {
 	final IStockSource m_oRealStockSource;
 	final TestStockSourceData m_oStockSourceData;
@@ -41,7 +42,7 @@ public class TestStockSource extends BaseStockSource
 	
 	@Override public RateState getRateState(final RateInfo oRateInfo) throws Exception
 	{
-		final RateState oRateState = m_oRealStockSource.getRateState(oRateInfo);
+		final RateState oRateState = m_oRealStockSource.getCachedRateState(oRateInfo);
 		checkOrders(oRateInfo, oRateState);
 		return oRateState;
 	}
@@ -60,8 +61,12 @@ public class TestStockSource extends BaseStockSource
 				(oTradeOrder.getCreated().equals(oLastTradeOrder) || oTradeOrder.getCreated().before(oLastTradeOrder)))
 				break;
 			
+			BigDecimal nTradeOrderVolume = oTradeOrder.getVolume();
 			for(final Order oOrder : oRateOrders)
 			{
+				if (nTradeOrderVolume.compareTo(BigDecimal.ZERO) <= 0)
+					break;
+				
 				if (!oTradeOrder.getSide().equals(oOrder.getSide()))
 					continue;
 				
@@ -70,33 +75,35 @@ public class TestStockSource extends BaseStockSource
 				
 				if (OrderSide.BUY.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) >= 0)
 				{
-					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(oTradeOrder.getVolume().negate());
+					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
 						oOrder.setState(Order.DONE);
-						oTradeOrder.setVolume(BigDecimal.ZERO);
+						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
+						nTradeOrderVolume = nOrderVolumeDelta.negate();
 					}
 					else
 					{
 						oOrder.setVolume(nOrderVolumeDelta);
-						break;
+						nTradeOrderVolume = BigDecimal.ZERO;
 					}
 				}
 				
 				if (OrderSide.SELL.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) <= 0)
 				{
-					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(oTradeOrder.getVolume().negate());
+					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
 						oOrder.setState(Order.DONE);
-						oTradeOrder.setVolume(BigDecimal.ZERO);
+						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
+						nTradeOrderVolume = nOrderVolumeDelta.negate();
 					}
 					else
 					{
 						oOrder.setVolume(nOrderVolumeDelta);
-						break;
+						nTradeOrderVolume = BigDecimal.ZERO;
 					}
 				}
 			}
@@ -126,73 +133,82 @@ public class TestStockSource extends BaseStockSource
 	
 	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
-		for(final Order oOrder : m_oStockSourceData.getRateOrders(oRateInfo))
-		{
-			if (oOrder.getId().equalsIgnoreCase(strOrderId))
-				return oOrder;
+		synchronized (this)
+		{			
+			for(final Order oOrder : m_oStockSourceData.getRateOrders(oRateInfo))
+			{
+				if (oOrder.getId().equalsIgnoreCase(strOrderId))
+					return oOrder;
+			}
+			
+			for(final Order oOrder : m_oStockSourceData.getDoneOrders())
+			{
+				if (oOrder.getId().equalsIgnoreCase(strOrderId))
+					return oOrder;
+			}
+			
+			for(final Order oOrder : m_oStockSourceData.getRemoveOrders())
+			{
+				if (oOrder.getId().equalsIgnoreCase(strOrderId))
+					return oOrder;
+			}	
 		}
-		
-		for(final Order oOrder : m_oStockSourceData.getDoneOrders())
-		{
-			if (oOrder.getId().equalsIgnoreCase(strOrderId))
-				return oOrder;
-		}
-		
-		for(final Order oOrder : m_oStockSourceData.getRemoveOrders())
-		{
-			if (oOrder.getId().equalsIgnoreCase(strOrderId))
-				return oOrder;
-		}	
 			
 		return new Order(strOrderId, Order.NONE, "Order is absent");
 	}
 	
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
 	{
-		try
-		{
-			final Order oOrder = new Order();
-			oOrder.setId("" + (new Date().getTime()));
-			oOrder.setSide(oSide);
-			oOrder.setVolume(nVolume);
-			oOrder.setPrice(nPrice);
-			oOrder.setState(Order.WAIT);
-			oOrder.setCreated(new Date());
-
-			m_oStockSourceData.getRateOrders(oRateInfo).add(oOrder);
-			
-			System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
-			return oOrder;
-		}
-		catch (Exception e)
-		{
-			WorkerFactory.onException("TestStockSource.addOrder", e);
-			return new Order(Order.EXCEPTION, e.getMessage());
+		synchronized (this)
+		{			
+			try
+			{
+				final Order oOrder = new Order();
+				oOrder.setId("test_" + m_oStockSourceData.getLastOrderID() + "_" + (new Date().getTime()));
+				oOrder.setSide(oSide);
+				oOrder.setVolume(nVolume);
+				oOrder.setPrice(nPrice);
+				oOrder.setState(Order.WAIT);
+				oOrder.setCreated(new Date());
+	
+				m_oStockSourceData.getRateOrders(oRateInfo).add(oOrder);
+				
+				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
+				return oOrder;
+			}
+			catch (Exception e)
+			{
+				WorkerFactory.onException("TestStockSource.addOrder", e);
+				return new Order(Order.EXCEPTION, e.getMessage());
+			}
 		}
 	}
 	
 	@Override public Order removeOrder(final String strOrderId)
 	{
-		super.removeOrder(strOrderId);
-		
-		for(final List<Order> aOrders : m_oStockSourceData.getRateOrders().values())
-		{
-			for(final Order oOrder : aOrders)
+		synchronized (this)
+		{			
+			super.removeOrder(strOrderId);
+			
+			for(final List<Order> aOrders : m_oStockSourceData.getRateOrders().values())
 			{
-				if (!oOrder.getId().equalsIgnoreCase(strOrderId))
-					continue;
-				
-				aOrders.remove(oOrder);
-				oOrder.setState(Order.CANCEL);
-				
-				m_oStockSourceData.addRemoveOrder(oOrder);
+				for(final Order oOrder : aOrders)
+				{
+					if (!oOrder.getId().equalsIgnoreCase(strOrderId))
+						continue;
 					
-		        System.out.println("Remove order complete. " + strOrderId + ". Can't read order after remove");
-				return oOrder;
+					aOrders.remove(oOrder);
+					oOrder.setState(Order.CANCEL);
+					
+					m_oStockSourceData.addRemoveOrder(oOrder);
+						
+			        System.out.println("Remove order complete. " + strOrderId);
+					return oOrder;
+				}
 			}
+			
+			return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
 		}
-		
-		return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
 	}
 }
 
@@ -204,9 +220,18 @@ class TestStockSourceData implements Serializable
 	final List<Order> m_oRemoveOrders = new LinkedList<Order>();
 	final List<Order> m_oDoneOrders = new LinkedList<Order>();
 	final Map<RateInfo, Date> m_aLastTradeOrder = new HashMap<RateInfo, Date>();
+	Integer m_nLastOrderID = 0;
 	
 	public TestStockSourceData()
 	{
+	}
+	
+	public Integer getLastOrderID()
+	{
+		if (null == m_nLastOrderID)
+			m_nLastOrderID = 0;
+		
+		return m_nLastOrderID++;
 	}
 
 	public Map<RateInfo, List<Order>> getRateOrders()

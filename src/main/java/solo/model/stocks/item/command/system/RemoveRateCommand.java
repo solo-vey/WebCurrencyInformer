@@ -21,7 +21,7 @@ public class RemoveRateCommand extends BaseCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		WorkerFactory.getMainWorker().getStockExchange().getStockSource().removeRate(m_oRateInfo);
+		WorkerFactory.getStockSource().removeRate(m_oRateInfo);
 		WorkerFactory.getMainWorker().getStockWorker().stopRateWorker(m_oRateInfo);
 		
 		WorkerFactory.getMainWorker().sendSystemMessage("Stock rate worker [" + m_oRateInfo + "] stopped");
