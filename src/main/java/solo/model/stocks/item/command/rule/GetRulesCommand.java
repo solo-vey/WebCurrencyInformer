@@ -13,6 +13,7 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
+import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -27,12 +28,13 @@ public class GetRulesCommand extends BaseCommand
 	
 	public GetRulesCommand(final String strCommandLine)
 	{
-		super(strCommandLine, StringUtils.EMPTY);
+		super(strCommandLine, "#type#");
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
+		final String strType = getParameter("#type#");
 		
 		final Map<String, List<IRule>> aRulesByRate = new HashMap<String, List<IRule>>();
 		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
@@ -50,15 +52,27 @@ public class GetRulesCommand extends BaseCommand
 			aRulesByRate.get(strRate).add(oRuleInfo.getValue());
 		}
 		
+		final boolean bIsShowIfHasRealTest = !strType.contains("onlytestrules");
 	   	final List<List<String>> aButtons = new LinkedList<List<String>>();
 		for(final Entry<String, List<IRule>> oRateRules : aRulesByRate.entrySet())
     	{
+			boolean bIsHasRealRule = false;
+			for(final IRule oRule : oRateRules.getValue())
+				bIsHasRealRule |= !(oRule instanceof ITest); 
+			if (bIsHasRealRule != bIsShowIfHasRealTest)
+				continue;
+				
 			for(final IRule oRule : oRateRules.getValue())
 			{
 				final String strRuleInfo = oRule.getInfo();
 				aButtons.add(Arrays.asList(strRuleInfo + "=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRule.getID())));
 			}
      	}
+		
+		if (bIsShowIfHasRealTest)
+			aButtons.add(Arrays.asList("#### SHOW TEST RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", "onlytestrules")));
+		else
+			aButtons.add(Arrays.asList("#### SHOW REAL RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", StringUtils.EMPTY)));
 			
 		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + aButtons.size() + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}

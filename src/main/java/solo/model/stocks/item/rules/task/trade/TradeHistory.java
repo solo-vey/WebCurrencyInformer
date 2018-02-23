@@ -35,7 +35,7 @@ public class TradeHistory implements Serializable
 
 	public void addToHistory(final String strMessage)
 	{
-		final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
+		final DateFormat oDateFormat = new SimpleDateFormat("HH:mm:ss");
 		final String strDate = oDateFormat.format(new Date()) + "\t"; 
 		m_strHistory += strDate + strMessage + "\r\n";
 		addToLog(strDate + strMessage + "\r\n");
@@ -53,7 +53,7 @@ public class TradeHistory implements Serializable
 				Files.createFile(oPath);
 			}
 			
-		    Files.write(Paths.get(getFileName()), strMessage.getBytes(), StandardOpenOption.APPEND);
+		    Files.write(Paths.get(getFileName()), 	strMessage.getBytes(), StandardOpenOption.APPEND);
 		}
 		catch (IOException e) {}
 	}	
