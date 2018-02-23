@@ -67,7 +67,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 				if (nTradeOrderVolume.compareTo(BigDecimal.ZERO) <= 0)
 					break;
 				
-				if (!oTradeOrder.getSide().equals(oOrder.getSide()))
+				if (oTradeOrder.getSide().equals(oOrder.getSide()))
 					continue;
 				
 				if (!Order.WAIT.equals(oOrder.getState()))
