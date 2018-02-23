@@ -1,5 +1,7 @@
 package solo.model.stocks.item.rules.task.trade;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.RateInfo;
 
 public class TestTradesInfo extends TradesInfo implements ITest
@@ -13,6 +15,7 @@ public class TestTradesInfo extends TradesInfo implements ITest
 	
 	@Override public String getInfo()
 	{
-		return "[TEST] " + super.getInfo();
+		return StringUtils.EMPTY;
+		//return "[TEST] " + super.getInfo();
 	}
 }

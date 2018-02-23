@@ -23,6 +23,7 @@ import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.transport.MessageLevel;
 import solo.utils.ResourceUtils;
 
 public class StockManager implements IStockManager
@@ -76,7 +77,7 @@ public class StockManager implements IStockManager
 		if (aWorkingControler.size() > 1)
 		{
 			oTaskTrade.getTradeControler().setParameter(TradeControler.TRADE_COUNT_PARAMETER, "0");
-			//WorkerFactory.getTransport().sendMessage("MANAGER\r\nStop controler [" + oRateInfo + "]");
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, "MANAGER\r\nStop controler [" + oRateInfo + "]");
 		}
 	}
 		
@@ -100,8 +101,8 @@ public class StockManager implements IStockManager
 			oControler.setParameter(TradeControler.TRADE_COUNT_PARAMETER, oControler.getParameter(TradeControler.MAX_TARDES));
 		}
 		
-		//if (StringUtils.isNotBlank(strMessage))
-		//	WorkerFactory.getTransport().sendMessage("MANAGER\r\n" + strMessage);
+		if (StringUtils.isNotBlank(strMessage))
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, "MANAGER\r\n" + strMessage);
 	}
 
 	@Override public StockManagesInfo getInfo()
@@ -111,9 +112,6 @@ public class StockManager implements IStockManager
 	
 	@Override public void tradeStart(final TaskTrade oTaskTrade) 
 	{
-		if (oTaskTrade instanceof ITest)
-			return;
-		
 		m_oStockManagesInfo.tradeStart(oTaskTrade);
 		save();
 	}
@@ -121,19 +119,12 @@ public class StockManager implements IStockManager
 	@Override public void tradeDone(final TaskTrade oTaskTrade) 
 	{
 		trackTrades(oTaskTrade);
-		
-		if (oTaskTrade instanceof ITest)
-			return;
-		
 		m_oStockManagesInfo.tradeDone(oTaskTrade);
 		save();
 	}
 
 	@Override public void buyDone(final TaskTrade oTaskTrade) 
 	{
-		if (oTaskTrade instanceof ITest)
-			return;
-		
 		m_oStockManagesInfo.buyDone(oTaskTrade);
 		save();
 	}

@@ -19,13 +19,25 @@ public class CurrencyTradesBlock implements Serializable
 {
 	private static final long serialVersionUID = 7340981410262177314L;
 	
-	public Map<Currency, TradesBlock> m_oCurrencyTrades = new HashMap<Currency, TradesBlock>();
+	protected Map<Currency, TradesBlock> m_oCurrencyTrades = new HashMap<Currency, TradesBlock>();
 	
 	public void addTrade(final TaskTrade oTaskTrade)
 	{
 		addTrade(oTaskTrade.getTradeInfo());
 	}
 	
+	public Map<Currency, TradesBlock> getCurrencyTrades()
+	{
+		return m_oCurrencyTrades;
+	}
+	
+	public void addTrade(final Currency oCurrency, final TradesBlock oTradesBlock)
+	{
+		if (!m_oCurrencyTrades.containsKey(oCurrency))
+			m_oCurrencyTrades.put(oCurrency, new TradesBlock());
+		m_oCurrencyTrades.get(oCurrency).addTrade(oTradesBlock);
+	}
+
 	public void addTrade(final TradeInfo oTradeInfo)
 	{
 		final Currency oCurrency = oTradeInfo.getRateInfo().getCurrencyTo();

@@ -13,6 +13,6 @@ public class TestTradeInfo extends TradeInfo implements ITest
 	
 	@Override public String getInfo()
 	{
-		return "[TEST] " + super.getInfo();
+		return "[TEST] " + super.getInfo().replace("\r\n", "\r\n[" + getRateInfo() + "]");
 	}
 }

@@ -48,6 +48,13 @@ public class TradesBlock implements Serializable
 		}
 	}
 	
+	public void addTrade(final TradesBlock oTradesBlock)
+	{
+		m_nCount += oTradesBlock.getCount();
+		m_nSpendSum = m_nSpendSum.add(oTradesBlock.getSpendSum());
+		m_nReceivedSum = m_nReceivedSum.add(oTradesBlock.getReceivedSum());
+	}
+	
 	@Override public String toString()
 	{
 		return m_nCount + " / " + MathUtils.toCurrencyStringEx3(getTotalSum()) + " / " + 
