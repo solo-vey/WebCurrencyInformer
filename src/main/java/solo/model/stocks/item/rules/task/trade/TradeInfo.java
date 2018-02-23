@@ -262,9 +262,10 @@ public class TradeInfo extends BaseObject implements Serializable
 	public void setCriticalPrice(BigDecimal nCriticalPrice, final String strMessage)
 	{
 		m_nCriticalPrice = nCriticalPrice;
-		addToHistory("Set critical price : " + MathUtils.toCurrencyStringEx2(nCriticalPrice)); 
 		if (StringUtils.isNotBlank(strMessage))
 			addToHistory(strMessage);
+		else
+			addToHistory("Set critical price : " + MathUtils.toCurrencyStringEx2(nCriticalPrice)); 
 	}
 	
 	public void setCriticalVolume(BigDecimal nCriticalVolume)

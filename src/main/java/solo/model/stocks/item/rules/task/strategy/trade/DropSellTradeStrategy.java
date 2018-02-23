@@ -81,7 +81,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHourDateCreate))
 	    {
 	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nBougthPrice.doubleValue() * 0.85, TradeUtils.getPricePrecision(oRateInfo));
-	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 60 minutes critical price ");
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "60 minutes critical price ");
 			return;
 	    }
 	    
@@ -89,7 +89,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHalfHourDateCreate))
 	    {
 	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nBougthPrice.doubleValue() * 0.98, TradeUtils.getPricePrecision(oRateInfo));
-	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 30 minutes critical price ");
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "30 minutes critical price ");
 			return;
 	    }
 		
@@ -98,14 +98,14 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oFithteenMinutesDateCreate))
 	    {
 	    	final BigDecimal nNewCriticalPrice = nBougthPrice.add(nTradeCommision);
-	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Drop after 15 minutes critical price ");
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "15 minutes critical price ");
 			return;
 	    }
 		
     	final BigDecimal nTradeMargin = TradeUtils.getMarginValue(nBougthPrice, oRateInfo);
 	    final BigDecimal nCommisionAndMargin = nTradeMargin.add(nTradeCommision);
     	final BigDecimal nNewCriticalPrice = nBougthPrice.add(nCommisionAndMargin);
-    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Set less 15 minutes critical price ");
+    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "Critical price ");
 	}
 	
 	protected void setNewCriticalPrice(final BigDecimal nCriticalPrice, final ITradeTask oTaskTrade, final String strType)
@@ -114,10 +114,7 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		if (nCriticalPrice.compareTo(oTaskTrade.getTradeInfo().getCriticalPrice()) == 0)
 			return;
 		
-		final StockCandlestick oStockCandlestick = WorkerFactory.getStockExchange().getStockCandlestick();
-		final Candlestick oCandlestick = oStockCandlestick.get(oRateInfo);
-		
-		final String strShortMessage = strType + MathUtils.toCurrencyStringEx2(nCriticalPrice) + ". Trand " + oCandlestick.getType() + " " + 
+		final String strShortMessage = strType + MathUtils.toCurrencyStringEx2(nCriticalPrice) + ". " + 
 				oTaskTrade.getTradeInfo().getOrder().getInfoShort();
 		
 		final String strMessage = oRateInfo + "\r\n" + strShortMessage + 
