@@ -2,8 +2,6 @@ package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
 
-import org.apache.commons.lang.StringUtils;
-
 import solo.model.stocks.item.RateInfo;
 
 public class TestTradesInfo extends TradesInfo implements ITest
@@ -14,10 +12,12 @@ public class TestTradesInfo extends TradesInfo implements ITest
 	{
 		super(oRateInfo, nRuleID);
 	}
-	
-	@Override public void tradeStart(final TaskTrade oTaskTrade)
+		
+	@Override public void tradeDone(final TaskTrade oTaskTrade)
 	{
-		setSum(getBuySum(), getTradeCount());
+		super.tradeDone(oTaskTrade);
+		
+		setSum(getBuySum(), 1);
 		
 		m_nLockedSum = BigDecimal.ZERO;
 		m_nSumToSell = BigDecimal.ZERO;
@@ -29,11 +29,12 @@ public class TestTradesInfo extends TradesInfo implements ITest
 		
 		m_nBuyVolume = BigDecimal.ZERO;
 		m_nSoldVolume = BigDecimal.ZERO;
+		
 	}
 	
 	@Override public String getInfo()
 	{
-		return StringUtils.EMPTY;
+		return "Count: " + getTradeCount() + "\r\n";
 		//return "[TEST] " + super.getInfo();
 	}
 }

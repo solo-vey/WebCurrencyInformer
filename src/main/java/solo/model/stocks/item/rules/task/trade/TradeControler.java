@@ -313,7 +313,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		
 		if (ManagerUtils.isHasRealRules(getRateInfo()))
 		{
-			final MessageLevel oMessageLevel = (oTaskTrade.getTradeInfo().getDelta().compareTo(BigDecimal.ZERO) < 0 ? MessageLevel.TRADERESULT : MessageLevel.TRADERESULT);
+			final MessageLevel oMessageLevel = (!ManagerUtils.isTestObject(this) || oTaskTrade.getTradeInfo().getDelta().compareTo(BigDecimal.ZERO) < 0 ? MessageLevel.TRADERESULT : MessageLevel.TESTTRADERESULT);
 			WorkerFactory.getMainWorker().sendMessage(oMessageLevel, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getTradesInfo().getInfo());
 		}
 	}	

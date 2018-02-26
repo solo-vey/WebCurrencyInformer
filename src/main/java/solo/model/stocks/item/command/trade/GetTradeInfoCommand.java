@@ -1,13 +1,16 @@
 package solo.model.stocks.item.command.trade;
 
 import java.util.Arrays;
+import java.util.LinkedList;
 import java.util.List;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
@@ -74,11 +77,23 @@ public class GetTradeInfoCommand extends BaseCommand
 			strMessage = oTradeControler.getTradesInfo() + "\r\n" + strTradeControlerFullInfo;
 			final String strSetParam = "taskparam_" + m_nRuleID + "_";
 			
-			final List<List<String>> aButtons = Arrays.asList(
+			List<List<String>> aButtons = new LinkedList<List<String>>();
+			aButtons.addAll(Arrays.asList(
 								Arrays.asList("Chart=chart_" + oTradeControler.getTradesInfo().getRateInfo(), 
 										(nMaxTrades > 0 ? "Stop=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_-1" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
 										strNewStrategy + "=" + strSetParam + TradeControler.TRADE_STRATEGY_PARAMETER + "_" + strNewStrategy, 
-										"Remove=/removerule_" + m_nRuleID));
+										"Remove=/removerule_" + m_nRuleID)));
+			
+			for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
+	    	{
+				if (!oRuleInfo.getValue().getRateInfo().equals(oTradeControler.getTradesInfo().getRateInfo()))
+					continue;
+				
+				if (oRuleInfo.getValue().equals(oTradeControler) || null == TradeUtils.getRuleAsTradeControler(oRuleInfo.getValue()))
+					continue;
+				
+				aButtons.add(Arrays.asList(oRuleInfo.getValue().getInfo() + "=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRuleInfo.getValue().getID())));
+	     	}
 			
 			strMessage += (!strMessage.contains("BUTTONS\r\n") ? "BUTTONS\r\n" : ",") + TelegramTransport.getButtons(aButtons);
 		}

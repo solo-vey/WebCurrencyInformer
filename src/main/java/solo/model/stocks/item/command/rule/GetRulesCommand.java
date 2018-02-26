@@ -37,19 +37,19 @@ public class GetRulesCommand extends BaseCommand
 		final String strType = getParameter("#type#");
 		
 		final Map<String, List<IRule>> aRulesByRate = new HashMap<String, List<IRule>>();
+		int nAllCount = 0;
 		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
 			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRuleInfo.getValue());
 			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
 				continue;
 			
-			final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRuleInfo.getValue());
-			final String strRate = (null != oTradeTask ? oTradeTask.getRateInfo().toString() : 
-									(null != oTradeControler ? oTradeControler.getTradesInfo().getRateInfo().toString() : StringUtils.EMPTY));
+			final String strRate = oRuleInfo.getValue().getRateInfo().toString();
 			if (!aRulesByRate.containsKey(strRate))
 				aRulesByRate.put(strRate, new LinkedList<IRule>());
 			
 			aRulesByRate.get(strRate).add(oRuleInfo.getValue());
+			nAllCount++;
 		}
 		
 		final boolean bIsShowIfHasRealTest = !strType.contains("onlytestrules");
@@ -69,11 +69,12 @@ public class GetRulesCommand extends BaseCommand
 			}
      	}
 		
-		if (bIsShowIfHasRealTest)
+		if (bIsShowIfHasRealTest && aButtons.size() < nAllCount)
 			aButtons.add(Arrays.asList("#### SHOW TEST RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", "onlytestrules")));
-		else
+		
+		if (!bIsShowIfHasRealTest && aButtons.size() < nAllCount)
 			aButtons.add(Arrays.asList("#### SHOW REAL RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", StringUtils.EMPTY)));
 			
-		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + aButtons.size() + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
+		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + (aButtons.size() - 1) + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}
 }

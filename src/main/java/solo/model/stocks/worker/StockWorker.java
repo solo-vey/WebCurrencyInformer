@@ -5,6 +5,7 @@ import java.util.List;
 
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.command.trade.ManageStock;
 import solo.utils.ResourceUtils;
 
 public class StockWorker extends BaseWorker
@@ -71,6 +72,8 @@ public class StockWorker extends BaseWorker
 	{
 		Thread.currentThread().setName(m_oStockExchange.getStockName() + " StockWorker");
 		super.doWork();
+		
+		addCommand(new ManageStock());
 	}
 	
 	public IStockExchange getStockExchange()

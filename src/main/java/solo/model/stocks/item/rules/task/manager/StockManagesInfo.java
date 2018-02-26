@@ -6,7 +6,6 @@ import java.util.Calendar;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.BaseObject;
-import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 
 public class StockManagesInfo extends BaseObject implements Serializable

@@ -38,12 +38,16 @@ public class GetStockInfoCommand extends BaseCommand
 	
 	public GetStockInfoCommand(final String strСommandLine)
 	{
-		super(strСommandLine, RATE_PARAMETER);
+		super(strСommandLine, "#type#");
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
+		
+		final String strType = getParameter("#type#");
+		final boolean bIsSellFreeVolume = strType.contains("sellfreevolume");
+		final boolean bIsShoOrders = strType.contains("showorders");
 		
 		String strMessage = StringUtils.EMPTY;		
 		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
@@ -54,15 +58,18 @@ public class GetStockInfoCommand extends BaseCommand
 			final StockUserInfo oUserInfo = WorkerFactory.getStockSource().getUserInfo(null);
 			
 		   	final List<List<String>> aButtons = new LinkedList<List<String>>();
-			for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
-			{
-				for(final Order oOrder : oOrdersInfo.getValue())
+		   	if (bIsShoOrders)
+		   	{
+				for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 				{
-					final String strOrderInfo = oOrdersInfo.getKey() + "/" + oOrder.getSide() + "/" + MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + 
-													"/" + MathUtils.toCurrencyStringEx3(oOrder.getSum());
-					aButtons.add(Arrays.asList(strOrderInfo + " [X]=" + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, oOrder.getId())));
+					for(final Order oOrder : oOrdersInfo.getValue())
+					{
+						final String strOrderInfo = oOrdersInfo.getKey() + "/" + oOrder.getSide() + "/" + MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + 
+														"/" + MathUtils.toCurrencyStringEx3(oOrder.getSum());
+						aButtons.add(Arrays.asList(strOrderInfo + " [X]=" + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, oOrder.getId())));
+					}
 				}
-			}
+		   	}
 			
 			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();	
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
@@ -95,7 +102,7 @@ public class GetStockInfoCommand extends BaseCommand
 				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
 							"/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + "\r\n";
 				
-				if (nFreeVolum.compareTo(BigDecimal.ZERO) > 0)
+				if (nFreeVolum.compareTo(BigDecimal.ZERO) > 0 && bIsSellFreeVolume)
 				{
 					for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
 					{
@@ -200,6 +207,12 @@ public class GetStockInfoCommand extends BaseCommand
 				final BigDecimal oTotalUahSum = MathUtils.getBigDecimal(oTotalBtcSum.doubleValue() / oBtcBidPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
 				strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
 			}
+			
+			if (!bIsShoOrders)
+				aButtons.add(Arrays.asList("##### SHOW ORDERS #####=" + CommandFactory.makeCommandLine(GetStockInfoCommand.class, "type", "showorders")));
+			if (!bIsSellFreeVolume)
+				aButtons.add(Arrays.asList("### SELL FREE VOLUME ###=" + CommandFactory.makeCommandLine(GetStockInfoCommand.class, "type", "sellfreevolume")));
+			
 			strMessage += (aButtons.size() > 0 ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
 		}
 		catch(final Exception e)

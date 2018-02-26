@@ -17,8 +17,11 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.Rules;
+import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
+import solo.model.stocks.item.rules.task.trade.TTradeControler;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -39,8 +42,35 @@ public class StockManager implements IStockManager
 	
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{
+		startTestControler();
 	}	
 	
+	protected void startTestControler()
+	{
+		final Rules oRules  = WorkerFactory.getStockExchange().getRules();
+		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+		{
+			boolean bIsRateRulePrecent = false;
+			for(final IRule oRule : oRules.getRules().values())
+				bIsRateRulePrecent |= (oRule.getRateInfo().equals(oRateInfo));
+			
+			if (bIsRateRulePrecent)
+				continue;
+			
+			try
+			{
+				final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));			
+				final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + nSum;
+				final IRule oRule = RulesFactory.getRule(strRuleInfo);
+				WorkerFactory.getStockExchange().getRules().addRule(oRule);
+			}
+			catch(final Exception e)
+			{
+				WorkerFactory.onException("Can't create test trade controler", e);
+			}
+		}
+	}
+
 	void trackTrades(final TaskTrade oTaskTrade)
 	{
 		if (!m_bIsTrackTrades)
