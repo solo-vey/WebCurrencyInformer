@@ -107,8 +107,8 @@ public class BaseStockSource implements IStockSource
 		List<Order> oBids = oRateAnalysisResult.getBidsOrders();
 		oAsks = StrategyUtils.removeGarbageOrders(oAsks, oBids.get(0).getPrice(), OrderSide.SELL); 
 		oBids = StrategyUtils.removeGarbageOrders(oBids, oAsks.get(0).getPrice(), OrderSide.BUY);
-		oAsks = StrategyUtils.removeFakeOrders(oAsks, BigDecimal.ONE, oRateInfo); 
-		oBids = StrategyUtils.removeFakeOrders(oBids, BigDecimal.ONE, oRateInfo);
+		oAsks = StrategyUtils.removeFakeOrders(oAsks, null, oRateInfo); 
+		oBids = StrategyUtils.removeFakeOrders(oBids, null, oRateInfo);
 		
 		final BigDecimal nMinPrice = MathUtils.getBigDecimal(StrategyUtils.getBestPrice(oBids).doubleValue() * 0.98, TradeUtils.getPricePrecision(oRateInfo));
 		final BigDecimal nMaxPrice = MathUtils.getBigDecimal(StrategyUtils.getBestPrice(oAsks).doubleValue() * 1.02, TradeUtils.getPricePrecision(oRateInfo));

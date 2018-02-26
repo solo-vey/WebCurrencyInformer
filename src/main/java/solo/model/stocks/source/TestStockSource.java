@@ -170,7 +170,9 @@ public class TestStockSource extends BaseStockSource implements ITest
 		{			
 			try
 			{
-				final Order oOrder = new Order();
+		        checkOrderParameters(oSide, oRateInfo, nPrice);
+
+		        final Order oOrder = new Order();
 				oOrder.setId("test_" + m_oStockSourceData.getLastOrderID() + "_" + (new Date().getTime()));
 				oOrder.setSide(oSide);
 				oOrder.setVolume(nVolume);

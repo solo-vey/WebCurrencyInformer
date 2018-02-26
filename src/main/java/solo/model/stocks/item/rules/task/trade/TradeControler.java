@@ -16,6 +16,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
@@ -310,7 +311,11 @@ public class TradeControler extends TaskBase implements ITradeControler
 		m_oTradesInfo.updateOrderInfo(aTaskTrades);
 		WorkerFactory.getStockExchange().getManager().tradeDone(oTaskTrade);
 		
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getTradesInfo().getInfo());
+		if (ManagerUtils.isHasRealRules(getRateInfo()))
+		{
+			final MessageLevel oMessageLevel = (oTaskTrade.getTradeInfo().getDelta().compareTo(BigDecimal.ZERO) < 0 ? MessageLevel.TRADERESULT : MessageLevel.TRADERESULT);
+			WorkerFactory.getMainWorker().sendMessage(oMessageLevel, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getTradesInfo().getInfo());
+		}
 	}	
 
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 

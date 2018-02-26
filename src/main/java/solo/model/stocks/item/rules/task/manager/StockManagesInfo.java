@@ -66,7 +66,7 @@ public class StockManagesInfo extends BaseObject implements Serializable
 	public void tradeDone(final TaskTrade oTaskTrade) 
 	{
 		final Calendar oCalendar = Calendar.getInstance();
-		if (!(oTaskTrade instanceof ITest))
+		if (!ManagerUtils.isTestObject(oTaskTrade))
 		{		
 			getTotal().addTrade(oTaskTrade);	
 			getMonthsTotal().addTrade(oCalendar.get(Calendar.MONTH) + 1, oTaskTrade);
@@ -74,8 +74,11 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			getHoursTotal().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
 		}
 		
-		getLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
-		getRateLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
+		if (!ManagerUtils.isTestObject(oTaskTrade) || !ManagerUtils.isHasRealRules(oTaskTrade.getRateInfo()))
+		{
+			getLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
+			getRateLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
+		}
 	}
 	
 	public void buyDone(final TaskTrade oTaskTrade) 

@@ -1,13 +1,12 @@
 package solo.model.stocks.item.command.system;
 
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
  */
-public class SetStockParameterCommand extends BaseCommand implements IHistoryCommand
+public class SetStockParameterCommand extends BaseCommand
 {
 	final static public String NAME = "setStockParameter";
 	final static public String NAME_PARAMETER = "#name#";

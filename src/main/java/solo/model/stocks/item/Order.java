@@ -177,7 +177,7 @@ public class Order extends BaseObject implements Serializable
 
 	public String getInfoShort()
 	{
-		if (isNull())
+		if (isNull() && getSum().compareTo(BigDecimal.ZERO) == 0)
 			return "Null order" + (StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY)
 			 	+ (StringUtils.isNotBlank(getState()) ? ". State [" + getState() + "]" : StringUtils.EMPTY);
 		

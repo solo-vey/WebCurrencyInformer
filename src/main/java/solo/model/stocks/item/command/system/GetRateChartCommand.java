@@ -10,13 +10,12 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.analyse.Candlestick;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
 
 /** Формат комманды 
  */
-public class GetRateChartCommand extends BaseCommand implements IHistoryCommand
+public class GetRateChartCommand extends BaseCommand
 {
 	final static public String NAME = "chart";
 	final static public String RATE_PARAMETER = "#rate#";

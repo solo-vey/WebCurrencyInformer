@@ -6,13 +6,12 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
-import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.CommonUtils;
 
 /** Формат комманды 
  */
-public class AddOrderCommand extends BaseCommand implements IHistoryCommand
+public class AddOrderCommand extends BaseCommand
 {
 	final static public String NAME = "addOrder";
 	final static public String SIDE_PARAMETER = "#side#";
