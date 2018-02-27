@@ -1,6 +1,7 @@
 package solo.model.stocks.item.command.system;
 
 import java.io.File;
+import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -57,6 +58,8 @@ public class GetRateChartCommand extends BaseCommand
     	}
 		if (aLine.size() > 0)
 			aButtons.add(aLine);
+		
+		aButtons.add(Arrays.asList("Rules [" + m_oRateInfo + "]=/rules_rate:" + m_oRateInfo));
 		
 		WorkerFactory.getTransport().sendPhoto(new File(strFileName), strMessage + 
     			"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));

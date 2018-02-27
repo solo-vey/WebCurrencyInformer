@@ -1,6 +1,10 @@
 package solo.utils;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -8,6 +12,9 @@ import java.util.Properties;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.log4j.Logger;
+
+import solo.CurrencyInformer;
+import solo.model.stocks.worker.WorkerFactory;
 
 /** Работа с файлом настроек */
 public final class ResourceUtils 
@@ -63,6 +70,16 @@ public final class ResourceUtils
 	public static String getResource(final String strKey, final String strProperyFile)
 	{
 		return getResource(strKey, strProperyFile, StringUtils.EMPTY);
+	}
+	
+	/** Получение строкового значения из property файла (без учета кодировки)
+	 * @param strKey Ключ ресурса
+	 * @param strProperyFile Имя файла настроек
+	 * @return строка без учета кодировки */
+	public static void setResource(final String strKey, final String strProperyFile, final String strValue)
+	{
+		final PropertyFileInfo oProperties = registerProperties(strProperyFile);
+		oProperties.setOverlappingValue(strKey, strValue);
 	}
 	
 	/** Получение строкового значения из property файла (без учета кодировки) 
@@ -124,10 +141,9 @@ public final class ResourceUtils
 	 */
 	private static String readProperty(final String strKey, final PropertyFileInfo oProperties)
 	{
-		final String strEnvironmentValueKey = oProperties.Name + "." + strKey; 
-		final String strEnvironmentValue = System.getenv(strEnvironmentValueKey);
-		if (null != strEnvironmentValue)
-			return strEnvironmentValue;
+		final String strOverlappingValue = oProperties.getOverlappingValue(strKey);
+		if (null != strOverlappingValue)
+			return strOverlappingValue;
 		
 		return oProperties.Properties.getProperty(strKey);
 	}
@@ -138,6 +154,8 @@ class PropertyFileInfo
 {
 	/** Сами настройки */
 	final public Properties Properties;
+	/** Изменения в настроках - перекрывающие настройки */
+	Map<String, String> m_oOverlapping = new HashMap<String, String>();
 	/** Имя файла настроек */
 	final public String Name;
 	
@@ -152,8 +170,73 @@ class PropertyFileInfo
 		Name = FilenameUtils.getBaseName(strProperyFile);
 
 		oRegisterProperyFiles.put(strProperyFile, this);
+		
+		loadOverlapping();
 	}
+	
+	public String getOverlappingValue(final String strProperyName)
+	{
+		return m_oOverlapping.get(strProperyName);
+	}
+	
+	public void setOverlappingValue(final String strProperyName, final String strValue)
+	{
+		m_oOverlapping.put(strProperyName, strValue);
+		save();
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected void loadOverlapping()
+	{
+		final String strFileName = getFileName(Name);
+		if (null == strFileName)
+			return;
+		
+		try
+		{
+	         final FileInputStream oFileStream = new FileInputStream(strFileName);
+	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
+	         m_oOverlapping = (Map<String, String>) oStream.readObject();
+	         oStream.close();
+	         oFileStream.close();			
+		} 
+		catch (final Exception e) 
+		{
+			WorkerFactory.onException("Can't load properties overlapping [" + strFileName + "]", e);
+	    }
+		
+		save();
+	}
+	
+	protected void save()
+	{
+		final String strFileName = getFileName(Name);
+		if (null == strFileName)
+			return;
+		
+		try 
+		{
+	         final FileOutputStream oFileStream = new FileOutputStream(strFileName);
+	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
+	         oStream.writeObject(m_oOverlapping);
+	         oStream.close();
+	         oFileStream.close();
+		} 
+		catch (IOException e) 
+		{
+			WorkerFactory.onException("Can't save properties overlapping [" + strFileName + "]", e);
+		}	
+		}
 
+	protected String getFileName(final String strPropertyFileName)
+	{
+		if (CurrencyInformer.PROPERTIES_FILE_NAME.equalsIgnoreCase(strPropertyFileName + ".properties"))
+			return null;
+		
+		final String strName = strPropertyFileName.replace(".properties", StringUtils.EMPTY) + "PropertyOverlapping.ser";
+		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + strName;
+	}
+	
 	/** Получаем данные о файле настроек по имени файла настроек
 	 * @param strProperyFile Имя файла настроек
 	 * @param oRegisterProperyFiles Список уже зарегистрированных файлов с параметрами 

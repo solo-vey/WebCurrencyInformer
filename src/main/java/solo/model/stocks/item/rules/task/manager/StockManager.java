@@ -58,8 +58,8 @@ public class StockManager implements IStockManager
 		{
 			final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
 			final List<RateInfo> oProspectiveRates = ManagerUtils.getProspectiveRates(oAllRateState, BigDecimal.ZERO);
-			for(final RateInfo oRateInfo : oProspectiveRates)
-				WorkerFactory.getMainWorker().addCommand(new AddRateCommand(oRateInfo.toString()));
+//			for(final RateInfo oRateInfo : oProspectiveRates)
+//				WorkerFactory.getMainWorker().addCommand(new AddRateCommand(oRateInfo.toString()));
 		}
 		catch(final Exception e)
 		{

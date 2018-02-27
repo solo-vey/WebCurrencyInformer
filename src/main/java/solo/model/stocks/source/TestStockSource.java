@@ -12,6 +12,7 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -26,6 +27,7 @@ import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
 
 public class TestStockSource extends BaseStockSource implements ITest
@@ -53,6 +55,11 @@ public class TestStockSource extends BaseStockSource implements ITest
 		if (null == oRateOrders || oRateOrders.size() == 0)
 			return;
 		
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strChance = ResourceUtils.getResource("stock.test.chance", oStockExchange.getStockProperties(), "1");
+		final BigDecimal nChance = MathUtils.fromString(strChance);
+		
+		final Random oRandom = new Random();
 		final Date oLastTradeOrder = m_oStockSourceData.getLastTradeOrder().get(oRateInfo);
 		final List<Order> aDoneOrders = new LinkedList<Order>();
 		for(final Order oTradeOrder : oRateState.getTrades())
@@ -60,6 +67,9 @@ public class TestStockSource extends BaseStockSource implements ITest
 			if (null != oTradeOrder.getCreated() && null != oLastTradeOrder &&
 				(oTradeOrder.getCreated().equals(oLastTradeOrder) || oTradeOrder.getCreated().before(oLastTradeOrder)))
 				break;
+			
+			if (oRandom.nextDouble() >= nChance.doubleValue())
+				continue;
 			
 			BigDecimal nTradeOrderVolume = oTradeOrder.getVolume();
 			for(final Order oOrder : oRateOrders)

@@ -9,6 +9,7 @@ import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.StockManager;
 import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.source.TestStockSource;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.ResourceUtils;
 
@@ -87,6 +88,8 @@ public class BaseStockExchange implements IStockExchange
 	{
 		if (strName.equalsIgnoreCase(MESSAGE_LEVEL_PARAMETER))
 			m_oMessageLevel = MessageLevel.valueOf(strValue.toUpperCase());
+		
+		ResourceUtils.setResource(strName, WorkerFactory.getStockExchange().getStockProperties(), strValue);
 	}
 	
 	public String getParameter(String strName)

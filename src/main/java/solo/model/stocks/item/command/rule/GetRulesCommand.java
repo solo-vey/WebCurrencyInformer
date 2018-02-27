@@ -13,9 +13,11 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
+import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -34,7 +36,7 @@ public class GetRulesCommand extends BaseCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		final String strType = getParameter("#type#");
+		final String strType = getParameter("#type#").toLowerCase();
 		
 		final Map<String, List<IRule>> aRulesByRate = new HashMap<String, List<IRule>>();
 		int nAllCount = 0;
@@ -44,12 +46,15 @@ public class GetRulesCommand extends BaseCommand
 			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
 				continue;
 			
+			nAllCount++;
 			final String strRate = oRuleInfo.getValue().getRateInfo().toString();
+			if (strType.contains("rate:") && !strType.contains("rate:" + strRate))
+				continue;
+			
 			if (!aRulesByRate.containsKey(strRate))
 				aRulesByRate.put(strRate, new LinkedList<IRule>());
 			
 			aRulesByRate.get(strRate).add(oRuleInfo.getValue());
-			nAllCount++;
 		}
 		
 		final boolean bIsShowIfHasRealTest = !strType.contains("onlytestrules");
@@ -61,11 +66,33 @@ public class GetRulesCommand extends BaseCommand
 				bIsHasRealRule |= !(oRule instanceof ITest); 
 			if (bIsHasRealRule != bIsShowIfHasRealTest)
 				continue;
-				
-			for(final IRule oRule : oRateRules.getValue())
+			
+			if (!strType.contains("rate:"))
 			{
-				final String strRuleInfo = oRule.getInfo();
-				aButtons.add(Arrays.asList(strRuleInfo + "=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRule.getID())));
+				String strState = StringUtils.EMPTY;
+				for(final IRule oRule : oRateRules.getValue())
+				{
+					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+					final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
+					if (null != oTradeTask)
+						strState += oTradeTask.getTradeInfo().getOrder().getSide();
+					if (null != oTradeControler)
+					{
+						final String strTradeCount = oTradeControler.getParameter(TradeControler.TRADE_COUNT_PARAMETER);
+						strState += (ManagerUtils.isTestObject(oTradeControler) ? "TEST" : 
+								(strTradeCount.equals("0") ? "WAIT" : strTradeCount.equals("-1") ? "STOPED" : "work")) + ";";
+					}
+				}
+				
+				aButtons.add(Arrays.asList("[" + oRateRules.getKey() + "] [" + strState + "]=/rules_rate:" + oRateRules.getKey()));
+			}
+			else
+			{		
+				for(final IRule oRule : oRateRules.getValue())
+				{
+					final String strRuleInfo = oRule.getInfo();
+					aButtons.add(Arrays.asList(strRuleInfo + "=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRule.getID())));
+				}
 			}
      	}
 		
