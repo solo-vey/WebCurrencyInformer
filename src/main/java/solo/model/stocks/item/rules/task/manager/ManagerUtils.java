@@ -1,9 +1,23 @@
 package solo.model.stocks.item.rules.task.manager;
 
+import java.math.BigDecimal;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
+
+import solo.model.currency.Currency;
+import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateStateShort;
+import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.rules.task.trade.ITest;
+import solo.model.stocks.item.rules.task.trade.TTradeControler;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.utils.MathUtils;
+import solo.utils.ResourceUtils;
 
 public class ManagerUtils
 {
@@ -38,6 +52,93 @@ public class ManagerUtils
 		}
 		
 		return bIsHasTestRule;
+	}
+	
+	public static void createTestControler(final RateInfo oRateInfo)
+	{
+		if (isHasTestRules(oRateInfo))
+			return;
+		
+		try
+		{
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));			
+			final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + nSum;
+			final IRule oRule = RulesFactory.getRule(strRuleInfo);
+			WorkerFactory.getStockExchange().getRules().addRule(oRule);
+			
+			System.out.printf("Create test trade controler [" + oRateInfo + "]\\r\n");
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't create test trade controler [" + oRateInfo + "]", e);
+		}
+	}
+	
+	public static BigDecimal getMinDayRateVolume()
+	{
+		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final String strMinDayRateVolume = ResourceUtils.getResource("stock.min_day_rate_volume", oStockExchange.getStockProperties(), "50");
+		return MathUtils.fromString(strMinDayRateVolume);
+	}
+	
+	public static List<RateInfo> getProspectiveRates(final Map<RateInfo, RateStateShort> oAllRateState, final BigDecimal nMinExtraPercent)
+	{
+		final List<RateInfo> aProspectiveRates = new LinkedList<RateInfo>();
+		final List<RateInfo> aRates = WorkerFactory.getStockSource().getRates();
+		
+		final BigDecimal nMinDayRateVolume = ManagerUtils.getMinDayRateVolume();
+		for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
+		{
+			if (aRates.contains(oShortRateInfo.getKey()))
+				continue;
+			
+			final BigDecimal nBtcVolume = ManagerUtils.convertToBtcVolume(oShortRateInfo.getKey(), oShortRateInfo.getValue().getVolume(), oAllRateState);
+			if (nBtcVolume.compareTo(nMinDayRateVolume) < 0)
+				continue;
+		
+			final BigDecimal nExtraMagin = ManagerUtils.getExtraMargin(oShortRateInfo.getKey(), oShortRateInfo.getValue());
+			if (nExtraMagin.compareTo(BigDecimal.ZERO) <= 0)
+				continue;
+			
+			final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nExtraMagin.doubleValue() / oShortRateInfo.getValue().getAskPrice().doubleValue() * 100, 2);
+			if (nExtraPercent.compareTo(nMinExtraPercent) < 0)
+				continue;
+			
+			aProspectiveRates.add(oShortRateInfo.getKey());
+		}
+		return aProspectiveRates;
+	}
+	
+	public static BigDecimal convertToBtcVolume(final RateInfo oRateInfo, final BigDecimal nVolume, final Map<RateInfo, RateStateShort> oAllRateState)
+	{
+		final RateInfo oToBtcRateInfo = new RateInfo(oRateInfo.getCurrencyFrom(), Currency.BTC);
+		final RateStateShort oBtcToCurrencyRate = oAllRateState.get(oToBtcRateInfo);
+		if (null != oBtcToCurrencyRate)
+		{
+			final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBidPrice();
+			return nVolume.multiply(oBtcBidPrice);
+		}
+		else
+		{
+			final RateInfo oToBtcRateInfoReverse = RateInfo.getReverseRate(oToBtcRateInfo);
+			final RateStateShort oBtcToCurrencyRateReverse = oAllRateState.get(oToBtcRateInfoReverse);
+			if (null != oBtcToCurrencyRateReverse)
+			{
+				final BigDecimal oBtcBidPriceReverse = MathUtils.getBigDecimal(1 / oBtcToCurrencyRateReverse.getBidPrice().doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
+				return nVolume.multiply(oBtcBidPriceReverse);
+			}			
+		}
+		
+		return BigDecimal.ZERO;
+	}
+	
+	public static BigDecimal getExtraMargin(final RateInfo oRateInfo, final RateStateShort oRateStateShort)
+	{
+		final BigDecimal nDelta = oRateStateShort.getAskPrice().add(oRateStateShort.getBidPrice().negate());
+		final BigDecimal nCommission = TradeUtils.getCommisionValue(oRateStateShort.getAskPrice(), oRateStateShort.getBidPrice());
+		final BigDecimal nMargin = TradeUtils.getMarginValue(oRateStateShort.getAskPrice(), oRateInfo);
+		final BigDecimal nCommissionAnMargin = nCommission.add(nMargin);
+		return nDelta.add(nCommissionAnMargin.negate());
 	}
 }
 

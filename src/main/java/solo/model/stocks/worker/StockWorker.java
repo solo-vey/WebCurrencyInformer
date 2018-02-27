@@ -1,5 +1,6 @@
 package solo.model.stocks.worker;
 
+import java.util.Collection;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,6 +20,11 @@ public class StockWorker extends BaseWorker
 		super(ResourceUtils.getIntFromResource("check.stock.timeout", oStockExchange.getStockProperties(), 4000), oMainWorker.getStock());
 		m_oStockExchange = oStockExchange;
 		m_oMainWorker = oMainWorker;
+	}
+	
+	public Collection<StockRateWorker> getStockRateWorkers()
+	{
+		return m_aStockRateWorkers;
 	}
 
 	public void startWorker()

@@ -1,7 +1,11 @@
 package solo.model.stocks.item.command.system;
 
+import java.util.Map.Entry;
+
+import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.worker.WorkerFactory;
 
 public class RemoveRateCommand extends BaseCommand
@@ -23,6 +27,12 @@ public class RemoveRateCommand extends BaseCommand
 		super.execute();
 		WorkerFactory.getStockSource().removeRate(m_oRateInfo);
 		WorkerFactory.getMainWorker().getStockWorker().stopRateWorker(m_oRateInfo);
+		
+		if (!ManagerUtils.isHasRealRules(m_oRateInfo))
+		{
+			for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules(m_oRateInfo))
+				WorkerFactory.getStockExchange().getRules().removeRule(oRuleInfo.getValue());
+		}
 		
 		WorkerFactory.getMainWorker().sendSystemMessage("Stock rate worker [" + m_oRateInfo + "] stopped");
 	}

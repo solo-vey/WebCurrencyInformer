@@ -8,6 +8,7 @@ import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
@@ -17,11 +18,10 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
-import solo.model.stocks.item.Rules;
-import solo.model.stocks.item.RulesFactory;
+import solo.model.stocks.item.RateStateShort;
+import solo.model.stocks.item.command.system.AddRateCommand;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
-import solo.model.stocks.item.rules.task.trade.TTradeControler;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -43,31 +43,27 @@ public class StockManager implements IStockManager
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{
 		startTestControler();
+		lookForProspectiveRate();
 	}	
 	
 	protected void startTestControler()
 	{
-		final Rules oRules  = WorkerFactory.getStockExchange().getRules();
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+			ManagerUtils.createTestControler(oRateInfo);
+	}
+	
+	private void lookForProspectiveRate()
+	{
+		try
 		{
-			boolean bIsRateRulePrecent = false;
-			for(final IRule oRule : oRules.getRules().values())
-				bIsRateRulePrecent |= (oRule.getRateInfo().equals(oRateInfo));
-			
-			if (bIsRateRulePrecent)
-				continue;
-			
-			try
-			{
-				final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));			
-				final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + nSum;
-				final IRule oRule = RulesFactory.getRule(strRuleInfo);
-				WorkerFactory.getStockExchange().getRules().addRule(oRule);
-			}
-			catch(final Exception e)
-			{
-				WorkerFactory.onException("Can't create test trade controler", e);
-			}
+			final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
+			final List<RateInfo> oProspectiveRates = ManagerUtils.getProspectiveRates(oAllRateState, BigDecimal.ZERO);
+			for(final RateInfo oRateInfo : oProspectiveRates)
+				WorkerFactory.getMainWorker().addCommand(new AddRateCommand(oRateInfo.toString()));
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't create prospective rates list.", e);
 		}
 	}
 

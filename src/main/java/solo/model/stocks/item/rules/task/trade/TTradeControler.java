@@ -1,5 +1,9 @@
 package solo.model.stocks.item.rules.task.trade;
 
+import java.util.List;
+
+import solo.model.stocks.worker.WorkerFactory;
+
 public class TTradeControler extends TradeControler implements ITest
 {
 	private static final long serialVersionUID = -2333740994826596628L;
@@ -27,5 +31,12 @@ public class TTradeControler extends TradeControler implements ITest
 	@Override public String getInfo()
 	{
 		return "TEST" + super.getInfo();
+	}
+	
+	public void remove()
+	{
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		for(final ITradeTask oTaskTrade : aTaskTrades)
+			WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);
 	}
 }

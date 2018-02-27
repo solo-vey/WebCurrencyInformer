@@ -53,7 +53,7 @@ public class WorkerFactory
 		s_oThreadToWorkers.put(nThreadID, oWorker);
 	}
 	
-	static public void start()
+	static public void start() throws Exception
 	{
 //		(new MainWorker(Stocks.Kuna)).startWorker();
 //		(new MainWorker(Stocks.BtcTrade)).startWorker();

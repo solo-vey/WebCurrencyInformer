@@ -5,6 +5,6 @@ import solo.model.stocks.item.command.base.ICommand;
 public interface IWorker extends Runnable
 {
 	void addCommand(final ICommand oCommand);
-	void startWorker();
+	void startWorker() throws Exception;
 	void stopWorker();
 }

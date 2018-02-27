@@ -5,18 +5,15 @@ import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
-import java.util.TreeMap;
-
 import org.apache.commons.lang.StringUtils;
 
-import solo.model.currency.Currency;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -62,29 +59,13 @@ public class GetRateInfoCommand extends BaseCommand
     		
     		aLine.add(oRateInfo.toString().toUpperCase() + "=" + GetRateChartCommand.NAME + "_" + oRateInfo);
      	}
-    		
-    	final Map<BigDecimal, RateInfo> aExtraDeltaRates = new TreeMap<BigDecimal, RateInfo>();
-		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
-		for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
-		{
-			if (aRates.contains(oShortRateInfo.getKey()))
-				continue;
-			
-			final BigDecimal nDelta = oShortRateInfo.getValue().getAskPrice().add(oShortRateInfo.getValue().getBidPrice().negate());
-			final BigDecimal nCommission = TradeUtils.getCommisionValue(oShortRateInfo.getValue().getAskPrice(), oShortRateInfo.getValue().getBidPrice());
-			final BigDecimal nMargin = TradeUtils.getMarginValue(oShortRateInfo.getValue().getAskPrice(), oShortRateInfo.getKey());
-			if (nDelta.compareTo(nCommission.add(nMargin)) <= 0)
-				continue;
-			final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nDelta.add(nCommission.negate()).doubleValue() / oShortRateInfo.getValue().getAskPrice().doubleValue() * 100, 2);
-						
-			aExtraDeltaRates.put(nExtraPercent.negate(), oShortRateInfo.getKey());
-		}
-		
-		for(final RateInfo oExtraDeltaRateInfo : aExtraDeltaRates.values())
-			strMessage += getRateData(oExtraDeltaRateInfo, oAllRateState);
-
     	if (aLine.size() > 0)
 			aButtons.add(aLine);
+   		
+		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
+    	final List<RateInfo> oProspectiveRates = ManagerUtils.getProspectiveRates(oAllRateState, BigDecimal.ZERO);
+		for(final RateInfo oExtraDeltaRateInfo : oProspectiveRates)
+			addRateButton(oExtraDeltaRateInfo, oAllRateState, aButtons);
 		
     	WorkerFactory.getMainWorker().sendSystemMessage(strMessage + 
     			"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
@@ -116,49 +97,22 @@ public class GetRateInfoCommand extends BaseCommand
 		return strData;
 	}
 	
-	public static String getRateData(final RateInfo oRateInfo, final Map<RateInfo, RateStateShort> oAllRateState)
+	public static void addRateButton(final RateInfo oRateInfo, final Map<RateInfo, RateStateShort> oAllRateState, List<List<String>> aButtons)
 	{
 		final RateStateShort oRateStateShort = oAllRateState.get(oRateInfo);
 		if (null == oRateStateShort)
-			return StringUtils.EMPTY;
+			return;
 		
 		final BigDecimal nAskPrice = oRateStateShort.getAskPrice();
-		final BigDecimal nBidPrice = oRateStateShort.getBidPrice();
-		final BigDecimal nVolume = oRateStateShort.getVolume();
-		BigDecimal nBtcVolume = BigDecimal.ZERO;
+		final BigDecimal nBtcVolume = ManagerUtils.convertToBtcVolume(oRateInfo, oRateStateShort.getVolume(), oAllRateState);
 		
-		final RateInfo oToBtcRateInfo = new RateInfo(oRateInfo.getCurrencyFrom(), Currency.BTC);
-		if (null != oAllRateState.get(oToBtcRateInfo))
-		{
-			final BigDecimal nToBtcPrice = oAllRateState.get(oToBtcRateInfo).getBidPrice();
-			nBtcVolume = nToBtcPrice.multiply(nVolume);
-		}
-		else
-		{
-			final RateInfo oFromBtcRateInfo = RateInfo.getReverseRate(oToBtcRateInfo);
-			if (null != oAllRateState.get(oFromBtcRateInfo))
-			{
-				final BigDecimal nFromBtcPrice = oAllRateState.get(oFromBtcRateInfo).getBidPrice();
-				final BigDecimal nToBtcPrice = MathUtils.getBigDecimal(1 / nFromBtcPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
-				nBtcVolume = nToBtcPrice.multiply(nVolume);
-			}
-			else
-			if (oRateInfo.getCurrencyFrom().equals(Currency.BTC))
-				nBtcVolume = nVolume;
-		}
+		final BigDecimal nExtraMagin = ManagerUtils.getExtraMargin(oRateInfo, oRateStateShort);
+		final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nExtraMagin.doubleValue() / nAskPrice.doubleValue() * 100, 2);
 		
-		if (nBtcVolume.compareTo(new BigDecimal(10)) < 0)
-			return StringUtils.EMPTY;
-		
-		final BigDecimal nDelta = nAskPrice.add(nBidPrice.negate());
-		final BigDecimal nCommission = TradeUtils.getCommisionValue(nAskPrice, nBidPrice);
-		final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nDelta.add(nCommission.negate()).doubleValue() / nAskPrice.doubleValue() * 100, 2);
-		
-		String strData = "[" + oRateInfo + "]\t\t" + MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
-						MathUtils.toCurrencyStringEx3(nBidPrice) + " / " +   
-						MathUtils.toCurrencyStringEx3(nDelta) + " / " +   
+		aButtons.add(Arrays.asList("[" + oRateInfo + "] / " + MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
+						MathUtils.toCurrencyStringEx3(oRateStateShort.getBidPrice()) + " / " +   
+						MathUtils.toCurrencyStringEx3(nExtraMagin) + " / " +   
 						MathUtils.toCurrencyStringEx3(nExtraPercent) + " / " +   
-						MathUtils.toCurrencyStringEx3(nBtcVolume) + "\r\n";
-		return strData;
+						MathUtils.toCurrencyStringEx3(nBtcVolume) + "=/addrate_" + oRateInfo));
 	}
 }

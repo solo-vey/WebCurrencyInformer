@@ -1,10 +1,8 @@
 package solo.model.stocks.worker;
 
-import java.util.Date;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.exchange.Stocks;
-import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.base.CommandQueue;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.rule.GetRulesCommand;

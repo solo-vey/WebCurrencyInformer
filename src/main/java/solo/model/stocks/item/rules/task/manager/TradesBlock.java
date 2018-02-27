@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 
 import solo.model.stocks.item.rules.task.trade.TradeInfo;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
 
 public class TradesBlock implements Serializable
@@ -48,6 +49,17 @@ public class TradesBlock implements Serializable
 		}
 	}
 	
+	public BigDecimal getDelta()
+	{
+		return getReceivedSum().add(getSpendSum().negate());
+	}
+	
+	public BigDecimal getPercent()
+	{
+		final BigDecimal nAveregeTradeSum = MathUtils.getBigDecimal(getSpendSum().doubleValue() / m_nCount, TradeUtils.DEFAULT_PRICE_PRECISION);
+		return MathUtils.getBigDecimal(getDelta().doubleValue() / nAveregeTradeSum.doubleValue() * 100, 2);
+	}
+	
 	public void addTrade(final TradesBlock oTradesBlock)
 	{
 		m_nCount += oTradesBlock.getCount();
@@ -57,7 +69,7 @@ public class TradesBlock implements Serializable
 	
 	@Override public String toString()
 	{
-		return m_nCount + " / " + MathUtils.toCurrencyStringEx3(getTotalSum()) + " / " + 
-			MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum().negate()));
+		return m_nCount + " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) + " / " + 
+						MathUtils.toCurrencyStringEx3(getDelta()) + " / " + MathUtils.toCurrencyStringEx3(getPercent());
 	}
 }
