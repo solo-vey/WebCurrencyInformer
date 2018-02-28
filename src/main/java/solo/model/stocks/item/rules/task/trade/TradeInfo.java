@@ -285,7 +285,7 @@ public class TradeInfo extends BaseObject implements Serializable
 			return;
 		
 		m_oBuyStrategy = oBuyStrategy;
-		addToHistory(strMessage + "Set buy strategy : " + oBuyStrategy); 
+		addToHistory(strMessage + "Set buy strategy : " + oBuyStrategy.getName()); 
 	}
 
 	public void restoreDefaultBuyStrategy()
@@ -305,7 +305,7 @@ public class TradeInfo extends BaseObject implements Serializable
 			return;
 
 		m_oSellStrategy = oSellStrategy;
-		addToHistory(strMessage + "Set sell strategy : " + oSellStrategy); 
+		addToHistory(strMessage + "Set sell strategy : " + oSellStrategy.getName()); 
 	}
 	
 	public void setTaskSide(OrderSide oTaskSide)

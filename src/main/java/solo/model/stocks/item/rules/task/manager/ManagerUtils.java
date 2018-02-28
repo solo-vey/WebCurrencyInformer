@@ -97,14 +97,6 @@ public class ManagerUtils
 			if (nBtcVolume.compareTo(nMinDayRateVolume) < 0)
 				continue;
 		
-			final BigDecimal nExtraMagin = ManagerUtils.getExtraMargin(oShortRateInfo.getKey(), oShortRateInfo.getValue());
-			if (nExtraMagin.compareTo(BigDecimal.ZERO) <= 0)
-				continue;
-			
-			final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nExtraMagin.doubleValue() / oShortRateInfo.getValue().getAskPrice().doubleValue() * 100, 2);
-			if (nExtraPercent.compareTo(nMinExtraPercent) < 0)
-				continue;
-			
 			aProspectiveRates.add(oShortRateInfo.getKey());
 		}
 		return aProspectiveRates;

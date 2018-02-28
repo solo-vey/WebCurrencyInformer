@@ -14,6 +14,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
+import solo.model.stocks.item.rules.task.manager.TradesBlock;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -88,9 +89,13 @@ public class GetRateInfoCommand extends BaseCommand
 		final BigDecimal nTradePrice = oAnalysisResult.getTopTradePrice();
 		final String strTradeType = (nTradePrice.compareTo(nAskBottomPrice) > 0 ? "^" : nTradePrice.compareTo(nBidTopPrice) < 0 ? "v" : "-");
 		
+		final TradesBlock oTradesData = WorkerFactory.getStockExchange().getManager().getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
+		
 		String strData = MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
 						MathUtils.toCurrencyStringEx3(nBidPrice) + " / " +  
-						MathUtils.toCurrencyStringEx3(nTradePrice) + "[" + strTradeType + "]\r\n";
+						MathUtils.toCurrencyStringEx3(nTradePrice) + "[" + strTradeType + "]" +
+						(null != oTradesData ? " [" + oTradesData.getPercent() + "%]" : StringUtils.EMPTY) +
+						"\r\n";
 		strData += "[" + oRateInfo + "] " + MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
 					MathUtils.toCurrencyStringEx3(nCommisionAndMargin) + " / " + 
 					MathUtils.toCurrencyStringEx3(nDelta.add(nCommisionAndMargin.negate())) + "\r\n";
@@ -102,17 +107,23 @@ public class GetRateInfoCommand extends BaseCommand
 		final RateStateShort oRateStateShort = oAllRateState.get(oRateInfo);
 		if (null == oRateStateShort)
 			return;
-		
-		final BigDecimal nAskPrice = oRateStateShort.getAskPrice();
+			
 		final BigDecimal nBtcVolume = ManagerUtils.convertToBtcVolume(oRateInfo, oRateStateShort.getVolume(), oAllRateState);
 		
+		final BigDecimal nAskPrice = oRateStateShort.getAskPrice();
+		final BigDecimal nDelta = nAskPrice.add(oRateStateShort.getBidPrice().negate());
 		final BigDecimal nExtraMagin = ManagerUtils.getExtraMargin(oRateInfo, oRateStateShort);
 		final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nExtraMagin.doubleValue() / nAskPrice.doubleValue() * 100, 2);
 		
-		aButtons.add(Arrays.asList("[" + oRateInfo + "] / " + MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
-						MathUtils.toCurrencyStringEx3(oRateStateShort.getBidPrice()) + " / " +   
-						MathUtils.toCurrencyStringEx3(nExtraMagin) + " / " +   
-						MathUtils.toCurrencyStringEx3(nExtraPercent) + " / " +   
-						MathUtils.toCurrencyStringEx3(nBtcVolume) + "=/addrate_" + oRateInfo));
+		final TradesBlock oTradesData = WorkerFactory.getStockExchange().getManager().getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
+		
+		aButtons.add(Arrays.asList(
+						MathUtils.toCurrencyStringEx3(nBtcVolume) + 
+						" [" + oRateInfo + "] " +
+						MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
+						MathUtils.toCurrencyStringEx3(nDelta) + " / " +   
+						MathUtils.toCurrencyStringEx3(nExtraPercent) + "%" +   
+						(null != oTradesData ? " [" + oTradesData.getPercent() + "%]" : StringUtils.EMPTY) + 
+						"=/addrate_" + oRateInfo));
 	}
 }

@@ -23,6 +23,7 @@ import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
@@ -81,7 +82,7 @@ public class GetStockInfoCommand extends BaseCommand
 				for(final IRule oRule : oRules.getRules().values())
 				{
 					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
-					if (null == oTradeTask)
+					if (null == oTradeTask || ManagerUtils.isTestObject(oTradeTask))
 						continue;
 					
 					final Order oOrder = oTradeTask.getTradeInfo().getOrder();
@@ -165,12 +166,6 @@ public class GetStockInfoCommand extends BaseCommand
 					if (OrderSide.BUY.equals(oOrder.getSide()))
 						nLockedSum = nLockedSum.add(oOrder.getSum().negate());
 
-					if (oOrdersInfo.getKey().getCurrencyFrom().equals(Currency.BTC))
-					{
-						oTotalBtcSum = oTotalBtcSum.add(oOrder.getVolume());
-						continue;
-					}
-							
 					final BigDecimal oSum = oOrder.getSum().multiply(oBtcBidPrice);
 					oTotalBtcSum = oTotalBtcSum.add(oSum);
 				}

@@ -73,6 +73,6 @@ public class TradesBlock implements Serializable
 	@Override public String toString()
 	{
 		return m_nCount + " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) + " / " + 
-						MathUtils.toCurrencyStringEx3(getDelta()) + " / " + MathUtils.toCurrencyStringEx3(getPercent());
+						MathUtils.toCurrencyStringEx3(getDelta()) + " / " + MathUtils.toCurrencyStringEx3(getPercent()) + "%";
 	}
 }

@@ -309,7 +309,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final List<Order> oTrades = oAnalysisResult.getTrades();
 		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice());
 		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oTrades.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oTrades.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oTrades.get(2).getPrice());
-		getTradeInfo().getHistory().addToLog(strLogMessage);
+		getTradeInfo().getHistory().addToLog(strLogMessage + "\r\n");
 	}
 
 	protected Order addOrder(final OrderSide oOrderSide, final BigDecimal oVolume, final BigDecimal oPrice)

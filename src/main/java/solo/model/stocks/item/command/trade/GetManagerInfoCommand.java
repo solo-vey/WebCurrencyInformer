@@ -27,7 +27,8 @@ public class GetManagerInfoCommand extends BaseCommand
 		
 		final String strMessage = WorkerFactory.getStockExchange().getManager().getInfo().asString(strType) +
 			"BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months"),
-																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "All=manager")));
+																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "All=manager"),
+																		Arrays.asList("Parameters=setstockparameter_?")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 }

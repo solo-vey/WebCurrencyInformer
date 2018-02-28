@@ -25,34 +25,34 @@ public class StockManagesInfo extends BaseObject implements Serializable
 	{
 	}
 	
-	protected CurrencyTradesBlock getTotal()
+	public CurrencyTradesBlock getTotal()
 	{
 		return m_oTotal;
 	}
 	
-	protected PeriodTradesBlock getMonthsTotal()
+	public PeriodTradesBlock getMonthsTotal()
 	{
 		return m_oMonthsTotal;
 	}
 	
-	protected PeriodTradesBlock getDaysTotal()
+	public PeriodTradesBlock getDaysTotal()
 	{
 		return m_oDaysTotal;
 	}	
 	
-	protected PeriodTradesBlock getHoursTotal()
+	public PeriodTradesBlock getHoursTotal()
 	{
 		return m_oHoursTotal;
 	}
 	
-	protected CycleTradesBlock getLast24Hours()
+	public CycleTradesBlock getLast24Hours()
 	{
 		if (null == m_oLast24Hours)
 			m_oLast24Hours = new CycleTradesBlock();
 		return m_oLast24Hours;
 	}
 	
-	protected RateCycleTradesBlock getRateLast24Hours()
+	public RateCycleTradesBlock getRateLast24Hours()
 	{
 		if (null == m_oRateLast24Hours)
 			m_oRateLast24Hours = new RateCycleTradesBlock();
