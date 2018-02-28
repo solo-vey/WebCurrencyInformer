@@ -17,6 +17,30 @@ public class WorkerFactory
 {
 	protected static IWorker s_oRootWorker = new BaseWorker();
 	protected static Map<Long, MainWorker> s_oThreadToWorkers = new HashMap<Long, MainWorker>();
+	protected static Map<Stocks, MainWorker> s_oAllWorkers = new HashMap<Stocks, MainWorker>();
+	
+	static
+	{
+		registerMainWorker(new MainWorker(Stocks.Kuna));
+		registerMainWorker(new MainWorker(Stocks.BtcTrade));
+		registerMainWorker(new MainWorker(Stocks.Exmo));
+		registerMainWorker(new MainWorker(Stocks.Cryptopia));
+	}
+	
+	public static void registerMainWorker(final MainWorker oMainWorker)
+	{
+		s_oAllWorkers.put(oMainWorker.getStock(), oMainWorker);
+	}
+	
+	public static Map<Stocks, MainWorker> getAllMainWorkers()
+	{
+		return s_oAllWorkers;
+	}
+	
+	public static MainWorker getMainWorker(Stocks oStock)
+	{
+		return getAllMainWorkers().get(oStock);
+	}
 
 	public static MainWorker getMainWorker()
 	{
@@ -55,10 +79,9 @@ public class WorkerFactory
 	
 	static public void start() throws Exception
 	{
-//		(new MainWorker(Stocks.Kuna)).startWorker();
-//		(new MainWorker(Stocks.BtcTrade)).startWorker();
-		(new MainWorker(Stocks.Exmo)).startWorker();
-		(new MainWorker(Stocks.Cryptopia)).startWorker();
+		getMainWorker(Stocks.Kuna).startWorker();
+		getMainWorker(Stocks.Exmo).startWorker();
+		getMainWorker(Stocks.Cryptopia).startWorker();
 		
 		s_oRootWorker.startWorker();
 		s_oRootWorker.run();

@@ -57,17 +57,17 @@ public class GetRulesCommand extends BaseCommand
 			aRulesByRate.get(strRate).add(oRuleInfo.getValue());
 		}
 		
-		final boolean bIsShowIfHasRealTest = !strType.contains("onlytestrules");
+		final boolean bIsShowIfHasReal = !strType.contains("onlytestrules");
 	   	final List<List<String>> aButtons = new LinkedList<List<String>>();
 		for(final Entry<String, List<IRule>> oRateRules : aRulesByRate.entrySet())
     	{
 			boolean bIsHasRealRule = false;
 			for(final IRule oRule : oRateRules.getValue())
 				bIsHasRealRule |= !(oRule instanceof ITest); 
-			if (bIsHasRealRule != bIsShowIfHasRealTest)
+			if (bIsHasRealRule != bIsShowIfHasReal)
 				continue;
 			
-			if (!strType.contains("rate:"))
+			if (!strType.contains("rate:") && bIsShowIfHasReal)
 			{
 				String strState = StringUtils.EMPTY;
 				for(final IRule oRule : oRateRules.getValue())
@@ -96,12 +96,12 @@ public class GetRulesCommand extends BaseCommand
 			}
      	}
 		
-		if (bIsShowIfHasRealTest && aButtons.size() < nAllCount)
+		if (bIsShowIfHasReal && aButtons.size() < nAllCount)
 			aButtons.add(Arrays.asList("#### SHOW TEST RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", "onlytestrules")));
 		
-		if (!bIsShowIfHasRealTest && aButtons.size() < nAllCount)
+		if (!bIsShowIfHasReal && aButtons.size() < nAllCount)
 			aButtons.add(Arrays.asList("#### SHOW REAL RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", StringUtils.EMPTY)));
 			
-		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + (aButtons.size() - 1) + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
+		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + (aButtons.size() > 0 ? aButtons.size() - 1 : 0) + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}
 }

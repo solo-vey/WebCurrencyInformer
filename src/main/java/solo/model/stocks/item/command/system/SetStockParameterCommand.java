@@ -18,15 +18,17 @@ public class SetStockParameterCommand extends BaseCommand
 	public SetStockParameterCommand(final String strСommandLine)
 	{
 		super(strСommandLine, CommonUtils.mergeParameters(NAME_PARAMETER, VALUE_PARAMETER));
-		m_strName = getParameter(NAME_PARAMETER);
-		m_strValue = getParameter(VALUE_PARAMETER);
+		m_strName = getParameter(NAME_PARAMETER).replace("-", "_");
+		m_strValue = getParameter(VALUE_PARAMETER).replace("-", "_");
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
 		
-		WorkerFactory.getStockExchange().setParameter(m_strName, m_strValue);
+		if (!"?".equalsIgnoreCase(m_strValue))
+			WorkerFactory.getStockExchange().setParameter(m_strName, m_strValue);
+		
 		WorkerFactory.getMainWorker().sendSystemMessage("Parameter [" + m_strName + "] = [" + WorkerFactory.getStockExchange().getParameter(m_strName) + "]");
 	}
 }

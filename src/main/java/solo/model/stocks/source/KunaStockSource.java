@@ -38,6 +38,7 @@ public class KunaStockSource extends BaseStockSource
 		
 		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
 		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
+		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.UAH));
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -92,7 +93,7 @@ public class KunaStockSource extends BaseStockSource
 			oOrder.setVolume(MathUtils.fromString(oMapOrder.get("volume").toString()));
 		
 		if (null != oMapOrder.get("created_at"))
-			oOrder.setCreated(oMapOrder.get("created_at").toString().replace("T", " ").replace("Z", "").split("\\+")[0], "yyyy-MM-dd HH:mm:ss");
+			oOrder.setCreated(oMapOrder.get("created_at").toString().replace("Z", "+0000").replace("+02:00", "+0200").replace("+03:00", "+0300"), "yyyy-MM-dd'T'HH:mm:ssZ");
 		
 		return oOrder;
 	}
@@ -125,7 +126,11 @@ public class KunaStockSource extends BaseStockSource
 				oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, nLocked)); 
 			}
 		}
-		catch(final Exception e) {}
+		catch(final Exception e) 
+		{
+			if (e.getMessage().contains("The tonce is invalid"))
+				m_nTimeDelta = null;
+		}
 	}
 	
 	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo)
@@ -147,7 +152,11 @@ public class KunaStockSource extends BaseStockSource
 				}
 			}
 		} 
-		catch(final Exception e) {}
+		catch(final Exception e) 
+		{
+			if (e.getMessage().contains("The tonce is invalid"))
+				m_nTimeDelta = null;			
+		}
 	}
 	
 	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
@@ -169,6 +178,9 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
+			if (e.getMessage().contains("The tonce is invalid"))
+				m_nTimeDelta = null;
+			
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
@@ -186,6 +198,9 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e) 
 		{
+			if (e.getMessage().contains("The tonce is invalid"))
+				m_nTimeDelta = null;
+
 			WorkerFactory.onException("KunaStockSource.getTrades", e);
 		}
 		
@@ -225,6 +240,9 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e)
 		{
+			if (e.getMessage().contains("The tonce is invalid"))
+				m_nTimeDelta = null;
+
 			WorkerFactory.onException("KunaStockSource.addOrder", e);
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
@@ -243,6 +261,9 @@ public class KunaStockSource extends BaseStockSource
 		}
 		catch (Exception e)
 		{
+			if (e.getMessage().contains("The tonce is invalid"))
+				m_nTimeDelta = null;
+
 			WorkerFactory.onException("KunaStockSource.removeOrder", e);
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}

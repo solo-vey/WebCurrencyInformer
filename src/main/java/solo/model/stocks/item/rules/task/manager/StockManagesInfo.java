@@ -3,6 +3,8 @@ package solo.model.stocks.item.rules.task.manager;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Map;
+
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.BaseObject;
@@ -111,13 +113,21 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			return getHoursTotal().toString();
 		
 		if (strType.equalsIgnoreCase("HOUR"))
-			return getHoursTotal().getPeriods().get(oCalendar.get(Calendar.HOUR_OF_DAY)).toString();
+		{
+			final Map<Integer, CurrencyTradesBlock> oHours = getHoursTotal().getPeriods();
+			final int nHour = oCalendar.get(Calendar.HOUR_OF_DAY);
+			return (null != oHours.get(nHour) ? oHours.get(nHour).toString() : "No data");
+		}
 		
 		if (strType.equalsIgnoreCase("DAYS"))
 			return getDaysTotal().toString();
 		
 		if (strType.equalsIgnoreCase("DAY"))
-			return getDaysTotal().getPeriods().get(oCalendar.get(Calendar.DAY_OF_MONTH)).toString();
+		{
+			final Map<Integer, CurrencyTradesBlock> oDays = getDaysTotal().getPeriods();
+			final int nDay = oCalendar.get(Calendar.DAY_OF_MONTH);
+			return (null != oDays.get(nDay) ? oDays.get(nDay).toString() : "No data");
+		}
 		
 		if (strType.equalsIgnoreCase("MONTHS"))
 			return getMonthsTotal().toString();

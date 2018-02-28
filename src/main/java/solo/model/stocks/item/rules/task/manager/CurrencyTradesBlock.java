@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
@@ -73,8 +74,12 @@ public class CurrencyTradesBlock implements Serializable
 	@Override public String toString()
 	{
 		String strResult = StringUtils.EMPTY;
-		for(final Entry<Currency, TradesBlock> oTradesInfo : m_oCurrencyTrades.entrySet())
-			strResult += oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + "\r\n";
+		final TreeMap<BigDecimal, Entry<Currency, TradesBlock>> aSorted = new TreeMap<BigDecimal, Entry<Currency, TradesBlock>>();
+		for(final Entry<Currency, TradesBlock> oTradesInfo : getCurrencyTrades().entrySet())
+			aSorted.put(oTradesInfo.getValue().getPercent(), oTradesInfo);
+		
+		for(final Entry<Currency, TradesBlock> oTradesInfo : aSorted.values())
+			strResult = oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + "\r\n" + strResult;
 		return strResult;
 	}
 }

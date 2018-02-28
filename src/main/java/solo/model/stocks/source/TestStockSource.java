@@ -82,14 +82,14 @@ public class TestStockSource extends BaseStockSource implements ITest
 				if (nTradeOrderVolume.compareTo(BigDecimal.ZERO) <= 0)
 					break;
 				
-				if (oTradeOrder.getSide().equals(oOrder.getSide()))
+				if (null != oTradeOrder.getSide() && oTradeOrder.getSide().equals(oOrder.getSide()))
 					continue;
 				
 				if (!Order.WAIT.equals(oOrder.getState()))
 					continue;
 				
-				System.err.println(strDate + oRateInfo + "\tTRADE " + oTradeOrder.getInfoShort());
-				System.err.println(strDate + "\t" + "Order " + oOrder.getInfoShort());
+				//System.err.println(strDate + oRateInfo + "\tTRADE " + oTradeOrder.getInfoShort());
+				//System.err.println(strDate + "\t" + "Order " + oOrder.getInfoShort());
 				if (OrderSide.BUY.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) >= 0)
 				{
 					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());

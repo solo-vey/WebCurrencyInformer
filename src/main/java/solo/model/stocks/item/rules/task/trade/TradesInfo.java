@@ -216,10 +216,10 @@ public class TradesInfo extends BaseObject implements Serializable
 			if (oOrder.isNull() || oOrder.isError() || oOrder.isCanceled() || oOrder.isDone())
 				continue;
 			
-			if (oOrder.getSide().equals(OrderSide.BUY))
+			if (OrderSide.BUY.equals(oOrder.getSide()))
 				m_nLockedSum = m_nLockedSum.add(oOrder.getSum());
 
-			if (oOrder.getSide().equals(OrderSide.SELL))
+			if (OrderSide.SELL.equals(oOrder.getSide()))
 			{
 				m_nLockedVolume = m_nLockedVolume.add(oOrder.getVolume());
 				m_nSumToSell = m_nSumToSell.add(oOrder.getSum());

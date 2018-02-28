@@ -1,9 +1,11 @@
 package solo.model.stocks.item.rules.task.manager;
 
 import java.io.Serializable;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -45,8 +47,12 @@ public class RateTradesBlock implements Serializable
 	@Override public String toString()
 	{
 		String strResult = StringUtils.EMPTY;
+		final TreeMap<BigDecimal, Entry<RateInfo, TradesBlock>> aSorted = new TreeMap<BigDecimal, Entry<RateInfo, TradesBlock>>();
 		for(final Entry<RateInfo, TradesBlock> oTradesInfo : getRateTrades().entrySet())
-			strResult += oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + "\r\n";
+			aSorted.put(oTradesInfo.getValue().getPercent(), oTradesInfo);
+		
+		for(final Entry<RateInfo, TradesBlock> oTradesInfo : aSorted.values())
+			strResult = oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + "\r\n" + strResult;
 		return strResult;
 	}
 }

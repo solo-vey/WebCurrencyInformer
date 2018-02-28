@@ -56,6 +56,9 @@ public class TradesBlock implements Serializable
 	
 	public BigDecimal getPercent()
 	{
+		if (getSpendSum().compareTo(BigDecimal.ZERO) == 0)
+			return BigDecimal.ZERO;
+		
 		final BigDecimal nAveregeTradeSum = MathUtils.getBigDecimal(getSpendSum().doubleValue() / m_nCount, TradeUtils.DEFAULT_PRICE_PRECISION);
 		return MathUtils.getBigDecimal(getDelta().doubleValue() / nAveregeTradeSum.doubleValue() * 100, 2);
 	}

@@ -1,7 +1,5 @@
 package solo.model.stocks.exchange;
 
-import org.apache.commons.lang.StringUtils;
-
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.analyse.StockCandlestick;
@@ -97,7 +95,7 @@ public class BaseStockExchange implements IStockExchange
 		if (strName.equalsIgnoreCase(MESSAGE_LEVEL_PARAMETER))
 			return m_oMessageLevel.toString();
 		
-		return StringUtils.EMPTY;
+		return ResourceUtils.getResource(strName, WorkerFactory.getStockExchange().getStockProperties());
 	}
 
 	@Override public IStockManager getManager()

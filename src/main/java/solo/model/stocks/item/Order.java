@@ -167,7 +167,10 @@ public class Order extends BaseObject implements Serializable
 			final SimpleDateFormat oFormatter = new SimpleDateFormat(strFormat);
 			setCreated(oFormatter.parse(strCreated));
 		}
-		catch (ParseException e) { }		
+		catch (ParseException e) 
+		{ 
+			System.err.println("Error parsing date [" + strCreated + "]");
+		}		
 	}
 	
 	public String getMessage()

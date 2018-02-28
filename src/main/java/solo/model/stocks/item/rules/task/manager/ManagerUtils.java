@@ -61,8 +61,9 @@ public class ManagerUtils
 		
 		try
 		{
-			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));			
-			final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + nSum;
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));	
+			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice().multiply(new BigDecimal(2));
+			final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + (nSum.compareTo(BigDecimal.ZERO) > 0 ? nSum : nMinChangePrice);
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			WorkerFactory.getStockExchange().getRules().addRule(oRule);
 			
