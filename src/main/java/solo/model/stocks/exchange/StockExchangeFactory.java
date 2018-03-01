@@ -14,6 +14,7 @@ public class StockExchangeFactory
 		registerStockExchange(Stocks.BtcTrade,	new BtcTradeStockExchange());
 		registerStockExchange(Stocks.Exmo, 		new ExmoStockExchange());
 		registerStockExchange(Stocks.Cryptopia,	new СryptopiaStockExchange());
+		registerStockExchange(Stocks.Poloniex,	new PoloniexStockExchange());
 	}
 	
 	static void registerStockExchange(final Stocks oStock, final IStockExchange oStockExchange)

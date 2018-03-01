@@ -41,7 +41,6 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		super(strCommandLine, strTemplate);
 		getTradeInfo().setTradeSum(getParameterAsBigDecimal(TRADE_VOLUME), true);
 		getTradeInfo().setTaskSide(OrderSide.BUY);
-		getTradeInfo().setTaskSide(OrderSide.BUY);
 	}
 
 	public TradeInfo getTradeInfo()
@@ -64,12 +63,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	
 	public String getInfo()
 	{
-		final String strGetRateCommand = (getTradeControler().equals(ITradeControler.NULL) ? 
-				CommandFactory.makeCommandLine(GetRateInfoCommand.class, GetRateInfoCommand.RATE_PARAMETER, m_oRateInfo) + " " : StringUtils.EMPTY);
-
 		return (getTradeControler().equals(ITradeControler.NULL) ? getType() + " " : StringUtils.EMPTY) + 
 					(getTradeInfo().getOrder().equals(Order.NULL) ?  getTradeInfo().getTaskSide() + " " : StringUtils.EMPTY) + 
-					strGetRateCommand + getTradeInfo().getOrder().getInfoShort() + "\r\n" + 
+					getTradeInfo().getOrder().getInfoShort() + "\r\n" + 
 					(StringUtils.isNotBlank(m_strCurrentState) ? "State [" + m_strCurrentState + "]\r\n" : StringUtils.EMPTY);   
 	}
 	
@@ -328,7 +324,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		}
 		
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, "Can't create order\r\n" + oOrderSide + "/" + MathUtils.toCurrencyStringEx2(oVolume) + "/" + MathUtils.toCurrencyStringEx2(oPrice) + "\r\n" + oAddOrder.getInfoShort());
-		m_strCurrentState = "addOrder - " + oAddOrder;
+		m_strCurrentState = "addOrder - " + oAddOrder.getInfoShort();
 		return oAddOrder;
 	}
 	

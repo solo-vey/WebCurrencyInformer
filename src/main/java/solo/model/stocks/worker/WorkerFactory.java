@@ -25,6 +25,7 @@ public class WorkerFactory
 		registerMainWorker(new MainWorker(Stocks.BtcTrade));
 		registerMainWorker(new MainWorker(Stocks.Exmo));
 		registerMainWorker(new MainWorker(Stocks.Cryptopia));
+		registerMainWorker(new MainWorker(Stocks.Poloniex));
 	}
 	
 	public static void registerMainWorker(final MainWorker oMainWorker)
@@ -81,7 +82,8 @@ public class WorkerFactory
 	{
 		getMainWorker(Stocks.Kuna).startWorker();
 		getMainWorker(Stocks.Exmo).startWorker();
-		getMainWorker(Stocks.Cryptopia).startWorker();
+//		getMainWorker(Stocks.Cryptopia).startWorker();
+//		getMainWorker(Stocks.Poloniex).startWorker();
 		
 		s_oRootWorker.startWorker();
 		s_oRootWorker.run();

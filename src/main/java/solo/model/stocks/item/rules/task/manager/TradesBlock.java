@@ -3,6 +3,8 @@ package solo.model.stocks.item.rules.task.manager;
 import java.io.Serializable;
 import java.math.BigDecimal;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.rules.task.trade.TradeInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
@@ -72,7 +74,10 @@ public class TradesBlock implements Serializable
 	
 	@Override public String toString()
 	{
-		return m_nCount + " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) + " / " + 
-						MathUtils.toCurrencyStringEx3(getDelta()) + " / " + MathUtils.toCurrencyStringEx3(getPercent()) + "%";
+		final boolean bIsLostMoney = (getPercent().compareTo(BigDecimal.ZERO) < 0);
+		final String strStyle = (bIsLostMoney ? "`" : StringUtils.EMPTY);
+		
+		return strStyle + m_nCount + " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) + " / " + 
+						MathUtils.toCurrencyStringEx3(getDelta()) + " / " + MathUtils.toCurrencyStringEx3(getPercent()) + "%" + strStyle;
 	}
 }

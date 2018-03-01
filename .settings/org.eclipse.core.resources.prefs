@@ -1,4 +1,4 @@
-#Tue Feb 13 14:53:02 EET 2018
+#Thu Mar 01 14:48:59 EET 2018
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
 encoding//src/main/resources/BtcTradeStockExchange.properties=UTF-8
@@ -6,6 +6,7 @@ encoding//src/main/resources/CryptopiaTelegramTransport.properties=UTF-8
 encoding//src/main/resources/ExmoStockExchange.properties=UTF-8
 encoding//src/main/resources/KunaStockExchange.properties=UTF-8
 encoding//src/main/resources/MockStockExchange.properties=UTF-8
+encoding//src/main/resources/PoloniexStockExchange.properties=UTF-8
 encoding//src/main/resources/TelegramTransport.properties=UTF-8
 encoding//src/main/resources/\u0421ryptopiaStockExchange.properties=UTF-8
 encoding//src/test/java=UTF-8

@@ -31,23 +31,22 @@ public class GetRateInfoCommand extends BaseCommand
 	
 	public GetRateInfoCommand(final String strRateInfo)
 	{
-		super(strRateInfo, RATE_PARAMETER);
+		super(strRateInfo, "#type#");
 		m_oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
 	}
 	
 	public void execute() throws Exception
 	{
 		super.execute();
+		final String strType = getParameter("#type#").toLowerCase();
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange(); 
     	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
     	
-    	final List<RateInfo> aRates = (null != m_oRateInfo ? Arrays.asList(m_oRateInfo) : WorkerFactory.getStockSource().getRates());
-    	
     	String strMessage = StringUtils.EMPTY;	     	
     	final List<List<String>> aButtons = new LinkedList<List<String>>();
     	List<String> aLine = new LinkedList<String>();
-    	for(final RateInfo oRateInfo : aRates)
+    	for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
     	{
 			final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
 			strMessage += getRateData(oRateInfo, oAnalysisResult) + "\r\n";
@@ -65,10 +64,16 @@ public class GetRateInfoCommand extends BaseCommand
    		
 		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
     	final List<RateInfo> oProspectiveRates = ManagerUtils.getProspectiveRates(oAllRateState, BigDecimal.ZERO);
-		for(final RateInfo oExtraDeltaRateInfo : oProspectiveRates)
-			addRateButton(oExtraDeltaRateInfo, oAllRateState, aButtons);
+    	if (strType.contains("prospectiverates"))
+    	{
+    		for(final RateInfo oExtraDeltaRateInfo : oProspectiveRates)
+    			addRateButton(oExtraDeltaRateInfo, oAllRateState, aButtons);
+    	}
+    	else
+    		if (oProspectiveRates.size() > 0)
+    			aButtons.add(Arrays.asList("### Prospective Rates ###=/rate_prospectiverates"));
 		
-    	WorkerFactory.getMainWorker().sendSystemMessage(strMessage + 
+    	WorkerFactory.getMainWorker().sendSystemMessage("HTML_STYLE\r\n" + strMessage + 
     			"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}
 
@@ -90,15 +95,19 @@ public class GetRateInfoCommand extends BaseCommand
 		final String strTradeType = (nTradePrice.compareTo(nAskBottomPrice) > 0 ? "^" : nTradePrice.compareTo(nBidTopPrice) < 0 ? "v" : "-");
 		
 		final TradesBlock oTradesData = WorkerFactory.getStockExchange().getManager().getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
+		final boolean bIsLostMoney = (null != oTradesData &&  oTradesData.getPercent().compareTo(BigDecimal.ZERO) < 0);
+		final String strStyle = (bIsLostMoney ? "<code>" : StringUtils.EMPTY);
+		final String strCloseStyle = (bIsLostMoney ? "</code>" : StringUtils.EMPTY);
 		
-		String strData = MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
+		String strData = strStyle + MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
 						MathUtils.toCurrencyStringEx3(nBidPrice) + " / " +  
 						MathUtils.toCurrencyStringEx3(nTradePrice) + "[" + strTradeType + "]" +
 						(null != oTradesData ? " [" + oTradesData.getPercent() + "%]" : StringUtils.EMPTY) +
 						"\r\n";
-		strData += "[" + oRateInfo + "] " + MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
+		strData += (bIsLostMoney ? "[" + oRateInfo.toString().toUpperCase() + "] " : "[" + oRateInfo + "] ")  + 
+					MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
 					MathUtils.toCurrencyStringEx3(nCommisionAndMargin) + " / " + 
-					MathUtils.toCurrencyStringEx3(nDelta.add(nCommisionAndMargin.negate())) + "\r\n";
+					MathUtils.toCurrencyStringEx3(nDelta.add(nCommisionAndMargin.negate())) + "\r\n" + strCloseStyle;
 		return strData;
 	}
 	

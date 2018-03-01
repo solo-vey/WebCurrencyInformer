@@ -6,6 +6,9 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -97,6 +100,9 @@ public class StockManager implements IStockManager
 			if (oControler.getParameter(TradeControler.TRADE_COUNT_PARAMETER).equalsIgnoreCase("0"))
 				continue;
 			
+			final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
+			oControler.getTradesInfo().getHistory().addToLog(oDateFormat.format(new Date()) + " Stop controler [" + oRateInfo + "]");
+
 			aWorkingControler.add(oControler);
 		}
 		
@@ -122,7 +128,8 @@ public class StockManager implements IStockManager
 			if (!strMaxTrades.equalsIgnoreCase("0"))
 				continue;
 			
-			oControler.getTradesInfo().getHistory().addToLog("Manager.startAllControlers.");
+			final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
+			oControler.getTradesInfo().getHistory().addToLog(oDateFormat.format(new Date()) + " Manager.startAllControlers.");
 			strMessage += "Start controler [" + oRateInfo + "]\r\n";	
 			oControler.setParameter(TradeControler.TRADE_COUNT_PARAMETER, oControler.getParameter(TradeControler.MAX_TARDES));
 		}

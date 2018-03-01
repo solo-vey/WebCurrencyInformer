@@ -10,6 +10,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import javax.net.ssl.SSLContext;
+
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.apache.http.HttpHost;
@@ -21,23 +23,20 @@ import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.methods.HttpUriRequest;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.SSLContexts;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
-import org.apache.log4j.Logger;
-
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.worker.WorkerFactory;
 
 /** Класс для работы с РЕЕЗ запросами к сторонним сервисам */
-@SuppressWarnings("deprecation")
 public class RequestUtils
 {
 	public final static int DEFAULT_TEMEOUT = 5;
-	/** The logger. */
-	private static Logger s_oLogger = Logger.getLogger(RequestUtils.class);
 	
 	/** Отправдяеи post запрос по указанному адресу
 	 * @param strURL URL запроса
@@ -267,8 +266,9 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
-            throw e; 
+			String strMessage = CommonUtils.getExceptionMessage(e);
+			strMessage = (strMessage.contains("Error executing query") ? strMessage : "Error executing query [" + oHttpUriRequest + "] [" + strMessage + "]");
+			throw new Exception(strMessage); 
 		}
 	}
 	
@@ -285,8 +285,9 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
-            throw e; 
+			String strMessage = CommonUtils.getExceptionMessage(e);
+			strMessage = (strMessage.contains("Error executing query") ? strMessage : "Error executing query [" + oHttpUriRequest + "] [" + strMessage + "]");
+			throw new Exception(strMessage); 
 		}
 	}
 	
@@ -303,8 +304,9 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
-            throw e; 
+			String strMessage = CommonUtils.getExceptionMessage(e);
+			strMessage = (strMessage.contains("Error executing query") ? strMessage : "Error executing query [" + oHttpUriRequest + "] [" + strMessage + "]");
+			throw new Exception(strMessage); 
 		}
 	}
 
@@ -321,8 +323,19 @@ public class RequestUtils
 		{	
 			while (true)
 			{
+				
+				final SSLContext oSSLContext = SSLContexts.custom().useTLS().build();
+				final SSLConnectionSocketFactory oSSLConnectionSocketFactory = new SSLConnectionSocketFactory(
+						oSSLContext,
+						new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"},   
+						null,
+						SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+			
 				final RequestConfig oConfig = getConfig(nTimeOut, bIsUseProxy);
-				final CloseableHttpClient oClient = HttpClientBuilder.create().setDefaultRequestConfig(oConfig).build();	
+				final CloseableHttpClient oClient = HttpClientBuilder.create()
+						.setDefaultRequestConfig(oConfig)
+						.setSSLSocketFactory(oSSLConnectionSocketFactory).build();	
+				
 				final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
 				if (null == oResponse)
 					return null;
@@ -334,22 +347,20 @@ public class RequestUtils
 
 				if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
 				{
-		            s_oLogger.error("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
-		            s_oLogger.error("URI [" + oHttpUriRequest.getURI() + "]\r\nParams : " + oHttpUriRequest.getParams());
 					nTryCount--;
 					Thread.sleep(50);
 					if (nTryCount > 0)
 						continue;
 					
-					throw new Exception("Query response status != 200.\r\n Status line [" + oResponse.getStatusLine() + "]\r\nCause : " + strContent);
+					final String strMessage = oResponse.getStatusLine().toString(); //\r\nCause : " + strContent);
+					throw new Exception(strMessage);
 				}
 				return strContent;
 			}
 		}
 		catch (final Exception e)
 		{
-			WorkerFactory.onException("Error executing query [" + oHttpUriRequest + "]", e);
-            throw e; 
+            throw new Exception("Error executing query [" + oHttpUriRequest + "] [" + CommonUtils.getExceptionMessage(e) + "]"); 
 		}
 	}
 	

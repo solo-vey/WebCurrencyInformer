@@ -9,6 +9,7 @@ import solo.transport.telegram.BtcTradeTelegramTransport;
 import solo.transport.telegram.CryptopiaTelegramTransport;
 import solo.transport.telegram.ExmoTelegramTransport;
 import solo.transport.telegram.KunaTelegramTransport;
+import solo.transport.telegram.PoloniexTelegramTransport;
 
 public class TransportFactory
 {
@@ -21,6 +22,7 @@ public class TransportFactory
 		registerTransport(Stocks.BtcTrade,	BtcTradeTelegramTransport.class);
 		registerTransport(Stocks.Exmo, 		ExmoTelegramTransport.class);
 		registerTransport(Stocks.Cryptopia,	CryptopiaTelegramTransport.class);
+		registerTransport(Stocks.Poloniex,	PoloniexTelegramTransport.class);
 	}
 	
 	static void registerTransport(final Stocks oStock, final Class<?> oClass)

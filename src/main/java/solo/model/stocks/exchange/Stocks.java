@@ -7,5 +7,6 @@ public enum Stocks
 	BtcTrade,
 	Exmo,
 	Cryptopia,
+	Poloniex,
 	Mock;
 }

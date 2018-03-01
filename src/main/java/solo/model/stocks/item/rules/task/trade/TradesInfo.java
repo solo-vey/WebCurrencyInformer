@@ -178,6 +178,7 @@ public class TradesInfo extends BaseObject implements Serializable
 	public void setRuleID(final Integer nRuleID)
 	{
 		m_nRuleID = nRuleID;
+		m_oHistory.setRuleID(nRuleID);
 	}
 	
 	public void tradeStart(final TaskTrade oTaskTrade)

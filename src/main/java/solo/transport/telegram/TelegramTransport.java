@@ -102,6 +102,10 @@ public class TelegramTransport implements ITransport
 			final String strButtons = getMessageButtons(strText);
 			if (StringUtils.isNotBlank(strButtons))
 				aParameters.put("reply_markup", strButtons);
+			if (strText.contains("MARKDOWN_STYLE\r\n") || strText.contains("`"))
+				aParameters.put("parse_mode", "Markdown");
+			if (strText.contains("HTML_STYLE\r\n"))
+				aParameters.put("parse_mode", "HTML");	
 			
 			final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 			oResult.put("message", oResult.get("result"));
@@ -152,7 +156,12 @@ public class TelegramTransport implements ITransport
 	
 	protected String getMessageText(final String strMessage)
 	{
-		return strMessage.replace("SYSTEM\r\n", StringUtils.EMPTY).replace("BUTTONS\r\n", "\0").split("\0")[0];
+		final String strText = strMessage.replace("SYSTEM\r\n", StringUtils.EMPTY)
+						.replace("MARKDOWN_STYLE\r\n", StringUtils.EMPTY)
+						.replace("HTML_STYLE\r\n", StringUtils.EMPTY)
+						.replace("BUTTONS\r\n", "\0").split("\0")[0];
+		
+		return (strText.length() < 4096 ? strText : strText.substring(0, 4000) + "...");
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -178,10 +187,13 @@ public class TelegramTransport implements ITransport
 			boolean bIsFirstButton = true;
 			for(final String strButtonInfo : oLine)
 			{
-				final String[] aButtonParts = strButtonInfo.split("=", 2);
-				if (aButtonParts.length != 2)
+				final String[] aButtonParts = strButtonInfo.split("=");
+				if (aButtonParts.length < 2)
 					continue;
-				strButtons += (bIsFirstButton ? StringUtils.EMPTY : ",") + "{\"text\":\"" + aButtonParts[0] + "\",\"callback_data\":\"" + aButtonParts[1] + "\"}";
+				
+				final String strButtonText = aButtonParts[0].replace("\"", "'").replace("{", "'").replace("}", "'").replace("\r\n", "");
+				final String strButtonCommand = aButtonParts[aButtonParts.length - 1];
+				strButtons += (bIsFirstButton ? StringUtils.EMPTY : ",") + "{\"text\":\"" + strButtonText + "\",\"callback_data\":\"" + strButtonCommand + "\"}";
 				bIsFirstButton = false;
 			}
 			strButtons += "]";

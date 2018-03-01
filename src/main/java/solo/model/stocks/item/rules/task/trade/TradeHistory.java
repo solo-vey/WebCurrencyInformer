@@ -41,6 +41,11 @@ public class TradeHistory implements Serializable
 		addToLog(strDate + strMessage + "\r\n");
 	}
 	
+	public void setRuleID(final Integer nRuleID)
+	{
+		m_nRuleID = nRuleID;
+	}
+	
 	public void addToLog(final String strMessage)
 	{
 		try 
