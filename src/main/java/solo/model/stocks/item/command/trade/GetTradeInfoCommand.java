@@ -61,7 +61,8 @@ public class GetTradeInfoCommand extends BaseCommand
 		{
 			strMessage = oTradeTask.getTradeInfo() + "\r\n" + oTradeTask.getTradeInfo().getInfo();
 			final List<List<String>> aButtons = Arrays.asList(
-								Arrays.asList("Controler=trade_" + oTradeTask.getTradeControler().getTradesInfo().getRuleID(), 
+								Arrays.asList(
+										(oTradeTask.getTradeControler().getTradesInfo().getRuleID() > 0 ? "Controler=trade_" + oTradeTask.getTradeControler().getTradesInfo().getRuleID() : StringUtils.EMPTY), 
 										(!oTradeTask.getTradeInfo().getOrder().isNull() ? "DelOrder=/removeorder_" + oTradeTask.getTradeInfo().getOrder().getId() : StringUtils.EMPTY), 
 										"DelTrade=/removerule_" + m_nRuleID));
 			

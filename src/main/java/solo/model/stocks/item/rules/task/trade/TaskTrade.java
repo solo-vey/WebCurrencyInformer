@@ -10,8 +10,6 @@ import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
-import solo.model.stocks.item.command.base.CommandFactory;
-import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.rules.task.TaskBase;
 import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
