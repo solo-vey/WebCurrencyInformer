@@ -1,5 +1,6 @@
 package solo.model.stocks.item.command.trade;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
@@ -8,9 +9,12 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.IRule;
+import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.rule.AddRuleCommand;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
 import solo.model.stocks.item.rules.task.trade.ControlerState;
@@ -21,6 +25,7 @@ import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
 import solo.utils.CommonUtils;
+import solo.utils.MathUtils;
 
 /** Формат комманды 
  */
@@ -95,6 +100,14 @@ public class GetTradeInfoCommand extends BaseCommand
 				
 				aButtons.add(Arrays.asList(oRuleInfo.getValue().getInfo() + "=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRuleInfo.getValue().getID())));
 	     	}
+			
+			if (ManagerUtils.isTestObject(oTradeControler))
+			{
+				final RateInfo oRateInfo = oTradeControler.getTradesInfo().getRateInfo();
+				final BigDecimal nSum = MathUtils.getBigDecimal(TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2)).doubleValue(), TradeUtils.getPricePrecision(oRateInfo));	
+				aButtons.add(Arrays.asList("Create controler [" + nSum + "]=" + CommandFactory.makeCommandLine(AddRuleCommand.class, 
+							AddRuleCommand.RULE_TYPE, TradeControler.NAME) + "_" + oRateInfo + "_" + nSum));
+			}
 			
 			strMessage += (!strMessage.contains("BUTTONS\r\n") ? "BUTTONS\r\n" : ",") + TelegramTransport.getButtons(aButtons);
 		}

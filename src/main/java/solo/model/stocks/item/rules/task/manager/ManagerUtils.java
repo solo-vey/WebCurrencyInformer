@@ -30,7 +30,7 @@ public class ManagerUtils
 		return oObject instanceof ITest;
 	}
 	
-	public static boolean isHasRealRules(final RateInfo oRateInfo)
+	public static boolean isHasRealControlers(final RateInfo oRateInfo)
 	{
 		boolean bIsHasRealRule = false;
 		for(final IRule oRule : WorkerFactory.getStockExchange().getRules().getRules().values())
@@ -38,13 +38,14 @@ public class ManagerUtils
 			if (!oRule.getRateInfo().equals(oRateInfo))
 				continue;
 			
-			bIsHasRealRule |= !isTestObject(oRule); 
+			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+			bIsHasRealRule |= (null != oControler && !isTestObject(oRule)); 
 		}
 		
 		return bIsHasRealRule;
 	}
 	
-	public static boolean isHasRealWorkingRules(final RateInfo oRateInfo)
+	public static boolean isHasRealWorkingControlers(final RateInfo oRateInfo)
 	{
 		boolean bIsHasRealWorkingRules = false;
 		for(final IRule oRule : WorkerFactory.getStockExchange().getRules().getRules().values())
@@ -62,7 +63,7 @@ public class ManagerUtils
 		return bIsHasRealWorkingRules;
 	}
 	
-	public static boolean isHasTestRules(final RateInfo oRateInfo)
+	public static boolean isHasTestControlers(final RateInfo oRateInfo)
 	{
 		boolean bIsHasTestRule = false;
 		for(final IRule oRule : WorkerFactory.getStockExchange().getRules().getRules().values())
@@ -70,7 +71,8 @@ public class ManagerUtils
 			if (!oRule.getRateInfo().equals(oRateInfo))
 				continue;
 			
-			bIsHasTestRule |= isTestObject(oRule); 
+			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+			bIsHasTestRule |= (null != oControler && isTestObject(oRule)); 
 		}
 		
 		return bIsHasTestRule;
@@ -78,7 +80,7 @@ public class ManagerUtils
 	
 	public static void createTestControler(final RateInfo oRateInfo)
 	{
-		if (isHasTestRules(oRateInfo))
+		if (isHasTestControlers(oRateInfo))
 			return;
 		
 		try

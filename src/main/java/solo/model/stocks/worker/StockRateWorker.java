@@ -44,7 +44,7 @@ public class StockRateWorker extends BaseWorker
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		final List<Entry<Integer, IRule>> oRules = oStockExchange.getRules().getRules(m_oRateInfo);
-		final boolean bIsHasRealWorkingRules = ManagerUtils.isHasRealWorkingRules(m_oRateInfo);
+		final boolean bIsHasRealWorkingRules = ManagerUtils.isHasRealWorkingControlers(m_oRateInfo);
 		
 		return (oRules.size() > 0 ? (bIsHasRealWorkingRules ? m_nTimeOut : m_nTimeOut * 3) : m_nTimeOut * 10);
 	}

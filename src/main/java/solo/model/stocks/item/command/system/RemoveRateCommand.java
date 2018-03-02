@@ -28,7 +28,7 @@ public class RemoveRateCommand extends BaseCommand
 		WorkerFactory.getStockSource().removeRate(m_oRateInfo);
 		WorkerFactory.getMainWorker().getStockWorker().stopRateWorker(m_oRateInfo);
 		
-		if (!ManagerUtils.isHasRealRules(m_oRateInfo))
+		if (!ManagerUtils.isHasRealControlers(m_oRateInfo))
 		{
 			for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules(m_oRateInfo))
 				WorkerFactory.getStockExchange().getRules().removeRule(oRuleInfo.getValue());

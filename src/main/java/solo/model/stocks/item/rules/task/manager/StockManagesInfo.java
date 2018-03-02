@@ -4,6 +4,7 @@ import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.Map;
+import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -75,7 +76,7 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			getHoursTotal().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
 		}
 		
-		if (!ManagerUtils.isTestObject(oTaskTrade) || !ManagerUtils.isHasRealWorkingRules(oTaskTrade.getRateInfo()))
+		if (!ManagerUtils.isTestObject(oTaskTrade) || !ManagerUtils.isHasRealWorkingControlers(oTaskTrade.getRateInfo()))
 		{
 			getLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
 			getRateLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
@@ -109,6 +110,14 @@ public class StockManagesInfo extends BaseObject implements Serializable
 		if (strType.equalsIgnoreCase("RATELAST24HOURS"))
 			return getRateLast24Hours().toString();
 		
+		if (strType.equalsIgnoreCase("RATELAST24FORHOURS"))
+		{
+			String strMessage = StringUtils.EMPTY;
+			for(final Entry<Integer, RateTradesBlock> oHourTradesInfo  : getRateLast24Hours().getPeriods().entrySet())
+				strMessage += oHourTradesInfo.getKey() + "\r\n" + oHourTradesInfo.getValue() + "\r\n";
+			return strMessage;
+		}
+		
 		if (strType.equalsIgnoreCase("HOURS"))
 			return getHoursTotal().toString();
 		
@@ -135,6 +144,6 @@ public class StockManagesInfo extends BaseObject implements Serializable
 		if (strType.equalsIgnoreCase("MONTH"))
 			return getMonthsTotal().getPeriods().get(oCalendar.get(Calendar.MONTH) + 1).toString();
 		
-		return "Unknown type [" + strType + "] of info [TOTAL, HOURS, HOUR, DAYS, DAY, MONTHS, MONTH, LAST24HOURS, RATELAST24HOURS]";
+		return "Unknown type [" + strType + "] of info [TOTAL, HOURS, HOUR, DAYS, DAY, MONTHS, MONTH, LAST24HOURS, RATELAST24HOURS, RATELAST24FORHOURS]";
 	}
 }

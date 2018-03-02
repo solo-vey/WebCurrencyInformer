@@ -170,12 +170,17 @@ public class TelegramTransport implements ITransport
 	
 	protected String getMessageText(final String strMessage)
 	{
-		final String strText = strMessage.replace("SYSTEM\r\n", StringUtils.EMPTY)
+		String strText = strMessage.replace("SYSTEM\r\n", StringUtils.EMPTY)
 						.replace("MARKDOWN_STYLE\r\n", StringUtils.EMPTY)
 						.replace("HTML_STYLE\r\n", StringUtils.EMPTY)
 						.replace("BUTTONS\r\n", "\0").split("\0")[0];
 		
-		return (strText.length() < 4096 ? strText : "..." + strText.substring(strText.length() - 4000));
+		if (strText.length() < 4096)
+			return strText;
+		
+		strText = strText.substring(strText.length() - 4000);
+		final String[] aTextParts = strText.split("\r", 2);
+		return "..." + (aTextParts.length > 1 ? aTextParts[1] : aTextParts[0]);
 	}
 	
 	@SuppressWarnings("unchecked")

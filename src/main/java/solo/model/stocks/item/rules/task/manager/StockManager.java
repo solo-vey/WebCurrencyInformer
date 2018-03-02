@@ -59,21 +59,20 @@ public class StockManager implements IStockManager
 
 	protected void checkUnprofitability()
 	{
-		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+		final Map<BigDecimal, RateInfo> oUnProfitabilityRates = getManagerStrategy().getUnProfitabilityRates();
+		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oUnProfitabilityRates.entrySet())
 		{
-			if (!getManagerStrategy().checkRateUnprofitability(oRateInfo))
-				continue;
-			
+			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();			
 			final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
 			for(final Entry<Integer, IRule> oRuleInfo : oRules)
 			{
 				final IRule oRule = oRuleInfo.getValue();
 				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-				if (null != oControler)
-				{
-					oControler.setControlerState(ControlerState.STOPPING);
-					addToHistory("Stop controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Bad profitable");
-				}
+				if (null == oControler || ManagerUtils.isTestObject(oControler))
+					continue;
+				
+				oControler.setControlerState(ControlerState.STOPPING);
+				addToHistory("Stop controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Bad profit [" + oRateProfitabilityInfo.getKey() + "]");
 			}
 		}
 	}
@@ -102,7 +101,7 @@ public class StockManager implements IStockManager
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oMoreProfitabilityRates.entrySet())
 		{
 			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
-			if (ManagerUtils.isHasRealWorkingRules(oRateInfo))
+			if (ManagerUtils.isHasRealWorkingControlers(oRateInfo))
 				continue;
 			
 			//ManagerUtils.createTradeControler(oRateInfo);
@@ -112,10 +111,13 @@ public class StockManager implements IStockManager
 			{
 				final IRule oRule = oRuleInfo.getValue();
 				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-				if (null != oControler && !ControlerState.WORK.equals(oControler.getControlerState()) && !ControlerState.WAIT.equals(oControler.getControlerState()))
+				if (null == oControler)
+					continue;
+				
+				if (ControlerState.STOPPED.equals(oControler.getControlerState()) || ControlerState.STOPPING.equals(oControler.getControlerState()))
 				{
 					oControler.setControlerState(ControlerState.WORK);
-					addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Good profitable [" + oRateProfitabilityInfo.getKey() + "%]");
+					addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]");
 				}
 			}
 		}
@@ -125,7 +127,7 @@ public class StockManager implements IStockManager
 	{
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
-			if (ManagerUtils.isHasTestRules(oRateInfo))
+			if (ManagerUtils.isHasTestControlers(oRateInfo))
 				continue;
 			
 			ManagerUtils.createTestControler(oRateInfo);
@@ -161,14 +163,7 @@ public class StockManager implements IStockManager
 		final BigDecimal nMargin = TradeUtils.getMarginValue(oTaskTrade.getTradeInfo().getReceivedSum(), oRateInfo);
 		final BigDecimal nHalfMargin = MathUtils.getBigDecimal(nMargin.doubleValue()/ 2, TradeUtils.getPricePrecision(oRateInfo));
 		if (nTradeDelta.compareTo(nHalfMargin) < 0)
-		{
-			final ITradeControler oControler = oTaskTrade.getTradeControler();
-			if (ManagerUtils.isTestObject(oControler))
-				return;
-			
-			oControler.setControlerState(ControlerState.WAIT);
-			addToHistory("Stop controler [" + oTaskTrade.getRateInfo() + "] [" + oControler.getTradesInfo().getRuleID() + "]");
-		}
+			stopAllControlers(oTaskTrade.getTradeInfo().getRateInfo());
 		else
 			startAllControlers(oTaskTrade.getTradeInfo().getRateInfo());
 	}
@@ -180,11 +175,32 @@ public class StockManager implements IStockManager
 		{
 			final IRule oRule = oRuleInfo.getValue();
 			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-			if (null != oControler && ControlerState.WAIT.equals(oControler.getControlerState()))
-			{
-				oControler.setControlerState(ControlerState.WORK);
-				addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]");
-			}
+			if (null == oControler || ManagerUtils.isTestObject(oControler))
+				continue;
+
+			if (!ControlerState.WAIT.equals(oControler.getControlerState()))
+				continue;
+			
+			oControler.setControlerState(ControlerState.WORK);
+			addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]");
+		}
+	}
+	
+	private void stopAllControlers(final RateInfo oRateInfo)
+	{
+		final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
+		for(final Entry<Integer, IRule> oRuleInfo : oRules)
+		{
+			final IRule oRule = oRuleInfo.getValue();
+			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+			if (null == oControler || ManagerUtils.isTestObject(oControler))
+				continue;
+			
+			if (!ControlerState.WORK.equals(oControler.getControlerState()))
+				continue;
+			
+			oControler.setControlerState(ControlerState.WAIT);
+			addToHistory("Stop controler [" + oRateInfo + "] [" + oControler.getTradesInfo().getRuleID() + "]");
 		}
 	}
 

@@ -39,7 +39,7 @@ public class BaseManagerStrategy implements IManagerStrategy
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
 			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, 6); 
-			if (nAverageRateProfitabilityPercent.compareTo(BigDecimal.ZERO) < 0)
+			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageProfitabilityPercent) < 0)
 				continue;
 			
 			oRatePercents.put(nAverageRateProfitabilityPercent, oRateInfo);
@@ -51,16 +51,25 @@ public class BaseManagerStrategy implements IManagerStrategy
 		return oMoreProfitabilityRates;
 	}
 	
-	@Override public boolean checkRateUnprofitability(final RateInfo oRateInfo)
+	@Override public Map<BigDecimal, RateInfo> getUnProfitabilityRates()
 	{
 		if (!getNeedCheckUnProfitability())
-			return false;
+			return new HashMap<BigDecimal, RateInfo>();
 		
-		final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, 6); 
-		final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oRateInfo, 6); 
-		
-		return (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageUnprofitabilityPercent) < 0 ||
-				nMinRateHourProfitabilityPercent.compareTo(m_nMinHourUnprofitabilityPercent) < 0);
+		final TreeMap<BigDecimal, RateInfo> oUnProfitabilityRatesPercents = new TreeMap<BigDecimal, RateInfo>();
+		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+		{
+			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, 6); 
+			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oRateInfo, 6); 
+			
+			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageUnprofitabilityPercent) >= 0 &&
+				nMinRateHourProfitabilityPercent.compareTo(m_nMinHourUnprofitabilityPercent) >= 0)
+				continue;
+			
+			oUnProfitabilityRatesPercents.put(nAverageRateProfitabilityPercent, oRateInfo);
+		}
+	
+		return oUnProfitabilityRatesPercents;
 	}	
 	
 	protected boolean getNeedCheckProfitability()

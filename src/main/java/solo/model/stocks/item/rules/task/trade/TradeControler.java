@@ -138,10 +138,8 @@ public class TradeControler extends TaskBase implements ITradeControler
 					(null == oOrder.getPrice() ? StringUtils.EMPTY : MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + "/") + 
 					MathUtils.toCurrencyStringEx3(oTaskTrade.getTradeInfo().getTradeSum()) + ";";  
 		}
-		strInfo += "[" + (m_nMaxTrades > 0 ? m_nMaxTrades.toString() : (m_nMaxTrades <= -1 ? "Stopped" : "Wait")) + "]";
 		
-		return strInfo + 
-			getTradesInfo().getCurrentState();   
+		return strInfo + "[" + getControlerState() + "]" + getTradesInfo().getCurrentState();   
 	}
 	
 	public String getFullInfo()
@@ -340,7 +338,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		m_oTradesInfo.updateOrderInfo(aTaskTrades);
 		WorkerFactory.getStockExchange().getManager().tradeDone(oTaskTrade);
 		
-		if (ManagerUtils.isHasRealRules(getRateInfo()))
+		if (ManagerUtils.isHasRealControlers(getRateInfo()))
 		{
 			final MessageLevel oMessageLevel = (!ManagerUtils.isTestObject(this) || oTaskTrade.getTradeInfo().getDelta().compareTo(BigDecimal.ZERO) < 0 ? MessageLevel.TRADERESULT : MessageLevel.TESTTRADERESULT);
 			final String strMessage = (StringUtils.isNotBlank(oTaskTrade.getTradeInfo().getInfo()) ?  oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" : StringUtils.EMPTY) + 

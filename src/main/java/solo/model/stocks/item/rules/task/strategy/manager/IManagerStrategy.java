@@ -8,6 +8,6 @@ import solo.model.stocks.item.RateInfo;
 
 public interface IManagerStrategy extends Serializable
 {
-	public Map<BigDecimal, RateInfo> getMoreProfitabilityRates();
-	boolean checkRateUnprofitability(final RateInfo oRateInfo);
+	Map<BigDecimal, RateInfo> getMoreProfitabilityRates();
+	Map<BigDecimal, RateInfo> getUnProfitabilityRates();
 }
