@@ -1,6 +1,7 @@
 package solo.model.stocks.item.rules.task.manager;
 
 import java.io.Serializable;
+import java.util.Map;
 import java.util.Map.Entry;
 
 import solo.model.stocks.item.RateInfo;
@@ -21,6 +22,11 @@ public class RateCycleTradesBlock implements Serializable
 	public void addTrade(final Integer nPeriod, final TradeInfo oTradeInfo)
 	{
 		m_oCycleTrades.addTrade(nPeriod, oTradeInfo);
+	}
+	
+	public Map<Integer, RateTradesBlock> getPeriods()
+	{
+		return m_oCycleTrades.getPeriods();
 	}
 	
 	public RateTradesBlock getTotal()

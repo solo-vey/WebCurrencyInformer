@@ -1,7 +1,8 @@
 package solo.model.stocks.item.rules.task.trade;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.RateInfo;
-import solo.utils.MathUtils;
 
 public class TestTradeInfo extends TradeInfo implements ITest
 {
@@ -14,7 +15,6 @@ public class TestTradeInfo extends TradeInfo implements ITest
 	
 	@Override public String getInfo()
 	{
-		return "[TEST][" + getRateInfo() + "] " + MathUtils.toCurrencyStringEx3(getAveragedSoldPrice()) + " / " + MathUtils.toCurrencyStringEx3(getAveragedBoughPrice()) + 
-				" / " + MathUtils.toCurrencyStringEx3(getDelta());
+		return StringUtils.EMPTY;
 	}
 }

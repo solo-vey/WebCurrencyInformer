@@ -17,7 +17,6 @@ import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
-import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -75,13 +74,9 @@ public class GetRulesCommand extends BaseCommand
 					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
 					final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
 					if (null != oTradeTask)
-						strState += oTradeTask.getTradeInfo().getOrder().getSide();
-					if (null != oTradeControler)
-					{
-						final String strTradeCount = oTradeControler.getParameter(TradeControler.TRADE_COUNT_PARAMETER);
-						strState += (ManagerUtils.isTestObject(oTradeControler) ? "TEST" : 
-								(strTradeCount.equals("0") ? "WAIT" : strTradeCount.equals("-1") ? "STOPED" : "work")) + ";";
-					}
+						strState += oTradeTask.getTradeInfo().getOrder().getSide() + ";";
+					if (null != oTradeControler && !ManagerUtils.isTestObject(oTradeControler))
+						strState += oTradeControler.getControlerState() + ";";
 				}
 				
 				aButtons.add(Arrays.asList("[" + oRateRules.getKey() + "] [" + strState + "]=/rules_rate:" + oRateRules.getKey()));

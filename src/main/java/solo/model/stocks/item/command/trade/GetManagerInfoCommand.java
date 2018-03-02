@@ -2,6 +2,8 @@ package solo.model.stocks.item.command.trade;
 
 import java.util.Arrays;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -25,9 +27,14 @@ public class GetManagerInfoCommand extends BaseCommand
 		
 		final String strType = getParameter(TYPE_PARAMETER);
 		
-		final String strMessage = WorkerFactory.getStockExchange().getManager().getInfo().asString(strType) +
-			"BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months"),
-																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "All=manager"),
+		String strMessage = StringUtils.EMPTY;
+		if (strType.equalsIgnoreCase("HISTORY"))
+			strMessage = WorkerFactory.getStockExchange().getManager().getHistory().toString();
+		else
+			strMessage = WorkerFactory.getStockExchange().getManager().getInfo().asString(strType);
+		
+		strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months", "All=manager"),
+																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "History=manager_history"),
 																		Arrays.asList("Parameters=setstockparameter_?")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}

@@ -33,8 +33,19 @@ public class TTradeControler extends TradeControler implements ITest
 		return "TEST" + super.getInfo();
 	}
 	
+	@Override public ControlerState getControlerState()
+	{
+		return ControlerState.WORK;
+	}
+	
+	@Override public void setControlerState(ControlerState oControlerState)
+	{
+	} 
+	
 	public void remove()
 	{
+		super.remove();
+		
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 			WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);

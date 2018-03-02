@@ -9,6 +9,8 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.Semaphore;
 
 import javax.net.ssl.SSLContext;
 
@@ -36,7 +38,10 @@ import solo.model.stocks.worker.WorkerFactory;
 /** Класс для работы с РЕЕЗ запросами к сторонним сервисам */
 public class RequestUtils
 {
-	public final static int DEFAULT_TEMEOUT = 5;
+	public final static int DEFAULT_TEMEOUT = 3;
+	public final static int MAX_PARALEL_QUERY = 5;
+	
+	private static final Map<IStockExchange, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<IStockExchange, Semaphore>();
 	
 	/** Отправдяеи post запрос по указанному адресу
 	 * @param strURL URL запроса
@@ -323,7 +328,6 @@ public class RequestUtils
 		{	
 			while (true)
 			{
-				
 				final SSLContext oSSLContext = SSLContexts.custom().useTLS().build();
 				final SSLConnectionSocketFactory oSSLConnectionSocketFactory = new SSLConnectionSocketFactory(
 						oSSLContext,
@@ -336,7 +340,7 @@ public class RequestUtils
 						.setDefaultRequestConfig(oConfig)
 						.setSSLSocketFactory(oSSLConnectionSocketFactory).build();	
 				
-				final HttpResponse oResponse = oClient.execute(oHttpUriRequest);
+				HttpResponse oResponse = getResponse(oHttpUriRequest, nTimeOut, oClient);
 				if (null == oResponse)
 					return null;
 			
@@ -362,6 +366,32 @@ public class RequestUtils
 		{
             throw new Exception("Error executing query [" + oHttpUriRequest + "] [" + CommonUtils.getExceptionMessage(e) + "]"); 
 		}
+	}
+
+	static HttpResponse getResponse(final HttpUriRequest oHttpUriRequest, final int nTimeOut, final CloseableHttpClient oClient) throws Exception
+	{
+		if (nTimeOut > 10)
+			return oClient.execute(oHttpUriRequest);
+		
+		final Semaphore oSemaphore = getSemaphore();
+		try
+		{
+			oSemaphore.acquire();
+			return oClient.execute(oHttpUriRequest);
+		}
+		finally
+		{
+			oSemaphore.release();
+		}
+	}
+	
+	protected static Semaphore getSemaphore()
+	{
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
+		if (!s_oAllSemaphores.containsKey(oStockExchange))
+			s_oAllSemaphores.put(oStockExchange, new Semaphore(MAX_PARALEL_QUERY, true));
+
+		return s_oAllSemaphores.get(oStockExchange);
 	}
 	
 	public static RequestConfig getConfig(final int nTimeOut, final Boolean bIsUseProxy)

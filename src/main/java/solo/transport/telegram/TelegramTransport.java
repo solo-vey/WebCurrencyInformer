@@ -102,10 +102,10 @@ public class TelegramTransport implements ITransport
 			final String strButtons = getMessageButtons(strText);
 			if (StringUtils.isNotBlank(strButtons))
 				aParameters.put("reply_markup", strButtons);
-			if (strText.contains("MARKDOWN_STYLE\r\n") || strText.contains("`"))
-				aParameters.put("parse_mode", "Markdown");
-			if (strText.contains("HTML_STYLE\r\n"))
-				aParameters.put("parse_mode", "HTML");	
+			
+			final String strParseMode = getParseMode(strText);
+			if (StringUtils.isNotBlank(strParseMode))
+				aParameters.put("parse_mode", strParseMode);
 			
 			final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getSendMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 			oResult.put("message", oResult.get("result"));
@@ -119,6 +119,16 @@ public class TelegramTransport implements ITransport
 		}
 		
 		return null;
+	}
+	
+	public String getParseMode(final String strText)
+	{
+		if (strText.contains("MARKDOWN_STYLE\r\n") || strText.contains("`"))
+			return "Markdown";
+		if (strText.contains("HTML_STYLE\r\n") || strText.contains("<code>") || strText.contains("<b>") || strText.contains("<i>"))
+			return "HTML";
+		
+		return StringUtils.EMPTY;
 	}
     
 	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
@@ -134,7 +144,11 @@ public class TelegramTransport implements ITransport
 		final String strButtons = getMessageButtons("SYSTEM\r\n" + strCaption);
 		if (StringUtils.isNotBlank(strButtons))
 			oBuilder.addTextBody("reply_markup", strButtons);
-   	  
+		
+		final String strParseMode = getParseMode(strCaption);
+		if (StringUtils.isNotBlank(strParseMode))
+			oBuilder.addTextBody("parse_mode", strParseMode);
+		
     	final String strResult = uploadFileRequest(getSendPhotoUrl(), oBuilder, false);
     	final Map<String, Object> oResult = JsonUtils.json2Map(strResult);
     	oResult.put("message", oResult.get("result"));
@@ -161,7 +175,7 @@ public class TelegramTransport implements ITransport
 						.replace("HTML_STYLE\r\n", StringUtils.EMPTY)
 						.replace("BUTTONS\r\n", "\0").split("\0")[0];
 		
-		return (strText.length() < 4096 ? strText : strText.substring(0, 4000) + "...");
+		return (strText.length() < 4096 ? strText : "..." + strText.substring(strText.length() - 4000));
 	}
 	
 	@SuppressWarnings("unchecked")

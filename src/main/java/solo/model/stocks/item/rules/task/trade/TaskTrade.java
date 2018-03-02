@@ -321,7 +321,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			nTryCount--;
 		}
 		
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, "Can't create order\r\n" + oOrderSide + "/" + MathUtils.toCurrencyStringEx2(oVolume) + "/" + MathUtils.toCurrencyStringEx2(oPrice) + "\r\n" + oAddOrder.getInfoShort());
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, "Can't create order\r\n" + oOrderSide + "/" + MathUtils.toCurrencyStringEx2(oVolume) + "/" + MathUtils.toCurrencyStringEx2(oPrice) + "\r\n" + oAddOrder.getInfoShort());
 		m_strCurrentState = "addOrder - " + oAddOrder.getInfoShort();
 		return oAddOrder;
 	}
@@ -364,12 +364,10 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getInfo() + " is executed");
 		
-		getTradeInfo().setCriticalPrice(getTradeInfo().calculateCriticalPrice());
-		final String strMessage = "Set critical price " + getTradeInfo().getCriticalPriceString() + 
-									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(getTradeInfo().getAveragedBoughPrice(), getTradeInfo().getAveragedBoughPrice())) + 
+		final String strMessage = "/" + MathUtils.toCurrencyStringEx2(TradeUtils.getCommisionValue(getTradeInfo().getAveragedBoughPrice(), getTradeInfo().getAveragedBoughPrice())) + 
 									"/" + MathUtils.toCurrencyStringEx2(TradeUtils.getMarginValue(getTradeInfo().getAveragedBoughPrice(), getTradeInfo().getRateInfo()));
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, strMessage);
-		getTradeInfo().addToHistory(strMessage);
+
+		getTradeInfo().setCriticalPrice(getTradeInfo().calculateCriticalPrice(), strMessage);
 		getTradeControler().buyDone(this);
 
 		getTradeInfo().setOrder(Order.NULL);

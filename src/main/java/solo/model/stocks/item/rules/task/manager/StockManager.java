@@ -6,15 +6,10 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
-import org.apache.commons.lang.StringUtils;
 
 import solo.CurrencyInformer;
 import solo.model.stocks.analyse.StateAnalysisResult;
@@ -23,36 +18,119 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.command.system.AddRateCommand;
-import solo.model.stocks.item.rules.task.trade.ITest;
+import solo.model.stocks.item.rules.task.strategy.manager.BaseManagerStrategy;
+import solo.model.stocks.item.rules.task.strategy.manager.IManagerStrategy;
+import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
-import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
-import solo.transport.MessageLevel;
+import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
 
 public class StockManager implements IStockManager
 {
 	final protected StockManagesInfo m_oStockManagesInfo;
 	final protected boolean m_bIsTrackTrades;
+	final protected IManagerStrategy m_oManagerStrategy;
+	final protected ManagerHistory m_oManagerHistory;
 	
 	public StockManager(final IStockExchange oStockExchange)
 	{
 		m_oStockManagesInfo = load(oStockExchange);
 		m_bIsTrackTrades = true;
+		m_oManagerHistory = new ManagerHistory(oStockExchange);
+		m_oManagerStrategy = new BaseManagerStrategy(oStockExchange);
 	}
+	
+	protected IManagerStrategy getManagerStrategy()
+	{
+		return m_oManagerStrategy;
+	}	
 	
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{
-		startTestControler();
+		startTestControlers();
 		lookForProspectiveRate();
+		checkUnprofitability();
+//		removeStoppedControlers();
+		checkProfitableRates();
 	}	
-	
-	protected void startTestControler()
+
+	protected void checkUnprofitability()
 	{
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+		{
+			if (!getManagerStrategy().checkRateUnprofitability(oRateInfo))
+				continue;
+			
+			final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
+			for(final Entry<Integer, IRule> oRuleInfo : oRules)
+			{
+				final IRule oRule = oRuleInfo.getValue();
+				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+				if (null != oControler)
+				{
+					oControler.setControlerState(ControlerState.STOPPING);
+					addToHistory("Stop controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Bad profitable");
+				}
+			}
+		}
+	}
+	
+	protected void removeStoppedControlers()
+	{
+		final Map<Integer, IRule> oRules = WorkerFactory.getStockExchange().getRules().getRules();
+		final List<IRule> oStoppedoRules = new LinkedList<IRule>();
+		for(final IRule oRule : oRules.values())
+		{
+			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+			if (null != oControler && ControlerState.STOPPED.equals(oControler.getControlerState()))
+				oStoppedoRules.add(oRule);
+		}
+		
+		for(final IRule oRule : oStoppedoRules)
+		{
+			WorkerFactory.getStockExchange().getRules().removeRule(oRule);
+			addToHistory("Remove stopped controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]");
+		}
+	}
+	
+	protected void checkProfitableRates()
+	{
+		final Map<BigDecimal, RateInfo> oMoreProfitabilityRates = getManagerStrategy().getMoreProfitabilityRates();
+		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oMoreProfitabilityRates.entrySet())
+		{
+			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
+			if (ManagerUtils.isHasRealWorkingRules(oRateInfo))
+				continue;
+			
+			//ManagerUtils.createTradeControler(oRateInfo);
+			
+			final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
+			for(final Entry<Integer, IRule> oRuleInfo : oRules)
+			{
+				final IRule oRule = oRuleInfo.getValue();
+				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+				if (null != oControler && !ControlerState.WORK.equals(oControler.getControlerState()) && !ControlerState.WAIT.equals(oControler.getControlerState()))
+				{
+					oControler.setControlerState(ControlerState.WORK);
+					addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Good profitable [" + oRateProfitabilityInfo.getKey() + "%]");
+				}
+			}
+		}
+	}
+
+	protected void startTestControlers()
+	{
+		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+		{
+			if (ManagerUtils.isHasTestRules(oRateInfo))
+				continue;
+			
 			ManagerUtils.createTestControler(oRateInfo);
+			addToHistory("Start test controler [" + oRateInfo + "]");
+		}
 	}
 	
 	private void lookForProspectiveRate()
@@ -61,8 +139,11 @@ public class StockManager implements IStockManager
 		{
 			final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
 			final List<RateInfo> oProspectiveRates = ManagerUtils.getProspectiveRates(oAllRateState, BigDecimal.ZERO);
-//			for(final RateInfo oRateInfo : oProspectiveRates)
-//				WorkerFactory.getMainWorker().addCommand(new AddRateCommand(oRateInfo.toString()));
+			for(final RateInfo oRateInfo : oProspectiveRates)
+			{
+				WorkerFactory.getMainWorker().addCommand(new AddRateCommand(oRateInfo.toString()));
+				addToHistory("Start prospective rate [" + oRateInfo + "]");
+			}
 		}
 		catch(final Exception e)
 		{
@@ -75,67 +156,36 @@ public class StockManager implements IStockManager
 		if (!m_bIsTrackTrades)
 			return;
 		
+		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
 		final BigDecimal nTradeDelta = oTaskTrade.getTradeInfo().getDelta();
-		final BigDecimal nMargin = TradeUtils.getMarginValue(oTaskTrade.getTradeInfo().getReceivedSum(), oTaskTrade.getTradeInfo().getRateInfo());
-		if (nTradeDelta.compareTo(nMargin) < 0)
-			stopControler(oTaskTrade.getTradeInfo().getRateInfo(), oTaskTrade);
+		final BigDecimal nMargin = TradeUtils.getMarginValue(oTaskTrade.getTradeInfo().getReceivedSum(), oRateInfo);
+		final BigDecimal nHalfMargin = MathUtils.getBigDecimal(nMargin.doubleValue()/ 2, TradeUtils.getPricePrecision(oRateInfo));
+		if (nTradeDelta.compareTo(nHalfMargin) < 0)
+		{
+			final ITradeControler oControler = oTaskTrade.getTradeControler();
+			if (ManagerUtils.isTestObject(oControler))
+				return;
+			
+			oControler.setControlerState(ControlerState.WAIT);
+			addToHistory("Stop controler [" + oTaskTrade.getRateInfo() + "] [" + oControler.getTradesInfo().getRuleID() + "]");
+		}
 		else
-			startAllControlers(oTaskTrade.getTradeInfo().getRateInfo(), oTaskTrade);
+			startAllControlers(oTaskTrade.getTradeInfo().getRateInfo());
 	}
-	
-	private void stopControler(final RateInfo oRateInfo, final TaskTrade oTaskTrade)
-	{
-		if (oTaskTrade.getTradeControler() instanceof ITest)
-			return;
 		
+	private void startAllControlers(final RateInfo oRateInfo)
+	{
 		final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
-		final List<ITradeControler> aWorkingControler = new LinkedList<ITradeControler>();
 		for(final Entry<Integer, IRule> oRuleInfo : oRules)
 		{
 			final IRule oRule = oRuleInfo.getValue();
 			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-			if (null == oControler)
-				continue;
-			
-			if (oControler.getParameter(TradeControler.TRADE_COUNT_PARAMETER).equalsIgnoreCase("0"))
-				continue;
-			
-			final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
-			oControler.getTradesInfo().getHistory().addToLog(oDateFormat.format(new Date()) + " Stop controler [" + oRateInfo + "]");
-
-			aWorkingControler.add(oControler);
+			if (null != oControler && ControlerState.WAIT.equals(oControler.getControlerState()))
+			{
+				oControler.setControlerState(ControlerState.WORK);
+				addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]");
+			}
 		}
-		
-		if (aWorkingControler.size() > 1)
-		{
-			oTaskTrade.getTradeControler().setParameter(TradeControler.TRADE_COUNT_PARAMETER, "0");
-			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, "MANAGER\r\nStop controler [" + oRateInfo + "]");
-		}
-	}
-		
-	private void startAllControlers(final RateInfo oRateInfo, final TaskTrade oTaskTrade)
-	{
-		final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
-		String strMessage = StringUtils.EMPTY  + "";
-		for(final Entry<Integer, IRule> oRuleInfo : oRules)
-		{
-			final IRule oRule = oRuleInfo.getValue();
-			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-			if (null == oControler)
-				continue;
-			
-			final String strMaxTrades = oControler.getParameter(TradeControler.TRADE_COUNT_PARAMETER);
-			if (!strMaxTrades.equalsIgnoreCase("0"))
-				continue;
-			
-			final DateFormat oDateFormat = new SimpleDateFormat("dd.MM HH:mm:ss");
-			oControler.getTradesInfo().getHistory().addToLog(oDateFormat.format(new Date()) + " Manager.startAllControlers.");
-			strMessage += "Start controler [" + oRateInfo + "]\r\n";	
-			oControler.setParameter(TradeControler.TRADE_COUNT_PARAMETER, oControler.getParameter(TradeControler.MAX_TARDES));
-		}
-		
-		if (StringUtils.isNotBlank(strMessage))
-			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, "MANAGER\r\n" + strMessage);
 	}
 
 	@Override public StockManagesInfo getInfo()
@@ -169,6 +219,16 @@ public class StockManager implements IStockManager
 	@Override public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) 
 	{
 	} 
+	
+	@Override public ManagerHistory getHistory()
+	{
+		return m_oManagerHistory;
+	}
+	
+	protected void addToHistory(final String strMessage)
+	{
+		m_oManagerHistory.addMessage(strMessage);
+	}
 	
 	public void save()
 	{

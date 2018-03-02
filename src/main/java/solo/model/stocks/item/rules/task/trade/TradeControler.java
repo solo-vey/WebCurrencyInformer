@@ -96,7 +96,36 @@ public class TradeControler extends TaskBase implements ITradeControler
 		getTradesInfo().addToHistory("Set trade strategy [" + m_oTradeStrategy.getName() + "]");
 	}
 	
-	public String getInfo()
+	@Override public ControlerState getControlerState()
+	{
+		if (m_nMaxTrades == 0)
+			return ControlerState.WAIT;
+		
+		if (m_nMaxTrades > 0)
+			return ControlerState.WORK;
+		
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
+		return (aTaskTrades.size() > 0 ? ControlerState.STOPPING : ControlerState.STOPPED);
+	}
+	
+	@Override public void setControlerState(ControlerState oControlerState)
+	{
+		if (oControlerState.equals(getControlerState()))
+			return;
+		
+		if (ControlerState.WAIT.equals(oControlerState))
+			m_nMaxTrades = 0;
+		else if (ControlerState.STOPPING.equals(oControlerState) || ControlerState.STOPPED.equals(oControlerState))
+			m_nMaxTrades = -1;
+		else if (ControlerState.WORK.equals(oControlerState))
+			m_nMaxTrades = getParameterAsInt(MAX_TARDES, 1);
+		
+		final String strMessage = "Set new controler state [" + getRateInfo() + "] [" + getID() + "] - " + oControlerState;
+		getTradesInfo().addToHistory(strMessage);
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, strMessage);
+	} 
+	
+	@Override public String getInfo()
 	{
 		String strInfo = "[" + getRateInfo() + "]";  		
 		for(final ITradeTask oTaskTrade : getTaskTrades())
@@ -314,7 +343,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 		if (ManagerUtils.isHasRealRules(getRateInfo()))
 		{
 			final MessageLevel oMessageLevel = (!ManagerUtils.isTestObject(this) || oTaskTrade.getTradeInfo().getDelta().compareTo(BigDecimal.ZERO) < 0 ? MessageLevel.TRADERESULT : MessageLevel.TESTTRADERESULT);
-			WorkerFactory.getMainWorker().sendMessage(oMessageLevel, oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" + getTradesInfo().getInfo());
+			final String strMessage = (StringUtils.isNotBlank(oTaskTrade.getTradeInfo().getInfo()) ?  oTaskTrade.getTradeInfo().getInfo() + "\r\n\r\n" : StringUtils.EMPTY) + 
+										getTradesInfo().getInfo();
+			WorkerFactory.getMainWorker().sendMessage(oMessageLevel,strMessage);
 		}
 	}	
 

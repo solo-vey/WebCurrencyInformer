@@ -75,7 +75,7 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			getHoursTotal().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
 		}
 		
-		if (!ManagerUtils.isTestObject(oTaskTrade) || !ManagerUtils.isHasRealRules(oTaskTrade.getRateInfo()))
+		if (!ManagerUtils.isTestObject(oTaskTrade) || !ManagerUtils.isHasRealWorkingRules(oTaskTrade.getRateInfo()))
 		{
 			getLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);
 			getRateLast24Hours().addTrade(oCalendar.get(Calendar.HOUR_OF_DAY), oTaskTrade);

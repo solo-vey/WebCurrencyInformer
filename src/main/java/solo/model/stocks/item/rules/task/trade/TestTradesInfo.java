@@ -2,7 +2,10 @@ package solo.model.stocks.item.rules.task.trade;
 
 import java.math.BigDecimal;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.item.RateInfo;
+import solo.utils.MathUtils;
 
 public class TestTradesInfo extends TradesInfo implements ITest
 {
@@ -17,6 +20,11 @@ public class TestTradesInfo extends TradesInfo implements ITest
 	{
 		super.tradeDone(oTaskTrade);
 		
+		final TradeInfo oLastTradeInfo = oTaskTrade.getTradeInfo();
+		m_strCurrentState = MathUtils.toCurrencyStringEx3(oLastTradeInfo.getAveragedSoldPrice()) + " / " + 
+							MathUtils.toCurrencyStringEx3(oLastTradeInfo.getAveragedBoughPrice()) + " / " + 
+							MathUtils.toCurrencyStringEx3(oLastTradeInfo.getDelta());
+		
 		setSum(getBuySum(), 1);
 		
 		m_nLockedSum = BigDecimal.ZERO;
@@ -29,12 +37,20 @@ public class TestTradesInfo extends TradesInfo implements ITest
 		
 		m_nBuyVolume = BigDecimal.ZERO;
 		m_nSoldVolume = BigDecimal.ZERO;
-		
 	}
+	
+	@Override public String getCurrentState() 
+	{	
+		return StringUtils.EMPTY;
+	};
+	
+	@Override public void setCurrentState(String strCurrentState) 
+	{	
+	};
 	
 	@Override public String getInfo()
 	{
-		return "Count: " + getTradeCount() + "\r\n";
-		//return "[TEST] " + super.getInfo();
+		return (StringUtils.isNotBlank(m_strCurrentState) ? "<b>Last : " + m_strCurrentState + "</b>\r\n\r\n" : StringUtils.EMPTY)
+				+ "Count: " + getTradeCount() + " [" + getRateInfo() + "]\r\n";
 	}
 }

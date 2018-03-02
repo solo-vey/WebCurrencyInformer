@@ -5,6 +5,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
+import java.math.BigDecimal;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Properties;
@@ -124,6 +125,49 @@ public final class ResourceUtils
 			return nDefault;
 		}
 	}
+	
+	/** Получение числового значения из property файла 
+	 * @param strKey Ключ ресурса
+	 * @param nDefault Значение по умолчанию
+	 * @param strProperyFile Имя файла настроек
+	 * @return число */
+	public static double getDoubleFromResource(final String strKey, final String strProperyFile, final double nDefault)
+	{
+		final PropertyFileInfo oProperties = registerProperties(strProperyFile);
+
+		try 
+		{ 
+			final Double nValue = Double.parseDouble(readProperty(strKey, oProperties).trim().replace("\t", StringUtils.EMPTY)); 
+			s_oLogger.info("Get propery [" + strKey + "] = [" + nValue + "]");
+			return nValue; 
+		} 
+		catch(final Exception oException) 
+		{
+			s_oLogger.error("Error loading or convert to int propery [" + strKey + "]. Use dafault value [" + nDefault + "]", oException);
+			return nDefault;
+		}
+	}
+	
+	
+	/** Получение числового значения из property файла 
+	 * @param strKey Ключ ресурса
+	 * @param nDefault Значение по умолчанию
+	 * @param strProperyFile Имя файла настроек
+	 * @return число */
+	public static BigDecimal getBigDecimalFromResource(final String strKey, final String strProperyFile, final BigDecimal nDefault)
+	{
+		final double nValue = getDoubleFromResource(strKey, strProperyFile, nDefault.doubleValue());
+		return new BigDecimal(nValue);
+	}
+	
+	/** Получение числового значения из property файла 
+	 * @param strKey Ключ ресурса
+	 * @param nDefault Значение по умолчанию
+	 * @return число */
+	public static BigDecimal getBigDecimalFromResource(final String strKey, final BigDecimal nDefault)
+	{
+		return getBigDecimalFromResource(strKey, WorkerFactory.getMainWorker().getStockExchange().getStockProperties(), nDefault);
+	}	
 	
 	/** Получение логического значения из property файла 
 	 * @param strKey Ключ ресурса

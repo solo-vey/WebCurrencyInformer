@@ -21,19 +21,28 @@ public interface ITradeControler extends Serializable
 	void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume);
 	String getParameter(final String strParameterName);
 	void setParameter(final String strParameterName, final String strValue);
+	ControlerState getControlerState();
+	void setControlerState(final ControlerState oControlerState);
 }
 
 class NullTradeControler implements ITradeControler
 {
 	private static final long serialVersionUID = 1648163916052411734L;
 	
-	public String getFullInfo() { return StringUtils.EMPTY; }
-	public TradesInfo getTradesInfo() { return new TradesInfo(new RateInfo(Currency.UAH, Currency.UAH), -1); };
-	public void tradeStart(final TaskTrade oTaskTrade) {}
-	public void tradeDone(final TaskTrade oTaskTrade) {}
-	public void buyDone(final TaskTrade oTaskTrade) {}
-	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {} 
-	public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {} 
-	public String getParameter(final String strParameterName) { return null; }
-	public void setParameter(final String strParameterName, final String strValue) {} 
+	@Override public String getFullInfo() { return StringUtils.EMPTY; }
+	@Override public TradesInfo getTradesInfo() { return new TradesInfo(new RateInfo(Currency.UAH, Currency.UAH), -1); };
+	@Override public void tradeStart(final TaskTrade oTaskTrade) {}
+	@Override public void tradeDone(final TaskTrade oTaskTrade) {}
+	@Override public void buyDone(final TaskTrade oTaskTrade) {}
+	@Override public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {} 
+	@Override public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {} 
+	@Override public String getParameter(final String strParameterName) { return null; }
+	@Override public void setParameter(final String strParameterName, final String strValue) {}
+	@Override public ControlerState getControlerState()
+	{
+		return ControlerState.STOPPING;
+	}
+	@Override public void setControlerState(ControlerState oControlerState)
+	{
+	} 
 }
