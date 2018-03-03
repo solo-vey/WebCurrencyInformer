@@ -80,7 +80,7 @@ public class WorkerFactory
 	
 	static public void start() throws Exception
 	{
-		getMainWorker(Stocks.Kuna).startWorker();
+//		getMainWorker(Stocks.Kuna).startWorker();
 		getMainWorker(Stocks.Exmo).startWorker();
 //		getMainWorker(Stocks.Cryptopia).startWorker();
 //		getMainWorker(Stocks.Poloniex).startWorker();

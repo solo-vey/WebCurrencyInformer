@@ -35,9 +35,8 @@ public class StockRateWorker extends BaseWorker
 	@Override protected void doWork() throws Exception
 	{
 		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " - " + m_oRateInfo);
-		super.doWork();
-		
 		addCommand(new CheckRateRulesCommand(m_oRateInfo));
+		super.doWork();
 	}
 	
 	@Override int getTimeOut()

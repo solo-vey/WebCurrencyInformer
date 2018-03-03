@@ -2,6 +2,7 @@ package solo.model.stocks.item.rules.task.strategy.manager;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.TreeMap;
@@ -22,12 +23,14 @@ public class BaseManagerStrategy implements IManagerStrategy
 	final protected BigDecimal m_nMinAverageUnprofitabilityPercent;
 	final protected BigDecimal m_nMinHourUnprofitabilityPercent;
 	final protected BigDecimal m_nMinAverageProfitabilityPercent;
+	final protected Integer m_nBackViewProfitabilityHours;
 	
 	public BaseManagerStrategy(final IStockExchange oStockExchange)
 	{
 		m_nMinAverageUnprofitabilityPercent = ResourceUtils.getBigDecimalFromResource("stock.min.average.unprofitability_percent", oStockExchange.getStockProperties(), BigDecimal.ZERO);
 		m_nMinHourUnprofitabilityPercent = ResourceUtils.getBigDecimalFromResource("stock.min.hour.unprofitability_percent", oStockExchange.getStockProperties(), BigDecimal.ZERO);
 		m_nMinAverageProfitabilityPercent = ResourceUtils.getBigDecimalFromResource("stock.min.hour.profitability_percent", oStockExchange.getStockProperties(), BigDecimal.ONE);
+		m_nBackViewProfitabilityHours = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", oStockExchange.getStockProperties(), 3);
 	}
 
 	@Override public Map<BigDecimal, RateInfo> getMoreProfitabilityRates()
@@ -35,20 +38,17 @@ public class BaseManagerStrategy implements IManagerStrategy
 		if (!getNeedCheckProfitability())
 			return new HashMap<BigDecimal, RateInfo>();
 		
-		final TreeMap<BigDecimal, RateInfo> oRatePercents = new TreeMap<BigDecimal, RateInfo>();
+		final TreeMap<BigDecimal, RateInfo> oRatePercents = new TreeMap<BigDecimal, RateInfo>(Collections.reverseOrder());
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
-			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, 6); 
+			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, m_nBackViewProfitabilityHours); 
 			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageProfitabilityPercent) < 0)
 				continue;
 			
 			oRatePercents.put(nAverageRateProfitabilityPercent, oRateInfo);
 		}
 		
-		final Map<BigDecimal, RateInfo> oMoreProfitabilityRates = new HashMap<BigDecimal, RateInfo>();
-		oMoreProfitabilityRates.putAll(oRatePercents);
-	
-		return oMoreProfitabilityRates;
+		return oRatePercents;
 	}
 	
 	@Override public Map<BigDecimal, RateInfo> getUnProfitabilityRates()
@@ -59,8 +59,8 @@ public class BaseManagerStrategy implements IManagerStrategy
 		final TreeMap<BigDecimal, RateInfo> oUnProfitabilityRatesPercents = new TreeMap<BigDecimal, RateInfo>();
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
-			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, 6); 
-			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oRateInfo, 6); 
+			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo, m_nBackViewProfitabilityHours); 
+			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oRateInfo, m_nBackViewProfitabilityHours); 
 			
 			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageUnprofitabilityPercent) >= 0 &&
 				nMinRateHourProfitabilityPercent.compareTo(m_nMinHourUnprofitabilityPercent) >= 0)

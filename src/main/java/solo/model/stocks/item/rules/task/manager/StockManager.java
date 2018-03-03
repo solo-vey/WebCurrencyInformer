@@ -12,11 +12,15 @@ import java.util.Map;
 import java.util.Map.Entry;
 
 import solo.CurrencyInformer;
+import solo.model.currency.Currency;
+import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
+import solo.model.stocks.item.Rules;
+import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.system.AddRateCommand;
 import solo.model.stocks.item.rules.task.strategy.manager.BaseManagerStrategy;
 import solo.model.stocks.item.rules.task.strategy.manager.IManagerStrategy;
@@ -49,12 +53,26 @@ public class StockManager implements IStockManager
 	}	
 	
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
-	{
+	{		
 		startTestControlers();
 		lookForProspectiveRate();
 		checkUnprofitability();
 //		removeStoppedControlers();
 		checkProfitableRates();
+	}
+
+	protected Map<Currency, CurrencyAmount> getMoney()
+	{
+		try
+		{
+			final StockUserInfo oUserInfo = WorkerFactory.getStockSource().getUserInfo(null);
+			final Rules oRules = WorkerFactory.getStockExchange().getRules();
+			return ManagerUtils.calculateStockMoney(oUserInfo, oRules);
+		}
+		catch(final Exception e)
+		{
+			return null;
+		}
 	}	
 
 	protected void checkUnprofitability()
@@ -98,6 +116,9 @@ public class StockManager implements IStockManager
 	protected void checkProfitableRates()
 	{
 		final Map<BigDecimal, RateInfo> oMoreProfitabilityRates = getManagerStrategy().getMoreProfitabilityRates();
+		if (oMoreProfitabilityRates.size()== 0)
+			return;
+		
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oMoreProfitabilityRates.entrySet())
 		{
 			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
@@ -120,6 +141,23 @@ public class StockManager implements IStockManager
 					addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]");
 				}
 			}
+		}
+		
+		final Map<Currency, CurrencyAmount> oMoney = getMoney();
+		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oMoreProfitabilityRates.entrySet())
+		{
+			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
+			if (ManagerUtils.isHasRealWorkingControlers(oRateInfo))
+				continue;
+
+			final Currency oCurrencyTo = oRateInfo.getCurrencyTo();
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
+			final BigDecimal nFreeSum = (oMoney.containsKey(oCurrencyTo) ? oMoney.get(oCurrencyTo).getBalance() : BigDecimal.ZERO);
+			if (nSum.compareTo(nFreeSum) > 0)
+				continue;
+			
+			final BigDecimal nLocked = (oMoney.containsKey(oCurrencyTo) ? oMoney.get(oCurrencyTo).getLocked() : BigDecimal.ZERO);
+			oMoney.put(oCurrencyTo, new CurrencyAmount(nFreeSum.add(nSum.negate()), nLocked.add(nSum)));
 		}
 	}
 

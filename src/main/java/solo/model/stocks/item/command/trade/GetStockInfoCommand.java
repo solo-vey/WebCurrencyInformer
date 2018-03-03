@@ -14,7 +14,6 @@ import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
-import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
@@ -23,8 +22,9 @@ import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.rule.AddRuleCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
-import solo.model.stocks.item.rules.task.trade.ITradeTask;
+import solo.model.stocks.item.rules.task.trade.SellTaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -72,63 +72,40 @@ public class GetStockInfoCommand extends BaseCommand
 				}
 		   	}
 			
-			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();	
-			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
+			final Map<Currency, CurrencyAmount> oMoney = ManagerUtils.calculateStockMoney(oUserInfo, oRules);
+			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oMoney.entrySet())
 			{
-				if (oCurrencyInfo.getValue().getBalance().compareTo(new BigDecimal(0.000001)) < 0)
+				final BigDecimal nFreeVolum = oCurrencyInfo.getValue().getBalance();
+				if (nFreeVolum.compareTo(new BigDecimal(0.000001)) < 0)
+					continue;
+
+				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + 
+						"/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getLocked()) + "\r\n";
+				
+				if (nFreeVolum.compareTo(BigDecimal.ZERO) == 0 || !bIsSellFreeVolume)
 					continue;
 				
-				BigDecimal nFreeVolum = oCurrencyInfo.getValue().getBalance();
-				for(final IRule oRule : oRules.getRules().values())
+				for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
 				{
-					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
-					if (null == oTradeTask || ManagerUtils.isTestObject(oTradeTask))
+					final RateInfo oRateInfo = oShortRateInfo.getKey();
+					if (!oRateInfo.getCurrencyFrom().equals(oCurrencyInfo.getKey()))
 						continue;
 					
-					final Order oOrder = oTradeTask.getTradeInfo().getOrder();
-					if (null == oOrder)
+					if (TradeUtils.getMinTradeVolume(oRateInfo).compareTo(nFreeVolum) > 0)
 						continue;
 					
-					if (!oTradeTask.getRateInfo().getCurrencyFrom().equals(oCurrencyInfo.getKey()) && 
-						!oTradeTask.getRateInfo().getCurrencyTo().equals(oCurrencyInfo.getKey()))
+					if (!oUserInfo.getMoney().containsKey(oRateInfo.getCurrencyTo()))
 						continue;
 					
-					if (OrderSide.BUY.equals(oOrder.getSide()) && oTradeTask.getRateInfo().getCurrencyFrom().equals(oCurrencyInfo.getKey()))
-						nFreeVolum = nFreeVolum.add(oTradeTask.getTradeInfo().getBoughtVolume().negate());
-					
-					if (OrderSide.SELL.equals(oOrder.getSide()) && oTradeTask.getRateInfo().getCurrencyTo().equals(oCurrencyInfo.getKey()))
-						nFreeVolum = nFreeVolum.add(oTradeTask.getTradeInfo().getReceivedSum().negate());
-				}
-				
-				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(oCurrencyInfo.getValue().getBalance()) + 
-							"/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + "\r\n";
-				
-				if (nFreeVolum.compareTo(BigDecimal.ZERO) > 0 && bIsSellFreeVolume)
-				{
-					for(final Entry<RateInfo, RateStateShort> oShortRateInfo : oAllRateState.entrySet())
-					{
-						if (!oShortRateInfo.getKey().getCurrencyFrom().equals(oCurrencyInfo.getKey()))
-							continue;
-						
-						if (TradeUtils.getMinTradeVolume(oShortRateInfo.getKey()).compareTo(nFreeVolum) > 0)
-							continue;
-						
-						if (!oUserInfo.getMoney().containsKey(oShortRateInfo.getKey().getCurrencyTo()))
-							continue;
-						
-						final BigDecimal nPrice = oShortRateInfo.getValue().getAskPrice();
-						final BigDecimal nSum = nPrice.multiply(nFreeVolum);
-						aButtons.add(Arrays.asList(oShortRateInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + 
-								"/" + MathUtils.toCurrencyStringEx3(nPrice) + "/" + MathUtils.toCurrencyStringEx3(nSum) + " [+]=" + 
-							CommandFactory.makeCommandLine(AddOrderCommand.class, AddOrderCommand.SIDE_PARAMETER, OrderSide.SELL,
-									AddOrderCommand.RATE_PARAMETER, oShortRateInfo.getKey(), 
-									AddOrderCommand.PRICE_PARAMETER, MathUtils.toCurrencyStringEx3(nPrice).replace(",", StringUtils.EMPTY), 
-									AddOrderCommand.VOLUME_PARAMETER,  MathUtils.toCurrencyStringEx3(nFreeVolum))));
-					}
+					final BigDecimal nPrice = oShortRateInfo.getValue().getAskPrice();
+					final BigDecimal nSum = nPrice.multiply(nFreeVolum);
+					aButtons.add(Arrays.asList("Sell [" + nFreeVolum + "] " + oRateInfo + " [" + nSum + "]=" + CommandFactory.makeCommandLine(AddRuleCommand.class, 
+							AddRuleCommand.RULE_TYPE, SellTaskTrade.NAME) + "_" + oRateInfo + "_" + nFreeVolum));
 				}
 			}
 			strMessage += "\r\n";
 			
+			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();	
 			BigDecimal oTotalBtcSum = BigDecimal.ZERO;
 			final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 			final Map<Currency, BigDecimal> aLocked = new HashMap<Currency, BigDecimal>();

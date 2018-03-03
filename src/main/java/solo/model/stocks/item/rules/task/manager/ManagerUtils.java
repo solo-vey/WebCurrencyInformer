@@ -2,23 +2,28 @@ package solo.model.stocks.item.rules.task.manager;
 
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
 import solo.model.currency.Currency;
+import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
+import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.RulesFactory;
+import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TTradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.item.rules.task.trade.TradesInfo;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
@@ -85,8 +90,8 @@ public class ManagerUtils
 		
 		try
 		{
-			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));	
-			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice().multiply(new BigDecimal(2));
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
+			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice().multiply(new BigDecimal(2.2));
 			final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + (nSum.compareTo(BigDecimal.ZERO) > 0 ? nSum : nMinChangePrice);
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			WorkerFactory.getStockExchange().getRules().addRule(oRule);
@@ -103,7 +108,7 @@ public class ManagerUtils
 	{
 		try
 		{
-			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2));	
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
 			if (nSum.compareTo(BigDecimal.ZERO) <= 0)
 				throw new Exception("Unknown min trade sum for [" + oRateInfo + "]");
 			
@@ -225,6 +230,39 @@ public class ManagerUtils
 		}
 		
 		return (nMinPercent.equals(new BigDecimal(Integer.MAX_VALUE)) ? BigDecimal.ZERO : nMinPercent);
+	}
+	
+	public static Map<Currency, CurrencyAmount> calculateStockMoney(final StockUserInfo oUserInfo, final Rules oRules)
+	{
+		final Map<Currency, BigDecimal> aLocked = new HashMap<Currency, BigDecimal>();
+		
+		for(final IRule oRule : oRules.getRules().values())
+		{
+			final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
+			if (null == oTradeControler || ManagerUtils.isTestObject(oTradeControler) || ControlerState.STOPPED.equals(oTradeControler.getControlerState()))
+				continue;
+			
+			final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();
+			final RateInfo oRateInfo = oTradesInfo.getRateInfo();			
+			
+			final BigDecimal nControlerFreeSum = oTradesInfo.getFreeSum();
+			final BigDecimal nLockedSumCurrencyTo = (aLocked.containsKey(oRateInfo.getCurrencyTo()) ? aLocked.get(oRateInfo.getCurrencyTo()) : BigDecimal.ZERO);
+			aLocked.put(oRateInfo.getCurrencyTo(), nLockedSumCurrencyTo.add(nControlerFreeSum));				
+			
+			final BigDecimal nControlerFreeVolume = oTradesInfo.getFreeVolume();
+			final BigDecimal nLockedVolumeCurrencyFrom = (aLocked.containsKey(oRateInfo.getCurrencyFrom()) ? aLocked.get(oRateInfo.getCurrencyFrom()) : BigDecimal.ZERO);
+			aLocked.put(oRateInfo.getCurrencyFrom(), nLockedVolumeCurrencyFrom.add(nControlerFreeVolume));	
+		}
+	
+		final Map<Currency, CurrencyAmount> oMoney = new HashMap<Currency, CurrencyAmount>();
+		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
+		{
+			final BigDecimal nLocked = (aLocked.containsKey(oCurrencyInfo.getKey()) ? aLocked.get(oCurrencyInfo.getKey()) : BigDecimal.ZERO);
+			final CurrencyAmount oRealCurrencyAmount = new CurrencyAmount(oCurrencyInfo.getValue().getBalance(), nLocked.add(oCurrencyInfo.getValue().getLocked()));
+			oMoney.put(oCurrencyInfo.getKey(), oRealCurrencyAmount);
+		}
+	
+		return oMoney;
 	}
 }
 
