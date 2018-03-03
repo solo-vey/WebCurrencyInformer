@@ -139,7 +139,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 					MathUtils.toCurrencyStringEx3(oTaskTrade.getTradeInfo().getTradeSum()) + ";";  
 		}
 		
-		return strInfo + "[" + getControlerState() + "]" + getTradesInfo().getCurrentState();   
+		return strInfo + 
+				(!ControlerState.WORK.equals(getControlerState()) ? "[" + getControlerState() + "]" : StringUtils.EMPTY) + 
+				getTradesInfo().getCurrentState();   
 	}
 	
 	public String getFullInfo()
