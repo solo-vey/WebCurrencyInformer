@@ -7,6 +7,10 @@ public enum Currency
 	BTC("Bitcoin"),
 	/** Ethereum */
 	ETH("Ethereum"), 
+	/** Ethereum Classic */
+	ETC("EthereumClassic"),
+	/** Electroneum */
+	ETN("Electroneum"), 
 	/** Waves */
 	WAVES("Waves"),
 	/** Xrp */
@@ -15,18 +19,23 @@ public enum Currency
 	DASH("Dash"),
 	/** Doge */
 	DOGE("Doge"),
+	/** Dot */
+	DOT("Dot"),
 	/** Zec */
 	ZEC("Zec"),
 	/** Usdt */
 	USDT("Usdt"),
 	/** Xmr */
 	XMR("Xmr"),
-	/** Etc */
-	ETC("Etc"),
+	/** WSX */
+	WSX("WSX"),
 	/** Kick */
 	KICK("Kick"),
 	/** Bch */
 	BCH("Bch"),
+	/** OrmeusCoin */
+	ORME("Orme"),	
+	
 	/** доллары */
 	USD("Usd"),
 	/** польские злотые */

@@ -48,7 +48,7 @@ public class GetStockInfoCommand extends BaseCommand
 		
 		final String strType = getParameter("#type#");
 		final boolean bIsSellFreeVolume = strType.contains("sellfreevolume");
-		final boolean bIsShoOrders = strType.contains("showorders");
+		final boolean bIsShowOrders = strType.contains("showorders");
 		
 		String strMessage = StringUtils.EMPTY;		
 		final Map<RateInfo, RateStateShort> oAllRateState = WorkerFactory.getStockSource().getAllRateState();
@@ -59,7 +59,7 @@ public class GetStockInfoCommand extends BaseCommand
 			final StockUserInfo oUserInfo = WorkerFactory.getStockSource().getUserInfo(null);
 			
 		   	final List<List<String>> aButtons = new LinkedList<List<String>>();
-		   	if (bIsShoOrders)
+		   	if (bIsShowOrders)
 		   	{
 				for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 				{
@@ -180,7 +180,7 @@ public class GetStockInfoCommand extends BaseCommand
 				strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";
 			}
 			
-			if (!bIsShoOrders)
+			if (!bIsShowOrders)
 				aButtons.add(Arrays.asList("##### SHOW ORDERS #####=" + CommandFactory.makeCommandLine(GetStockInfoCommand.class, "type", "showorders")));
 			if (!bIsSellFreeVolume)
 				aButtons.add(Arrays.asList("### SELL FREE VOLUME ###=" + CommandFactory.makeCommandLine(GetStockInfoCommand.class, "type", "sellfreevolume")));

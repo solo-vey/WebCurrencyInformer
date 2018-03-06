@@ -13,6 +13,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.worker.WorkerFactory;
@@ -23,8 +24,6 @@ import solo.utils.ResourceUtils;
 
 public class KunaStockSource extends BaseStockSource
 {
-	final protected String m_strOrdersUrl;
-	final protected String m_strTradesUrl;
 	final protected String m_strMyTradesUrl;
 	
 	protected Long m_nTimeDelta;
@@ -32,13 +31,16 @@ public class KunaStockSource extends BaseStockSource
 	public KunaStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
-		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
-		m_strTradesUrl = ResourceUtils.getResource("trades.url", getStockExchange().getStockProperties());
 		m_strMyTradesUrl = ResourceUtils.getResource("my_trades.url", getStockExchange().getStockProperties());
+	}
+	
+	protected void initRates()
+	{
+		super.initRates();
 		
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.UAH));
+		m_aAllRates.put(new RateInfo(Currency.BTC, Currency.UAH), new RateParamters());
+		m_aAllRates.put(new RateInfo(Currency.ETH, Currency.UAH), new RateParamters());
+		m_aAllRates.put(new RateInfo(Currency.WAVES, Currency.UAH), new RateParamters());
 	}
 	
 	@SuppressWarnings("unchecked")

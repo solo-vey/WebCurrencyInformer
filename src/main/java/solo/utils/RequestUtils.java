@@ -41,7 +41,7 @@ public class RequestUtils
 	public final static int DEFAULT_TEMEOUT = 3;
 	public final static int MAX_PARALEL_QUERY = 5;
 	
-	private static final Map<IStockExchange, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<IStockExchange, Semaphore>();
+	private static final Map<String, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<String, Semaphore>();
 	
 	/** Отправдяеи post запрос по указанному адресу
 	 * @param strURL URL запроса
@@ -321,8 +321,7 @@ public class RequestUtils
 	 * @throws Exception */
 	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
-		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		int nTryCount = ResourceUtils.getIntFromResource("stock.request.try_count", oStockExchange.getStockProperties(), 1);
+		int nTryCount = getTryCount();
 		
 		try
 		{	
@@ -368,12 +367,25 @@ public class RequestUtils
 		}
 	}
 
+	static int getTryCount()
+	{
+		try
+		{
+			final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+			return ResourceUtils.getIntFromResource("stock.request.try_count", oStockExchange.getStockProperties(), 1);
+		}
+		catch(final Exception e)
+		{
+			return 1;
+		}
+	}
+
 	static HttpResponse getResponse(final HttpUriRequest oHttpUriRequest, final int nTimeOut, final CloseableHttpClient oClient) throws Exception
 	{
 		if (nTimeOut > 10)
 			return oClient.execute(oHttpUriRequest);
 		
-		final Semaphore oSemaphore = getSemaphore();
+		final Semaphore oSemaphore = getSemaphore(oHttpUriRequest);
 		try
 		{
 			oSemaphore.acquire();
@@ -385,13 +397,13 @@ public class RequestUtils
 		}
 	}
 	
-	protected static Semaphore getSemaphore()
+	protected static Semaphore getSemaphore(final HttpUriRequest oHttpUriRequest)
 	{
-		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
-		if (!s_oAllSemaphores.containsKey(oStockExchange))
-			s_oAllSemaphores.put(oStockExchange, new Semaphore(MAX_PARALEL_QUERY, true));
+		final String strHost = oHttpUriRequest.getURI().getHost();
+		if (!s_oAllSemaphores.containsKey(strHost))
+			s_oAllSemaphores.put(strHost, new Semaphore(MAX_PARALEL_QUERY, true));
 
-		return s_oAllSemaphores.get(oStockExchange);
+		return s_oAllSemaphores.get(strHost);
 	}
 	
 	public static RequestConfig getConfig(final int nTimeOut, final Boolean bIsUseProxy)

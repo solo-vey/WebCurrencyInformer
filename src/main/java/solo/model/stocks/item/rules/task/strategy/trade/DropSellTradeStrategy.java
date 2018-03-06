@@ -14,6 +14,7 @@ import solo.model.stocks.item.analyse.StockCandlestick;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.strategy.CarefullBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
@@ -89,7 +90,8 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 		final BigDecimal nBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice(); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHourDateCreate))
 	    {
-	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nBougthPrice.doubleValue() * 0.98, TradeUtils.getPricePrecision(oRateInfo));
+	    	final double nDropPricePercent = (ManagerUtils.isTestObject(oTaskTrade) ? 0.5 : 0.98);
+	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nBougthPrice.doubleValue() * nDropPricePercent, TradeUtils.getPricePrecision(oRateInfo));
 	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "60 minutes critical price ");
 			return;
 	    }

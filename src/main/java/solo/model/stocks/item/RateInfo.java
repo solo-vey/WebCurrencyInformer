@@ -9,6 +9,7 @@ public class RateInfo implements Serializable
 	private static final long serialVersionUID = -7207375688298563812L;
 	
 	public static RateInfo ETH_UAH = new RateInfo(Currency.ETH, Currency.UAH); 
+	public static RateInfo NULL = new RateInfo(Currency.UAH, Currency.UAH);
 
 	final protected Currency m_oCurrencyFrom; 
 	final protected Currency m_oCurrencyTo;

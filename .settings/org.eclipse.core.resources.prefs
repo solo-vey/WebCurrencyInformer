@@ -1,6 +1,7 @@
-#Thu Mar 01 14:48:59 EET 2018
+#Tue Mar 06 19:14:45 EET 2018
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
+encoding//src/main/resources/BinanceStockExchange.properties=UTF-8
 encoding//src/main/resources/BtcTradeStockExchange.properties=UTF-8
 encoding//src/main/resources/CryptopiaTelegramTransport.properties=UTF-8
 encoding//src/main/resources/ExmoStockExchange.properties=UTF-8

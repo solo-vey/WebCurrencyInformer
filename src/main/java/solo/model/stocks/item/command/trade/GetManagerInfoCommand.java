@@ -42,40 +42,9 @@ public class GetManagerInfoCommand extends BaseCommand
 		String strMessage = StringUtils.EMPTY;
 		if (strType.equalsIgnoreCase("HISTORY"))
 			strMessage = oManager.getHistory().toString();
+		else
 		if (strType.equalsIgnoreCase("INFO"))
-		{			
-			strMessage = "<code>Rates [" + WorkerFactory.getStockSource().getRates().size() + "]</code>\r\n";
-			for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
-			{
-				final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
-				final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?"); 
-				strMessage += "<code>" + oRateInfo + "[" + strPercent + "],</code> ";
-			}
-			strMessage += "\r\n\r\n";
-			
-			strMessage += "<code>Controlers</code>\r\n";
-			final Map<ControlerState, Integer> oControlers = new HashMap<ControlerState, Integer>();
-			for(final Entry<Integer, IRule> oRule : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
-			{
-				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule.getValue());
-				if (null == oControler || ManagerUtils.isTestObject(oControler))
-					continue;
-				
-				if (!oControlers.containsKey(oControler.getControlerState()))
-					oControlers.put(oControler.getControlerState(), 0);
-				oControlers.put(oControler.getControlerState(), oControlers.get(oControler.getControlerState()) + 1);
-				
-				final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oControler.getTradesInfo().getRateInfo());
-				final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?");
-				if (strPercent.contains("-"))
-					strMessage += "<code>" + oRule.getValue().getInfo().toUpperCase() + "[" + strPercent + "]</code>\r\n";
-				else
-					strMessage += "<code>" + oRule.getValue().getInfo() + "[" + strPercent + "]</code>\r\n";
-			}
-			strMessage += "\r\n\r\n";
-			
-			
-		}
+			strMessage = getInfo(oManager);
 		else
 			strMessage = oManager.getInfo().asString(strType);
 		
@@ -83,5 +52,40 @@ public class GetManagerInfoCommand extends BaseCommand
 																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "RateLastHours=manager_ratelast24forhours", "History=manager_history"),
 																		Arrays.asList("Info=manager_info", "Parameters=setstockparameter_?")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
+	}
+
+	protected String getInfo(final IStockManager oManager)
+	{
+		String strMessage;
+		strMessage = "<code>Rates [" + WorkerFactory.getStockSource().getRates().size() + "]</code>\r\n";
+		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
+		{
+			final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
+			final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?"); 
+			strMessage += "<code>" + oRateInfo + "[" + strPercent + "],</code> ";
+		}
+		strMessage += "\r\n\r\n";
+		
+		strMessage += "<code>Controlers</code>\r\n";
+		final Map<ControlerState, Integer> oControlers = new HashMap<ControlerState, Integer>();
+		for(final Entry<Integer, IRule> oRule : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
+		{
+			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule.getValue());
+			if (null == oControler || ManagerUtils.isTestObject(oControler))
+				continue;
+			
+			if (!oControlers.containsKey(oControler.getControlerState()))
+				oControlers.put(oControler.getControlerState(), 0);
+			oControlers.put(oControler.getControlerState(), oControlers.get(oControler.getControlerState()) + 1);
+			
+			final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oControler.getTradesInfo().getRateInfo());
+			final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?");
+			if (strPercent.contains("-"))
+				strMessage += "<code>" + oRule.getValue().getInfo().toUpperCase() + "[" + strPercent + "]</code>\r\n";
+			else
+				strMessage += "<code>" + oRule.getValue().getInfo() + "[" + strPercent + "]</code>\r\n";
+		}
+		strMessage += "\r\n\r\n";
+		return strMessage;
 	}
 }

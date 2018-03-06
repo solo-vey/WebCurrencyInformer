@@ -135,6 +135,10 @@ public class TradeUtils
 	{
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		
+		final BigDecimal nStockMinTradeVolume = WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinQuantity();
+		if (nStockMinTradeVolume.compareTo(BigDecimal.ZERO) > 0)
+			return nStockMinTradeVolume;
+		
 		final String strMarket = getMarket(oRateInfo); 
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
 		String strMinVolume = ResourceUtils.getResource("stock." + strMarket + ".min_volume", oStockExchange.getStockProperties(), StringUtils.EMPTY);
@@ -159,7 +163,10 @@ public class TradeUtils
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getLastAnalysisResult();
 		final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
 		final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(oRateInfo).getBidsOrders().get(0).getPrice();
-		return oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01));
+		final BigDecimal nMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01));
+				
+		final BigDecimal nStockMinTradeSum = WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinAmount();
+		return (nStockMinTradeSum.compareTo(BigDecimal.ZERO) > 0 && nStockMinTradeSum.compareTo(nMinTradeSum) > 0 ? nStockMinTradeSum : nMinTradeSum);
 	}
 
 	public static IBuyStrategy getBuyStrategy(final RateInfo oRateInfo)

@@ -46,17 +46,21 @@ public class RateStateShort extends BaseObject
 	@SuppressWarnings("unchecked")
 	static public RateStateShort getFromData(final Entry<String, Object> oRateData)
 	{
+		return getFromData((Map<String, Object>) oRateData.getValue(), oRateData.getKey(), "_", "buy_price", "sell_price", "vol");
+	}
+	
+	static public RateStateShort getFromData(final Map<String, Object> oInfoData, final String strRate, final String strSpliter, final String strBuyPriceKey, final String strSellPriceKey, final String strVolumeKey)
+	{
 		try
 		{
-			final String[] aRateParts = oRateData.getKey().split("_");
+			final String[] aRateParts = strRate.split(strSpliter);
 			final Currency oCurrencyFrom = Currency.valueOf(aRateParts[0]);
 			final Currency oCurrencyTo = Currency.valueOf(aRateParts[1]);
 			final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
 			
-			final Map<String, Object> oInfoData = (Map<String, Object>) oRateData.getValue();
-			final BigDecimal nBidPrice = MathUtils.fromString(oInfoData.get("buy_price").toString());
-			final BigDecimal nAskPrice = MathUtils.fromString(oInfoData.get("sell_price").toString());
-			final BigDecimal nVolume = MathUtils.fromString(oInfoData.get("vol").toString());
+			final BigDecimal nBidPrice = MathUtils.fromString(oInfoData.get(strBuyPriceKey).toString());
+			final BigDecimal nAskPrice = MathUtils.fromString(oInfoData.get(strSellPriceKey).toString());
+			final BigDecimal nVolume = MathUtils.fromString(oInfoData.get(strVolumeKey).toString());
 			
 			return new RateStateShort(oRateInfo, nBidPrice, nAskPrice, nVolume);
 		}

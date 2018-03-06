@@ -16,30 +16,64 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
+import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.source.utils.Exmo;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
 import solo.utils.JsonUtils;
-import solo.utils.ResourceUtils;
 
 public class CryptopiaStockSource extends BaseStockSource
 {
-	final protected String m_strOrdersUrl;
-	final protected String m_strTradesUrl;
-	
 	public CryptopiaStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
-		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
-		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
-				
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.BTC));
+	}
+	
+	@SuppressWarnings("unchecked")
+	protected void initRates()
+	{
+		super.initRates();
 		
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USDT));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USDT));
+		try
+		{
+			final Map<String, Object> oPairsInfo = RequestUtils.sendGetAndReturnMap(m_strPairsUrl, true, RequestUtils.DEFAULT_TEMEOUT);
+			final List<Object> oAllRates = (List<Object>) oPairsInfo.get("Data");
+			for(final Object oRateData : oAllRates)
+				addRate((Map<String, Object>)oRateData);
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't init rates in stock source [" + getClass().getSimpleName() + "]", e);
+		}
+	}
+
+	void addRate(final Map<String, Object> aRateDataParameters)
+	{
+		try
+		{
+			final Currency oCurrencyFrom = Currency.valueOf(aRateDataParameters.get("Symbol").toString());
+			final Currency oCurrencyTo = Currency.valueOf(aRateDataParameters.get("BaseSymbol").toString());
+			final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
+			
+			final RateParamters oRateParamters = new RateParamters();
+			oRateParamters.setMinQuantity(MathUtils.fromString(aRateDataParameters.get("MinimumTrade").toString()));
+			oRateParamters.setMaxQuantity(MathUtils.fromString(aRateDataParameters.get("MaximumTrade").toString()));
+			oRateParamters.setMinPrice(MathUtils.fromString(aRateDataParameters.get("MinimumPrice").toString()));
+			oRateParamters.setMaxPrice(MathUtils.fromString(aRateDataParameters.get("MaximumPrice").toString()));
+			oRateParamters.setMinAmount(MathUtils.fromString(aRateDataParameters.get("MinimumBaseTrade").toString()));
+			oRateParamters.setMaxAmount(MathUtils.fromString(aRateDataParameters.get("MaximumBaseTrade").toString()));
+			oRateParamters.setTradeFee(MathUtils.fromString(aRateDataParameters.get("TradeFee").toString()));
+			m_aAllRates.put(oRateInfo, oRateParamters);
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't add rate in stock source [" + getClass().getSimpleName() + "]", e);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -61,6 +95,25 @@ public class CryptopiaStockSource extends BaseStockSource
 		final List<Object> oRateTrades = (List<Object>) oTrades.get("Data");
 		final List<Order> oTradeOrders = convert2Orders(oRateTrades);
 		oRateState.setTrades(oTradeOrders);
+	}
+	
+	@SuppressWarnings("unchecked")
+	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
+	{
+		final Map<RateInfo, RateStateShort> oAllRateState = super.getAllRateState();
+		final Map<String, Object> oAllTickersData = RequestUtils.sendGetAndReturnMap(m_strTickerUrl, true, RequestUtils.DEFAULT_TEMEOUT);
+		final List<Object> oAllTickers = (List<Object>) oAllTickersData.get("Data");
+		for(final Object oTickerData : oAllTickers)
+		{
+			final Map<String, Object> oRateTickerInfo = (Map<String, Object>)oTickerData;
+			final RateStateShort oRateStateShort = RateStateShort.getFromData(oRateTickerInfo, oRateTickerInfo.get("Label").toString(), "/", "BidPrice", "AskPrice", "Volume");
+			if (null == oRateStateShort || !m_aAllRates.containsKey(oRateStateShort.getRateInfo()) || oRateStateShort.getVolume().compareTo(BigDecimal.ZERO) == 0)
+				continue;
+			
+			oAllRateState.put(oRateStateShort.getRateInfo(), oRateStateShort);
+			m_aAllRates.get(oRateStateShort.getRateInfo()).setVolume(oRateStateShort.getVolume());
+		}
+		return oAllRateState;
 	}
 
 	protected String getRateIdentifier(final RateInfo oRateInfo)

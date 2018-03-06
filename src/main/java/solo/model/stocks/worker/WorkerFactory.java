@@ -82,7 +82,7 @@ public class WorkerFactory
 	{
 //		getMainWorker(Stocks.Kuna).startWorker();
 		getMainWorker(Stocks.Exmo).startWorker();
-//		getMainWorker(Stocks.Cryptopia).startWorker();
+		getMainWorker(Stocks.Cryptopia).startWorker();
 //		getMainWorker(Stocks.Poloniex).startWorker();
 		
 		s_oRootWorker.startWorker();

@@ -20,6 +20,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.utils.CommonUtils;
@@ -31,7 +32,6 @@ public class BtcTradeStockSource extends BaseStockSource
 {
 	final protected String m_strBuyUrl;
 	final protected String m_strSellUrl;
-	final protected String m_strDealsUrl;
 	final protected String m_strAuthUrl;
 	final protected String m_strOrderStatusUrl;
 	
@@ -44,13 +44,17 @@ public class BtcTradeStockSource extends BaseStockSource
 		super(oStockExchange);
 		m_strBuyUrl = ResourceUtils.getResource("buy.url", getStockExchange().getStockProperties());
 		m_strSellUrl = ResourceUtils.getResource("sell.url", getStockExchange().getStockProperties());
-		m_strDealsUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
 
 		m_strAuthUrl = ResourceUtils.getResource("auth.url", getStockExchange().getStockProperties());
 		m_strOrderStatusUrl = ResourceUtils.getResource("order_status.url", getStockExchange().getStockProperties());
+	}
+	
+	protected void initRates()
+	{
+		super.initRates();
 		
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
+		m_aAllRates.put(new RateInfo(Currency.BTC, Currency.UAH), new RateParamters());
+		m_aAllRates.put(new RateInfo(Currency.ETH, Currency.UAH), new RateParamters());
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -68,7 +72,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		final List<Order> oAsksOrders = convert2Orders((List<Object>) oSellOrders.get("list"));
 		oRateState.setAsksOrders(oAsksOrders);
 		
-		final String strDealsUrl = m_strDealsUrl.replace("#rate#", getRateIdentifier(oRateInfo));
+		final String strDealsUrl = m_strTradesUrl.replace("#rate#", getRateIdentifier(oRateInfo));
 		final List<Object> oInputTrades = RequestUtils.sendGetAndReturnList(strDealsUrl, true, RequestUtils.DEFAULT_TEMEOUT);
 		final List<Order> oTrades = convert2Orders(oInputTrades);
 		for(final Order oTradeOrder : oTrades)

@@ -16,88 +16,63 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.source.utils.Exmo;
+import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
 import solo.utils.JsonUtils;
-import solo.utils.ResourceUtils;
 
 public class ExmoStockSource extends BaseStockSource
-{
-	final protected String m_strOrdersUrl;
-	final protected String m_strTradesUrl;
-	final protected String m_strTickerUrl;
-	
+{	
 	public ExmoStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
-		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
-		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
-		m_strTickerUrl = ResourceUtils.getResource("ticker.url", getStockExchange().getStockProperties());
-				
-		m_aAllRates.add(new RateInfo(Currency.USD, Currency.RUB));
+	}
+	
+	protected void initRates()
+	{
+		super.initRates();
+		
+		try
+		{
+			final Map<String, Object> oAllRates = RequestUtils.sendGetAndReturnMap(m_strPairsUrl, true, RequestUtils.DEFAULT_TEMEOUT);
+			for(final Entry<String, Object> oRateData : oAllRates.entrySet())
+				addRate(oRateData);
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't init rates in stock source [" + getClass().getSimpleName() + "]", e);
+		}
+	}
 
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.RUB));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.PLN));
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.USDT));
-		
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.LTC, Currency.RUB));
-
-		m_aAllRates.add(new RateInfo(Currency.DOGE, Currency.BTC));
-		
-		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.DASH, Currency.RUB));
-
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.LTC));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.RUB));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.PLN));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.USDT));
-		
-		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.WAVES, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.EUR));
-		m_aAllRates.add(new RateInfo(Currency.ZEC, Currency.RUB));
-
-		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.XMR, Currency.EUR));
-		
-		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.XRP, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.KICK, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.KICK, Currency.ETH));
-		
-		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.ETC, Currency.RUB));
-		
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.BTC));
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.USD));
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.RUB));
-		m_aAllRates.add(new RateInfo(Currency.BCH, Currency.ETH));
+	@SuppressWarnings("unchecked")
+	void addRate(final Entry<String, Object> oRateData)
+	{
+		try
+		{
+			final Currency oCurrencyFrom = Currency.valueOf(oRateData.getKey().split("_")[0]);
+			final Currency oCurrencyTo = Currency.valueOf(oRateData.getKey().split("_")[1]);
+			final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
+			
+			final Map<String, String> aRateDataParameters = (Map<String, String>) oRateData.getValue();
+			final RateParamters oRateParamters = new RateParamters();
+			oRateParamters.setMinQuantity(MathUtils.fromString(aRateDataParameters.get("min_quantity")));
+			oRateParamters.setMaxQuantity(MathUtils.fromString(aRateDataParameters.get("max_quantity")));
+			oRateParamters.setMinPrice(MathUtils.fromString(aRateDataParameters.get("min_price")));
+			oRateParamters.setMaxPrice(MathUtils.fromString(aRateDataParameters.get("max_price")));
+			oRateParamters.setMinAmount(MathUtils.fromString(aRateDataParameters.get("min_amount")));
+			oRateParamters.setMaxAmount(MathUtils.fromString(aRateDataParameters.get("max_amount")));
+			m_aAllRates.put(oRateInfo, oRateParamters);
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't add rate in stock source [" + getClass().getSimpleName() + "]", e);
+		}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -128,8 +103,11 @@ public class ExmoStockSource extends BaseStockSource
 		for(final Entry<String, Object> oRateTickerInfo : oAllTickers.entrySet())
 		{
 			final RateStateShort oRateStateShort = RateStateShort.getFromData(oRateTickerInfo);
-			if (null != oRateStateShort)
-				oAllRateState.put(oRateStateShort.getRateInfo(), oRateStateShort);
+			if (null == oRateStateShort || !m_aAllRates.containsKey(oRateStateShort.getRateInfo()))
+				continue;
+			
+			oAllRateState.put(oRateStateShort.getRateInfo(), oRateStateShort);
+			m_aAllRates.get(oRateStateShort.getRateInfo()).setVolume(oRateStateShort.getVolume());
 		}
 		return oAllRateState;
 	}
@@ -247,6 +225,9 @@ public class ExmoStockSource extends BaseStockSource
 	@SuppressWarnings("unchecked")
 	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo) throws Exception
 	{
+		if (RateInfo.NULL.equals(oRequestRateInfo))
+			return;
+		
 		final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
 		final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
 		final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);

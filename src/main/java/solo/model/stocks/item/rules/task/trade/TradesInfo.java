@@ -232,11 +232,13 @@ public class TradesInfo extends BaseObject implements Serializable
 	{
 		final BigDecimal nReceiveAndSellSum = getReceivedSum().add(getSumToSell());
 		final BigDecimal nDelta = nReceiveAndSellSum.add(getSpendSum().negate());
-		return  "Count: " + getTradeCount() + " [" + getRateInfo().toString() + "] [" + m_nRuleID + "]\r\n" + 
-				"Money: " + MathUtils.toCurrencyStringEx3(getSum()) + "/" + MathUtils.toCurrencyStringEx3(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx3(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx3(getSumToSell()) + "\r\n" + 
-				"Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n" + 
-				MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + "\r\n" + 
-				getCurrentState();
+		String strResult = "Count: " + getTradeCount() + " [" + getRateInfo().toString() + "] [" + m_nRuleID + "]\r\n";
+		strResult += "Money: " + MathUtils.toCurrencyStringEx3(getSum()) + "/" + MathUtils.toCurrencyStringEx3(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx3(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx3(getSumToSell()) + "\r\n"; 
+		if (getVolume().compareTo(BigDecimal.ZERO) != 0 || getLockedVolume().compareTo(BigDecimal.ZERO) != 0)		
+			strResult += "Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n";
+		strResult += MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + "\r\n";
+		strResult += getCurrentState();
+		return strResult;
 	}
 	
 	/** Строковое представление документа */

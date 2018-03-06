@@ -16,6 +16,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -23,21 +24,20 @@ import solo.model.stocks.source.utils.Exmo;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
 import solo.utils.JsonUtils;
-import solo.utils.ResourceUtils;
 
 public class PoloniexStockSource extends BaseStockSource
 {
-	final protected String m_strOrdersUrl;
-	final protected String m_strTradesUrl;
-	
 	public PoloniexStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
-		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
-		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
-				
-		m_aAllRates.add(new RateInfo(Currency.USDT, Currency.BTC));
 	}
+	
+	protected void initRates()
+	{
+		super.initRates();
+		
+		m_aAllRates.put(new RateInfo(Currency.USDT, Currency.BTC), new RateParamters());
+	}	
 	
 	@SuppressWarnings("unchecked")
 	@Override protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception

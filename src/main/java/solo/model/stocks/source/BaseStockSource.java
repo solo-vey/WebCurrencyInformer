@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -18,6 +19,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.StockUserInfo;
@@ -30,7 +32,7 @@ import solo.utils.ResourceUtils;
 public class BaseStockSource implements IStockSource
 {
 	final protected List<RateInfo> m_aRates = new LinkedList<RateInfo>();
-	final protected List<RateInfo> m_aAllRates = new LinkedList<RateInfo>();
+	final protected Map<RateInfo, RateParamters> m_aAllRates = new HashMap<RateInfo, RateParamters>();
 	final protected BigDecimal m_nSumIgnore;
 	final protected IStockExchange m_oStockExchange;
 
@@ -39,11 +41,17 @@ public class BaseStockSource implements IStockSource
 	final protected String m_strRemoveOrderUrl;
 	final protected String m_strAddOrderUrl;
 	final protected String m_strTimeUrl;
+	
+	final protected String m_strOrdersUrl;
+	final protected String m_strTradesUrl;
+	final protected String m_strTickerUrl;
+	final protected String m_strPairsUrl;
+	
 	final protected String m_strPublicKey;
 	final protected String m_strSecretKey;
 	
 	final protected Map<RateInfo, RateState> m_oRateStateCache = new HashMap<RateInfo, RateState>();
-	
+
 	public BaseStockSource(final IStockExchange oStockExchange)
 	{
 		m_oStockExchange = oStockExchange;
@@ -54,16 +62,36 @@ public class BaseStockSource implements IStockSource
 		m_strMyOrdersUrl = ResourceUtils.getResource("my_orders.url", getStockExchange().getStockProperties());
 		m_strRemoveOrderUrl = ResourceUtils.getResource("remove_order.url", getStockExchange().getStockProperties());
 		m_strAddOrderUrl = ResourceUtils.getResource("add_order.url", getStockExchange().getStockProperties());
+
+		m_strOrdersUrl = ResourceUtils.getResource("orders.url", getStockExchange().getStockProperties());
+		m_strTradesUrl = ResourceUtils.getResource("deals.url", getStockExchange().getStockProperties());
+		m_strTickerUrl = ResourceUtils.getResource("ticker.url", getStockExchange().getStockProperties());
+		m_strPairsUrl = ResourceUtils.getResource("pairs.url", getStockExchange().getStockProperties());
 		
 		m_strPublicKey = ResourceUtils.getResource("trade.public.key", getStockExchange().getStockProperties());
 		m_strSecretKey = ResourceUtils.getResource("trade.secret.key", getStockExchange().getStockProperties());
 		
 		load();
+		init();
+	}
+	
+	public void init()
+	{
+		initRates();
+	}
+	
+	protected void initRates()
+	{
 	}
 	
 	public IStockExchange getStockExchange()
 	{
 		return m_oStockExchange;
+	}
+	
+	public RateParamters getRateParameters(final RateInfo oRateInfo)
+	{
+		return m_aAllRates.get(oRateInfo);
 	}
 	
 	public RateState getRateState(final RateInfo oRateInfo) throws Exception
@@ -148,7 +176,7 @@ public class BaseStockSource implements IStockSource
 		if (m_aRates.contains(oRateInfo))
 			return;
 		
-		if (!m_aAllRates.contains(oRateInfo))
+		if (!m_aAllRates.containsKey(oRateInfo))
 			throw new Exception("Unknown rate " + oRateInfo);
 		
 		m_aRates.add(oRateInfo);
@@ -166,9 +194,9 @@ public class BaseStockSource implements IStockSource
 		return m_aRates;
 	}
 
-	public List<RateInfo> getAllRates()
+	public Collection<RateInfo> getAllRates()
 	{
-		return m_aAllRates;
+		return m_aAllRates.keySet();
 	}
 	
 	protected List<Order> convert2Orders(final List<Object> oInputOrders)

@@ -273,7 +273,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 				nBuySum = oMinTradeSum;
 				if (null != oCurrencyAmount && oCurrencyAmount.getBalance().compareTo(nBuySum) < 0)
 				{
-					getTradesInfo().setCurrentState("Wait buy. No money on balance - " + MathUtils.toCurrencyStringEx2(nBuySum) + " < " + MathUtils.toCurrencyStringEx2(oCurrencyAmount.getBalance()));
+					getTradesInfo().setCurrentState("Wait buy. No money on balance - " + MathUtils.toCurrencyStringEx2(nBuySum) + " more " + MathUtils.toCurrencyStringEx2(oCurrencyAmount.getBalance()));
 					return;
 				}
 			}

@@ -12,6 +12,7 @@ import com.google.gson.GsonBuilder;
 import solo.model.currency.Currency;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.StockRateStates;
 import solo.utils.ResourceUtils;
 
@@ -25,9 +26,14 @@ public class MockStockSource extends BaseStockSource
 	{
 		super(oStockExchange);
 		m_strDataRoot = ResourceUtils.getResource("mock.data.root", getStockExchange().getStockProperties());
+	}
+	
+	protected void initRates()
+	{
+		super.initRates();
 		
-		m_aAllRates.add(new RateInfo(Currency.BTC, Currency.UAH));
-		m_aAllRates.add(new RateInfo(Currency.ETH, Currency.UAH));
+		m_aAllRates.put(new RateInfo(Currency.BTC, Currency.UAH), new RateParamters());
+		m_aAllRates.put(new RateInfo(Currency.ETH, Currency.UAH), new RateParamters());
 	}
 	
 	public void setDateStart(final Date oStartDate, final Date oMaxDate)
