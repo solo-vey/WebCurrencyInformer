@@ -90,4 +90,9 @@ public class BaseWorker extends Thread implements IWorker
 	{
 		m_bIsManualStopped = true;
 	}
+	
+	public boolean isWork()
+	{
+		return !m_bIsManualStopped;
+	}
 }

@@ -43,6 +43,11 @@ public class TelegramTransport implements ITransport
 	protected Integer m_nNextMessageID = null; 
 	protected String m_strSystemMessageID = null; 
 	
+	public TelegramTransport()
+	{
+		this(StringUtils.EMPTY);
+	}
+	
 	public TelegramTransport(final String strBotName)
 	{
 		m_strBotName = strBotName;
@@ -128,7 +133,7 @@ public class TelegramTransport implements ITransport
 		if (strText.contains("HTML_STYLE\r\n") || strText.contains("<code>") || strText.contains("<b>") || strText.contains("<i>"))
 			return "HTML";
 		
-		return StringUtils.EMPTY;
+		return "HTML";
 	}
     
 	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
@@ -175,12 +180,18 @@ public class TelegramTransport implements ITransport
 						.replace("HTML_STYLE\r\n", StringUtils.EMPTY)
 						.replace("BUTTONS\r\n", "\0").split("\0")[0];
 		
+		final String strParseMode = getParseMode(strMessage);
+		final String strStockPrefix = (strParseMode.equalsIgnoreCase("Markdown") ? 
+										"*@" + WorkerFactory.getMainWorker().getStock() + "*\r\n" : 
+										"<b>@" + WorkerFactory.getMainWorker().getStock() + "</b>\r\n");
+		
+		strText = strStockPrefix + strText;
 		if (strText.length() < 4096)
 			return strText;
 		
 		strText = strText.substring(strText.length() - 4000);
 		final String[] aTextParts = strText.split("\r", 2);
-		return "..." + (aTextParts.length > 1 ? aTextParts[1] : aTextParts[0]);
+		return strStockPrefix + "..." + (aTextParts.length > 1 ? aTextParts[1] : aTextParts[0]);
 	}
 	
 	@SuppressWarnings("unchecked")

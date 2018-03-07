@@ -1,9 +1,9 @@
 package solo.model.stocks.worker;
 
-import solo.transport.ITransport;
+import solo.model.stocks.item.command.base.ICommand;
 
 public interface IMainWorker
 {
-	ITransport getTransport();
 	StockWorker getStockWorker();
+	void addCommand(final ICommand oCommand);
 }

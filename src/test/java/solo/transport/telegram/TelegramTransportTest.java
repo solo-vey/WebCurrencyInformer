@@ -4,12 +4,12 @@ import java.util.Map;
 
 import org.junit.Test;
 
+import solo.archive.transports.TransportFactory;
 import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessages;
-import solo.transport.TransportFactory;
 
 public class TelegramTransportTest
 {

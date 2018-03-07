@@ -30,6 +30,7 @@ import solo.model.stocks.item.command.system.HistoryCommand;
 import solo.model.stocks.item.command.system.LastErrorsCommand;
 import solo.model.stocks.item.command.system.RemoveRateCommand;
 import solo.model.stocks.item.command.system.SendMessageCommand;
+import solo.model.stocks.item.command.system.SetCurrentStockCommand;
 import solo.model.stocks.item.command.system.SetStockParameterCommand;
 import solo.model.stocks.item.command.system.StartStockCommand;
 import solo.model.stocks.item.command.system.StopStockCommand;
@@ -59,6 +60,7 @@ public class CommandFactory
 		registerCommandClass(StopStockCommand.NAME, StopStockCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(AddRateCommand.NAME, AddRateCommand.class, CommandGroup.SYSTEM);
 		registerCommandClass(RemoveRateCommand.NAME, RemoveRateCommand.class, CommandGroup.SYSTEM);
+		registerCommandClass(SetCurrentStockCommand.NAME, SetCurrentStockCommand.class, CommandGroup.SYSTEM);
 
 		registerCommandClass(AddRuleCommand.NAME, 		AddRuleCommand.class, CommandGroup.RULES);
 		registerCommandClass(GetRulesCommand.NAME,		GetRulesCommand.class, CommandGroup.RULES);

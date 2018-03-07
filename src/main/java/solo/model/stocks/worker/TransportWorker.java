@@ -1,5 +1,6 @@
 package solo.model.stocks.worker;
 
+import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.system.GetTransportMessagesCommand;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.transport.ITransport;
@@ -8,20 +9,17 @@ import solo.utils.ResourceUtils;
 public class TransportWorker extends BaseWorker
 {
 	final ITransport m_oTransport;
-	final MainWorker m_oMainWorker; 
 	
-	public TransportWorker(final ITransport oTransport, final MainWorker oMainWorker)
+	public TransportWorker(final ITransport oTransport, final IWorker oMainWorker)
 	{
-		super(ResourceUtils.getIntFromResource("check.transport.timeout", oTransport.getProperties(), 4000), oMainWorker.getStock());
+		super(ResourceUtils.getIntFromResource("check.transport.timeout", oTransport.getProperties(), 4000), Stocks.Uknown);
 		m_oTransport = oTransport;
-		m_oMainWorker = oMainWorker;
 	}
 
 	public void startWorker()
 	{
 		super.startWorker();
-		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
-		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " Transport");
+		Thread.currentThread().setName("Transport");
 	}
 	
 	@Override protected void doWork() throws Exception

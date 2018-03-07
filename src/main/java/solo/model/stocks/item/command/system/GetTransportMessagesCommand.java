@@ -36,7 +36,7 @@ public class GetTransportMessagesCommand extends BaseCommand implements ISystemC
 		{
 			final String strCommandLine = oMessage.getText();
 			final ICommand oCommand = CommandFactory.getCommand(strCommandLine);
-			WorkerFactory.getMainWorker().addCommand(oCommand);
+			WorkerFactory.getCurrentMainWorker().addCommand(oCommand);
 		}
 	}
 }

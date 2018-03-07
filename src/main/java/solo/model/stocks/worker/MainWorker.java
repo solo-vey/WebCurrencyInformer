@@ -9,14 +9,11 @@ import solo.model.stocks.item.command.base.CommandHistory;
 import solo.model.stocks.item.command.base.ICommand;
 import solo.model.stocks.item.command.base.LastErrors;
 import solo.model.stocks.item.command.system.SendMessageCommand;
-import solo.transport.ITransport;
 import solo.transport.MessageLevel;
-import solo.transport.TransportFactory;
 
 public class MainWorker extends BaseWorker implements IMainWorker
 {
 	final protected StockWorker m_oStockWorker; 
-	final protected TransportWorker m_oTransportWorker; 
 	final protected CommandHistory m_oHistory; 
 	final protected LastErrors m_oLastErrors = new LastErrors();
 
@@ -24,7 +21,6 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	{
 		super(100, oStock);
 		m_oStockWorker = new StockWorker(StockExchangeFactory.getStockExchange(m_oStock), this);
-		m_oTransportWorker = new TransportWorker(TransportFactory.getTransport(m_oStock), this);
 		m_oHistory = new CommandHistory(StockExchangeFactory.getStockExchange(m_oStock));
 	}
 	
@@ -35,7 +31,6 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		Thread.currentThread().setName(getStockExchange().getStockName() + " Main");
 
 		m_oStockWorker.startWorker();
-		m_oTransportWorker.startWorker();
 	}
 	
 	public void stopWorker()
@@ -48,11 +43,6 @@ public class MainWorker extends BaseWorker implements IMainWorker
 	{
 		super.addCommand(oCommand);
 		getHistory().addCommand(oCommand);
-	}
-	
-	public ITransport getTransport()
-	{
-		return m_oTransportWorker.getTransport();
 	}
 
 	public StockWorker getStockWorker()
