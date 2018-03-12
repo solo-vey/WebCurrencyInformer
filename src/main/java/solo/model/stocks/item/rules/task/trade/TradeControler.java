@@ -259,7 +259,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			final BigDecimal nTotalSum = m_oTradesInfo.getSum().add(m_oTradesInfo.getSumToSell());
 			if (nTotalSum.compareTo(oMinTradeSum) < 0)
 			{
-				getTradesInfo().setCurrentState("Wait buy. No money - " + MathUtils.toCurrencyStringEx2(nTotalSum) + " < " + MathUtils.toCurrencyStringEx2(oMinTradeSum));
+				getTradesInfo().setCurrentState("Wait buy. No money - " + MathUtils.toCurrencyStringEx2(nTotalSum) + " less " + MathUtils.toCurrencyStringEx2(oMinTradeSum));
 				return;
 			}
 				
