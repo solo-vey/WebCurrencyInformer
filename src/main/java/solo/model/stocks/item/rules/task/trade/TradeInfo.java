@@ -232,19 +232,19 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public void addBuy(BigDecimal nSpendSum, BigDecimal nBuyVolume)
 	{
-		if (nSpendSum.compareTo(BigDecimal.ZERO) == 0 && nBuyVolume.compareTo(BigDecimal.ZERO) == 0)
+		if (TradeUtils.isVerySmallSum(m_oRateInfo, nSpendSum) && TradeUtils.isVerySmallVolume(m_oRateInfo, nBuyVolume))
 			return;
 		
 		m_nSpendSum = m_nSpendSum.add(nSpendSum);
 		m_nBoughtVolume = m_nBoughtVolume.add(nBuyVolume);
 		getTradeControler().addBuy(nSpendSum, nBuyVolume);
-		if (nSpendSum.compareTo(BigDecimal.ZERO) != 0 && nBuyVolume.compareTo(BigDecimal.ZERO) != 0)
+		if (nSpendSum.compareTo(BigDecimal.ZERO) != 0 && nBuyVolume.compareTo(new BigDecimal(0.0000001)) > 0)
 			addToHistory("Buy : " + MathUtils.toCurrencyStringEx2(getAveragedBoughPrice()) + " / " + MathUtils.toCurrencyStringEx2(nBuyVolume) + " / " + MathUtils.toCurrencyStringEx3(nSpendSum)); 
 	}
 	
 	public void addSell(BigDecimal nReceivedSum, BigDecimal nSellVolume)
 	{
-		if (nReceivedSum.compareTo(BigDecimal.ZERO) == 0 && nSellVolume.compareTo(BigDecimal.ZERO) == 0)
+		if (TradeUtils.isVerySmallSum(m_oRateInfo, nReceivedSum) && TradeUtils.isVerySmallVolume(m_oRateInfo, nSellVolume))
 			return;
 
 		m_nReceivedSum = m_nReceivedSum.add(nReceivedSum);
@@ -355,11 +355,20 @@ public class TradeInfo extends BaseObject implements Serializable
 		String strResult = StringUtils.EMPTY;
 		strResult += m_oRateInfo + " [" + m_nRuleID + "]\r\n";
 		
-		strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "\r\n";
-		strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
-		strResult += "BoughtVolume: " + MathUtils.toCurrencyStringEx2(getBoughtVolume()) + "\r\n";
-		strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
-		strResult += getHistory();
+		if (getNeedSpendSum().compareTo(BigDecimal.ZERO) != 0)
+			strResult += "NeedSpendSum: " + MathUtils.toCurrencyStringEx2(getNeedSpendSum()) + "\r\n";
+		if (getSpendSum().compareTo(BigDecimal.ZERO) != 0)
+			strResult += "SpendSum: " + MathUtils.toCurrencyStringEx2(getSpendSum()) + "\r\n";
+		if (getBoughtVolume().compareTo(BigDecimal.ZERO) != 0)
+			strResult += "BoughtVolume: " + MathUtils.toCurrencyStringEx2(getBoughtVolume()) + "\r\n";
+		
+		if (getReceivedSum().compareTo(BigDecimal.ZERO) != 0)
+			strResult += "ReceivedSum: " + MathUtils.toCurrencyStringEx2(getReceivedSum()) + "\r\n";
+		if (getNeedSellVolume().compareTo(BigDecimal.ZERO) != 0 && getBoughtVolume().compareTo(getNeedSellVolume()) != 0)
+			strResult += "NeedSoldVolume: " + MathUtils.toCurrencyStringEx2(getNeedSellVolume()) + "\r\n";
+		if (getSoldVolume().compareTo(BigDecimal.ZERO) != 0)
+			strResult += "SoldVolume: " + MathUtils.toCurrencyStringEx2(getSoldVolume()) + "\r\n";
+		strResult = strResult + "\r\n" + getHistory();
 		return strResult;
 	}
 }

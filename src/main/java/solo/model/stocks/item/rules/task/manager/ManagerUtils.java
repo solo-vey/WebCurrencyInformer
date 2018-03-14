@@ -122,7 +122,7 @@ public class ManagerUtils
 	{
 		try
 		{
-			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
+			final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2)));	
 			if (nSum.compareTo(BigDecimal.ZERO) <= 0)
 				throw new Exception("Unknown min trade sum for [" + oRateInfo + "]");
 			

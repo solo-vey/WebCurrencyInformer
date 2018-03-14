@@ -13,6 +13,7 @@ public class TradesBlock implements Serializable
 {
 	public static final String TYPE_FULL = "full";
 	public static final String TYPE_SHORT = "short";
+	public static final String TYPE_ONLY_PERCENT = "only_percent";
 
 	private static final long serialVersionUID = -4127051943452696486L;
 	
@@ -82,7 +83,7 @@ public class TradesBlock implements Serializable
 		final String strCloseStyle = (bIsLostMoney ? "</code>" : StringUtils.EMPTY);
 		
 		return strStyle + 
-						(!strType.equalsIgnoreCase("only_percent") ? " / " + m_nCount : StringUtils.EMPTY) + 
+						(!strType.equalsIgnoreCase("only_percent") ? m_nCount : StringUtils.EMPTY) + 
 						(strType.equalsIgnoreCase(TYPE_FULL) ? " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) : StringUtils.EMPTY) + 
 						(strType.equalsIgnoreCase(TYPE_FULL) ? " / " + MathUtils.toCurrencyStringEx3(getDelta()) : StringUtils.EMPTY) + 
 						"[" + MathUtils.toCurrencyStringEx3(getPercent()) + "%]" + strCloseStyle;

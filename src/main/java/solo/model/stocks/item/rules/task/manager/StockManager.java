@@ -60,7 +60,7 @@ public class StockManager implements IStockManager
 		startTestControlers();
 		lookForProspectiveRate();
 		checkUnprofitability();
-//		removeStoppedControlers();
+		removeStoppedControlers();
 		checkProfitableRates();
 	}
 
@@ -119,6 +119,28 @@ public class StockManager implements IStockManager
 		}
 	}
 	
+	protected boolean startStoppingControlers(final RateInfo oRateInfo, final BigDecimal oRateProfitabilityPrcent)
+	{
+		boolean bIsHadStoppingControlers = false;
+		final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
+		for(final Entry<Integer, IRule> oRuleInfo : oRules)
+		{
+			final IRule oRule = oRuleInfo.getValue();
+			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
+			if (null == oControler)
+				continue;
+			
+			if (ControlerState.STOPPED.equals(oControler.getControlerState()) || ControlerState.STOPPING.equals(oControler.getControlerState()))
+			{
+				oControler.setControlerState(ControlerState.WORK);
+				addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Good profit [" + oRateProfitabilityPrcent + "%]");
+				bIsHadStoppingControlers = true;
+			}
+		}
+		
+		return bIsHadStoppingControlers;
+	}
+	
 	protected void checkProfitableRates()
 	{
 		if (!getIsOperationAvalible(OPERATION_CHECK_RATES))
@@ -128,37 +150,23 @@ public class StockManager implements IStockManager
 		if (oMoreProfitabilityRates.size()== 0)
 			return;
 		
+		final List<Entry<BigDecimal, RateInfo>> oCreateControlers = new LinkedList<Entry<BigDecimal, RateInfo>>();
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oMoreProfitabilityRates.entrySet())
 		{
 			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
 			if (ManagerUtils.isHasRealWorkingControlers(oRateInfo))
 				continue;
 			
-			//ManagerUtils.createTradeControler(oRateInfo);
+			if (startStoppingControlers(oRateInfo, oRateProfitabilityInfo.getKey()))
+				continue;
 			
-			final List<Entry<Integer, IRule>> oRules = WorkerFactory.getStockExchange().getRules().getRules(oRateInfo);
-			for(final Entry<Integer, IRule> oRuleInfo : oRules)
-			{
-				final IRule oRule = oRuleInfo.getValue();
-				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-				if (null == oControler)
-					continue;
-				
-				if (ControlerState.STOPPED.equals(oControler.getControlerState()) || ControlerState.STOPPING.equals(oControler.getControlerState()))
-				{
-					oControler.setControlerState(ControlerState.WORK);
-					addToHistory("Start controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]");
-				}
-			}
+			oCreateControlers.add(oRateProfitabilityInfo);
 		}
 		
 		final Map<Currency, CurrencyAmount> oMoney = getMoney();
-		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oMoreProfitabilityRates.entrySet())
+		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oCreateControlers)
 		{
 			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
-			if (ManagerUtils.isHasRealWorkingControlers(oRateInfo))
-				continue;
-
 			final Currency oCurrencyTo = oRateInfo.getCurrencyTo();
 			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
 			final BigDecimal nFreeSum = (oMoney.containsKey(oCurrencyTo) ? oMoney.get(oCurrencyTo).getBalance() : BigDecimal.ZERO);
@@ -167,6 +175,9 @@ public class StockManager implements IStockManager
 			
 			final BigDecimal nLocked = (oMoney.containsKey(oCurrencyTo) ? oMoney.get(oCurrencyTo).getLocked() : BigDecimal.ZERO);
 			oMoney.put(oCurrencyTo, new CurrencyAmount(nFreeSum.add(nSum.negate()), nLocked.add(nSum)));
+			
+			ManagerUtils.createTradeControler(oRateInfo);
+			addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]");
 		}
 	}
 

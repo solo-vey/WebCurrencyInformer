@@ -277,6 +277,18 @@ public class TradeUtils
 
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.ERROR, strMessage);
 		return oRemoveOrder;
-	}		
+	}
+	
+	public static boolean isVerySmallSum(final RateInfo oRateInfo, final BigDecimal nSum)
+	{
+		final BigDecimal nRoundedSum = TradeUtils.getRoundedPrice(oRateInfo, nSum);
+		return (nRoundedSum.compareTo(BigDecimal.ZERO) == 0);
+	}
+	
+	public static boolean isVerySmallVolume(final RateInfo oRateInfo, final BigDecimal nVolume)
+	{
+		final BigDecimal nRoundedVolume = TradeUtils.getRoundedVolume(oRateInfo, nVolume);
+		return (nRoundedVolume.compareTo(BigDecimal.ZERO) == 0);
+	}
 }
 

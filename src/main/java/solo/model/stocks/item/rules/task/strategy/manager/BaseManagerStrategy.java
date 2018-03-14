@@ -40,10 +40,13 @@ public class BaseManagerStrategy implements IManagerStrategy
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
 			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo); 
-			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageProfitabilityPercent) < 0)
-				continue;
+			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageProfitabilityPercent) >= 0)
+				oRatePercents.put(nAverageRateProfitabilityPercent, oRateInfo);
 			
-			oRatePercents.put(nAverageRateProfitabilityPercent, oRateInfo);
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
+			final BigDecimal nAverageReverseRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oReverseRateInfo); 
+			if (nAverageReverseRateProfitabilityPercent.compareTo(m_nMinAverageProfitabilityPercent) >= 0)
+				oRatePercents.put(nAverageReverseRateProfitabilityPercent, oReverseRateInfo);
 		}
 		
 		return oRatePercents;
@@ -58,13 +61,17 @@ public class BaseManagerStrategy implements IManagerStrategy
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
 			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo); 
-			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oRateInfo); 
+			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oRateInfo); 			
+			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageUnprofitabilityPercent) < 0 ||
+				nMinRateHourProfitabilityPercent.compareTo(m_nMinHourUnprofitabilityPercent) < 0)
+					oUnProfitabilityRatesPercents.put(nAverageRateProfitabilityPercent, oRateInfo);
 			
-			if (nAverageRateProfitabilityPercent.compareTo(m_nMinAverageUnprofitabilityPercent) >= 0 &&
-				nMinRateHourProfitabilityPercent.compareTo(m_nMinHourUnprofitabilityPercent) >= 0)
-				continue;
-			
-			oUnProfitabilityRatesPercents.put(nAverageRateProfitabilityPercent, oRateInfo);
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
+			final BigDecimal nAverageReverseRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oReverseRateInfo); 
+			final BigDecimal nMinRateHourReverseProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oReverseRateInfo); 			
+			if (nAverageReverseRateProfitabilityPercent.compareTo(m_nMinAverageUnprofitabilityPercent) < 0 ||
+				nMinRateHourReverseProfitabilityPercent.compareTo(m_nMinHourUnprofitabilityPercent) < 0)
+					oUnProfitabilityRatesPercents.put(nAverageReverseRateProfitabilityPercent, oReverseRateInfo);
 		}
 	
 		return oUnProfitabilityRatesPercents;

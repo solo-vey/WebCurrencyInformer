@@ -10,10 +10,13 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.model.stocks.analyse.RateAnalysisResult;
+import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.system.GetRateInfoCommand;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
@@ -85,7 +88,7 @@ public class GetRulesCommand extends BaseCommand
 					if (null != oTradeTask)
 						strState += oTradeTask.getTradeInfo().getOrder().getSide() + ";";
 					if (null != oTradeControler && !ManagerUtils.isTestObject(oTradeControler))
-						strState += oTradeControler.getControlerState() + ";";
+						strState += (oRule.getRateInfo().getIsReverse() ? "#" : StringUtils.EMPTY) + oTradeControler.getControlerState() + ";";
 				}
 				strState = (StringUtils.isNotBlank(strState) ?  "[" + strState + "]" : StringUtils.EMPTY);
 			
@@ -118,7 +121,11 @@ public class GetRulesCommand extends BaseCommand
 			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oSelectedRateInfo); 
 			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oSelectedRateInfo); 
 			
-			strMessage = "Av [" + nAverageRateProfitabilityPercent + " %] Min [" + nMinRateHourProfitabilityPercent + "%]";
+			final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult();
+	    	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oSelectedRateInfo);
+	    	strMessage = GetRateInfoCommand.getRateData(oSelectedRateInfo, oAnalysisResult);
+	    	
+			strMessage += "Av [" + nAverageRateProfitabilityPercent + " %] Min [" + nMinRateHourProfitabilityPercent + "%]";
 			
 			final int nHoursCount = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
 			final List<Entry<Integer, RateTradesBlock>> aHoursTrades = ManagerUtils.getHoursTrades(nHoursCount + 1);
@@ -130,7 +137,7 @@ public class GetRulesCommand extends BaseCommand
 			if (null != oRateTrades)
 			{
 				for(final Entry<Integer, TradesBlock> oHourTrades : oRateTrades)
-					strMessage += oHourTrades.getKey() + oHourTrades.getValue().asString("only_percent") + ", ";
+					strMessage += oHourTrades.getKey() + oHourTrades.getValue().asString(TradesBlock.TYPE_SHORT) + ", ";
 			}
 
 		}

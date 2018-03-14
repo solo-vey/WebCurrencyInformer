@@ -275,6 +275,9 @@ public class ExmoStockSource extends BaseStockSource
 			System.out.println("Get order repeat [" + nTryCount + "][" + ((new Date()).getTime() - oDateStartGet.getTime()) + "] : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getState() + " " + oGetOrder.getMessage());
 		}
 		
+		if (oGetOrder.isDone() && oOriginalRateInfo.getIsReverse())
+			return TradeUtils.makeReveseOrder(oGetOrder);
+		
 		return oGetOrder;
 	}
 	
@@ -373,7 +376,8 @@ public class ExmoStockSource extends BaseStockSource
 			{
 				final String strOrderId = oOrderData.get("order_id").toString(); 
 				final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);
-				oOrder.setVolume(nVolume);
+				if (!oOriginalRateInfo.getIsReverse())
+					oOrder.setVolume(nOriginalVolume);
 
 				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
 				return oOrder;
