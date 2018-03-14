@@ -50,8 +50,8 @@ public class BaseTradeStrategy implements ITradeStrategy
 		if (oRemoveOrder.isException())
 			return;
 		
-		oTaskTrade.getTradeInfo().getHistory().addToHistory(strMessagePrefix + " Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
+		oTaskTrade.getTradeInfo().getHistory().addToHistory(strMessagePrefix + " Remove buy order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove buy order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
 		
 		if (OrderSide.BUY.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
 		{
@@ -69,8 +69,8 @@ public class BaseTradeStrategy implements ITradeStrategy
 		if (oRemoveOrder.isException())
 			return;
 		
-		oTaskTrade.getTradeInfo().getHistory().addToHistory(strMessagePrefix + " Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
+		oTaskTrade.getTradeInfo().getHistory().addToHistory(strMessagePrefix + " Remove sell order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
+		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Remove sell order [" + oGetOrder.getId() + "] [" + oGetOrder.getInfoShort() + "].");
 	
 		if (OrderSide.SELL.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
 		{

@@ -25,7 +25,6 @@ import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
 import solo.utils.CommonUtils;
-import solo.utils.MathUtils;
 
 /** Формат комманды 
  */
@@ -104,7 +103,7 @@ public class GetTradeInfoCommand extends BaseCommand
 			if (ManagerUtils.isTestObject(oTradeControler))
 			{
 				final RateInfo oRateInfo = oTradeControler.getTradesInfo().getRateInfo();
-				final BigDecimal nSum = MathUtils.getBigDecimal(TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2)).doubleValue(), TradeUtils.getPricePrecision(oRateInfo));	
+				final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2)));	
 				aButtons.add(Arrays.asList("Create controler [" + nSum + "]=" + CommandFactory.makeCommandLine(AddRuleCommand.class, 
 							AddRuleCommand.RULE_TYPE, TradeControler.NAME) + "_" + oRateInfo + "_" + nSum));
 			}

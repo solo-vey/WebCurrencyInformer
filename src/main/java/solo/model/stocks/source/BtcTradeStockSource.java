@@ -277,10 +277,10 @@ public class BtcTradeStockSource extends BaseStockSource
 			oOrder.setState(oTradeOrderInfo.get("status").toString());
 	}
 
-	@Override public Order removeOrder(final String strOrderId)
+	@Override public Order removeOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
 		authUser();
-		super.removeOrder(strOrderId);
+		super.removeOrder(strOrderId, oRateInfo);
 		final Order oOrder = getOrder(strOrderId, null);
 		try
 		{

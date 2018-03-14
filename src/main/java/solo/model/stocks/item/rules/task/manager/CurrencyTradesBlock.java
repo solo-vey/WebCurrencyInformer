@@ -79,7 +79,7 @@ public class CurrencyTradesBlock implements Serializable
 			aSorted.put(oTradesInfo.getValue().getPercent(), oTradesInfo);
 		
 		for(final Entry<Currency, TradesBlock> oTradesInfo : aSorted.values())
-			strResult = oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + "\r\n" + strResult;
+			strResult = oTradesInfo.getKey() + " : " + oTradesInfo.getValue().asString(TradesBlock.TYPE_FULL) + "\r\n" + strResult;
 		return strResult;
 	}
 }

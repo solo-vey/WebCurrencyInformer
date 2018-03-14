@@ -11,6 +11,9 @@ import solo.utils.MathUtils;
 
 public class TradesBlock implements Serializable
 {
+	public static final String TYPE_FULL = "full";
+	public static final String TYPE_SHORT = "short";
+
 	private static final long serialVersionUID = -4127051943452696486L;
 	
 	protected int m_nCount = 0;
@@ -72,12 +75,21 @@ public class TradesBlock implements Serializable
 		m_nReceivedSum = m_nReceivedSum.add(oTradesBlock.getReceivedSum());
 	}
 	
-	@Override public String toString()
+	public String asString(final String strType)
 	{
 		final boolean bIsLostMoney = (getPercent().compareTo(BigDecimal.ZERO) < 0);
-		final String strStyle = (bIsLostMoney ? "`" : StringUtils.EMPTY);
+		final String strStyle = (bIsLostMoney ? "<code>" : StringUtils.EMPTY);
+		final String strCloseStyle = (bIsLostMoney ? "</code>" : StringUtils.EMPTY);
 		
-		return strStyle + m_nCount + " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) + " / " + 
-						MathUtils.toCurrencyStringEx3(getDelta()) + " / " + MathUtils.toCurrencyStringEx3(getPercent()) + "%" + strStyle;
+		return strStyle + 
+						(!strType.equalsIgnoreCase("only_percent") ? " / " + m_nCount : StringUtils.EMPTY) + 
+						(strType.equalsIgnoreCase(TYPE_FULL) ? " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) : StringUtils.EMPTY) + 
+						(strType.equalsIgnoreCase(TYPE_FULL) ? " / " + MathUtils.toCurrencyStringEx3(getDelta()) : StringUtils.EMPTY) + 
+						"[" + MathUtils.toCurrencyStringEx3(getPercent()) + "%]" + strCloseStyle;
+	}
+	
+	@Override public String toString()
+	{
+		return asString(TYPE_SHORT);
 	}
 }

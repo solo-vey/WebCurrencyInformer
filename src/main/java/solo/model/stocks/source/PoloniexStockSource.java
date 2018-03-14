@@ -305,9 +305,9 @@ public class PoloniexStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("serial")
-	@Override public Order removeOrder(final String strOrderId)
+	@Override public Order removeOrder(final String strOrderId, final RateInfo oOriginalRateInfo)
 	{
-		super.removeOrder(strOrderId);
+		super.removeOrder(strOrderId, oOriginalRateInfo);
 		
         System.out.println("Remove order: " + strOrderId);
         final Date oDateStartRemove = new Date();

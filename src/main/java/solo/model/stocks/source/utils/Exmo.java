@@ -6,6 +6,7 @@ import okhttp3.OkHttpClient.Builder;
 import org.apache.commons.codec.binary.Hex;
 import org.apache.commons.lang.StringUtils;
 import solo.CurrencyInformer;
+import solo.utils.RequestUtils;
 import solo.utils.ResourceUtils;
 
 import javax.crypto.Mac;
@@ -20,10 +21,14 @@ import java.security.InvalidKeyException;
 import java.security.NoSuchAlgorithmException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Semaphore;
 
 public class Exmo 
 {
-    private static Long _nonce = 0L;
+    private static final String EXMO_HOST = "api.exmo.com";
+    private static final String HTTPS_API_EXMO_ROOT = "https://" + EXMO_HOST + "/v1/";
+    
+	private static Long _nonce = 0L;
     private static Long _nonceNext = 0L;
     private String _key;
     private String _secret;
@@ -33,8 +38,27 @@ public class Exmo
         _key = key;
         _secret = secret;
     }
-
+    
     public final String Request(String method, Map<String, String> arguments) 
+    {
+    	final Semaphore oSemaphore = RequestUtils.getSemaphore(EXMO_HOST);
+		try
+		{
+			oSemaphore.acquire();
+			return execute(method, arguments);
+		}
+		catch (InterruptedException e)
+		{
+			System.err.println("Request fail [" + HTTPS_API_EXMO_ROOT + method + "]: " + e.toString());
+			return null;
+		}
+		finally
+		{
+			oSemaphore.release();
+		}
+    }
+
+    public final String execute(String method, Map<String, String> arguments) 
     {
         Mac mac;
         SecretKeySpec key;
@@ -49,7 +73,7 @@ public class Exmo
         if (null == _nonceNext)
         	_nonceNext = 0L;
 
-        synchronized (_nonce) 
+        //synchronized (_nonce) 
         {
         	_nonce = System.nanoTime();
         	_nonce = _nonce++;
@@ -121,7 +145,7 @@ public class Exmo
 	        if (null != oProxy)
 	        	oBuilder.proxy(oProxy);
 	        OkHttpClient client = oBuilder.build();
-	        final String strURL = "https://api.exmo.com/v1/" + method;
+	        final String strURL = HTTPS_API_EXMO_ROOT + method;
 	        try 
 	        {
 	            RequestBody body = RequestBody.create(form, postData);

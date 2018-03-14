@@ -361,9 +361,9 @@ public class CryptopiaStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("serial")
-	@Override public Order removeOrder(final String strOrderId)
+	@Override public Order removeOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
-		super.removeOrder(strOrderId);
+		super.removeOrder(strOrderId, oRateInfo);
 		
         System.out.println("Remove order: " + strOrderId);
         final Date oDateStartRemove = new Date();

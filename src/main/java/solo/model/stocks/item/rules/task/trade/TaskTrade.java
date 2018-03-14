@@ -207,7 +207,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		getTradeInfo().setNeedBoughtVolume(oBuyOrder.getVolume(), true);
 		getTradeInfo().setTradeSum(oBuyOrder.getSum().add(getTradeInfo().getSpendSum()), true);
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oBuyOrder.getInfo());
-		getTradeInfo().addToHistory(oBuyOrder.getSide() + " + " + MathUtils.toCurrencyStringEx2(oBuyOrder.getPrice()));
+		getTradeInfo().addToHistory(oBuyOrder.getSide() + " / " + MathUtils.toCurrencyStringEx3(oBuyOrder.getPrice()) + " / " + MathUtils.toCurrencyStringEx3(oBuyOrder.getSum()));
 		return oBuyOrder;
 	}
 
@@ -221,14 +221,14 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			return oSellOrder;
 
 		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oSellOrder.getInfo() + "/" + getTradeInfo().getCriticalPriceString());
-		getTradeInfo().addToHistory(oSellOrder.getSide() + " + " + MathUtils.toCurrencyStringEx2(oSellOrder.getPrice()) + "/" + getTradeInfo().getCriticalPriceString());
+		getTradeInfo().addToHistory(oSellOrder.getSide() + " / " + MathUtils.toCurrencyStringEx3(oSellOrder.getPrice()) + " / " + getTradeInfo().getCriticalPriceString());
 		return oSellOrder;
 	}
 	
 	protected void setNewOrderPrice(final BigDecimal oNewPrice, final Order oGetOrder)
 	{
-		final BigDecimal nRoundedNewPrice = MathUtils.getBigDecimal(oNewPrice.doubleValue(), TradeUtils.getPricePrecision(m_oRateInfo));
-		final BigDecimal nRoundedOrderPrice = MathUtils.getBigDecimal(oGetOrder.getPrice().doubleValue(), TradeUtils.getPricePrecision(m_oRateInfo));
+		final BigDecimal nRoundedNewPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oNewPrice);
+		final BigDecimal nRoundedOrderPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oGetOrder.getPrice());
 		final BigDecimal nDeltaOrderPrice = (nRoundedNewPrice.compareTo(nRoundedOrderPrice) > 0 ? nRoundedNewPrice.add(nRoundedOrderPrice.negate()) 
 																		: nRoundedOrderPrice.add(nRoundedNewPrice.negate()));
 		final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice();
@@ -301,8 +301,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		final RateAnalysisResult oAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(m_oRateInfo);
 		final List<Order> oOrders = (oGetOrder.getSide().equals(OrderSide.BUY) ? oAnalysisResult.getBidsOrders() : oAnalysisResult.getAsksOrders());
 		final List<Order> oTrades = oAnalysisResult.getTrades();
-		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice());
-		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oTrades.get(0).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oTrades.get(1).getPrice()) + ";\t" + MathUtils.toCurrencyStringEx2(oTrades.get(2).getPrice());
+		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + 
+				(oOrders.size() > 1 ? MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" : StringUtils.EMPTY) + 
+				(oOrders.size() > 2 ? MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice()) : StringUtils.EMPTY);
+		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oTrades.get(0).getPrice()) + ";\t" + 
+				(oTrades.size() > 1 ? MathUtils.toCurrencyStringEx2(oTrades.get(1).getPrice()) + ";\t" : StringUtils.EMPTY) + 
+				(oTrades.size() > 2 ? MathUtils.toCurrencyStringEx2(oTrades.get(2).getPrice()) : StringUtils.EMPTY);
 		getTradeInfo().getHistory().addToLog(strLogMessage + "\r\n");
 	}
 
@@ -398,7 +402,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		setTradeControler(ITradeControler.NULL);
 		if (!getTradeInfo().getOrder().isNull())
-			getStockSource().removeOrder(getTradeInfo().getOrder().getId());
+			getStockSource().removeOrder(getTradeInfo().getOrder().getId(), null);
 	}
 	
 	@Override public ITradeControler getTradeControler()

@@ -50,17 +50,18 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		WorkerFactory.getStockTestSource().getRateState(m_oRateInfo);
 		oStockExchange.getLastAnalysisResult().analyse(oRateState, oStockExchange, m_oRateInfo);
 		
-		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateState.getRateInfo());
+		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
 		final RateState oReverseRateState = makeReverseRateState(oRateState);
 		oStockExchange.getLastAnalysisResult().analyse(oReverseRateState, oStockExchange, oReverseRateInfo);
 		
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
 		final List<Entry<Integer, IRule>> oRules = oStockExchange.getRules().getRules(m_oRateInfo);
-		if (oRules.size() == 0)
-			return;
-		
 		for(final Entry<Integer, IRule> oRuleInfo : oRules)
 			oRuleInfo.getValue().check(oStateAnalysisResult);
+		
+		final List<Entry<Integer, IRule>> oReverseRules = oStockExchange.getRules().getRules(oReverseRateInfo);
+		for(final Entry<Integer, IRule> oReverseRuleInfo : oReverseRules)
+			oReverseRuleInfo.getValue().check(oStateAnalysisResult);
 		
 		/*final MainWorker oMainWorker = WorkerFactory.getMainWorker();
 		final ExecutorService oThreadPool = Executors.newFixedThreadPool(oRules.size());

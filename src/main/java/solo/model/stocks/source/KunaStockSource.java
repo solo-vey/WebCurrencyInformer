@@ -250,9 +250,9 @@ public class KunaStockSource extends BaseStockSource
 		}
 	}
 	
-	@Override public Order removeOrder(final String strOrderId)
+	@Override public Order removeOrder(final String strOrderId, final RateInfo oOriginalRateInfo)
 	{
-		super.removeOrder(strOrderId);
+		super.removeOrder(strOrderId, oOriginalRateInfo);
 		
 		final Map<String, String> aParameters = new HashMap<String, String>();
 		aParameters.put("id", strOrderId);

@@ -1,5 +1,6 @@
 package solo.model.stocks.item.command.trade;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
@@ -12,7 +13,6 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
-import solo.model.stocks.item.rules.task.manager.TradesBlock;
 import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -49,7 +49,7 @@ public class GetManagerInfoCommand extends BaseCommand
 			strMessage = oManager.getInfo().asString(strType);
 		
 		strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months", "All=manager"),
-																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "RateLastHours=manager_ratelast24forhours", "History=manager_history"),
+																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "RateLastHours=manager_ratelasthours", "History=manager_history"),
 																		Arrays.asList("Info=manager_info", "Parameters=setstockparameter_?", "Stocks=setCurrentStock")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
@@ -60,9 +60,8 @@ public class GetManagerInfoCommand extends BaseCommand
 		strMessage = "<code>Rates [" + WorkerFactory.getStockSource().getRates().size() + "]</code>\r\n";
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
-			final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
-			final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?"); 
-			strMessage += "<code>" + oRateInfo + "[" + strPercent + "],</code> ";
+			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo); 
+			strMessage += "<code>" + oRateInfo + "[" + nAverageRateProfitabilityPercent + "%],</code> ";
 		}
 		strMessage += "\r\n\r\n";
 		
@@ -78,12 +77,11 @@ public class GetManagerInfoCommand extends BaseCommand
 				oControlers.put(oControler.getControlerState(), 0);
 			oControlers.put(oControler.getControlerState(), oControlers.get(oControler.getControlerState()) + 1);
 			
-			final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oControler.getTradesInfo().getRateInfo());
-			final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?");
-			if (strPercent.contains("-"))
-				strMessage += "<code>" + oRule.getValue().getInfo().toUpperCase() + "[" + strPercent + "]</code>\r\n";
+			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oControler.getTradesInfo().getRateInfo()); 
+			if (nAverageRateProfitabilityPercent.compareTo(BigDecimal.ZERO) < 0)
+				strMessage += "<code>" + oRule.getValue().getInfo().toUpperCase() + "[" + nAverageRateProfitabilityPercent + "%]</code>\r\n";
 			else
-				strMessage += "<code>" + oRule.getValue().getInfo() + "[" + strPercent + "]</code>\r\n";
+				strMessage += "<code>" + oRule.getValue().getInfo() + "[" + nAverageRateProfitabilityPercent + "%]</code>\r\n";
 		}
 		strMessage += "\r\n\r\n";
 		return strMessage;

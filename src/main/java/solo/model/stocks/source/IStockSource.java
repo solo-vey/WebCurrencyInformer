@@ -26,7 +26,7 @@ public interface IStockSource
 	void registerRate(final RateInfo oRateInfo) throws Exception;
 	void removeRate(final RateInfo oRateInfo);
 	Order getOrder(String strOrderId, final RateInfo oRateInfo);
-	Order removeOrder(String strOrderId);
+	Order removeOrder(String strOrderId, final RateInfo oRateInfo);
 	Order addOrder(OrderSide oSite, RateInfo oRateInfo, BigDecimal nVolume, BigDecimal nPrice);
 	StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception;
 	List<Order> getTrades(RateInfo m_oRateInfo, final int nPage, final int nCount);

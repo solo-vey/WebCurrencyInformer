@@ -41,7 +41,7 @@ public class Rules
 		
 		m_oRules.put(m_nLastRuleID, oRule);
 		oRule.setID(m_nLastRuleID);
-		System.err.printf("Add rule : " + oRule + "\r\n");
+		System.err.printf("Add rule : " + oRule);
 		m_nLastRuleID++;
 		save();
 	}

@@ -162,7 +162,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public String getCriticalPriceString()
 	{
-		return MathUtils.toCurrencyStringEx2(getCriticalPrice()).replace(",", StringUtils.EMPTY);
+		return MathUtils.toCurrencyStringEx3(getCriticalPrice()).replace(",", StringUtils.EMPTY);
 	}
 	
 	public IBuyStrategy getBuyStrategy()
@@ -212,8 +212,8 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public void setNeedBoughtVolume(final BigDecimal nNeedBoughtVolume, final boolean bWriteToHistory)
 	{
-		if (bWriteToHistory && getNeedBoughtVolume().compareTo(nNeedBoughtVolume) != 0)
-			addToHistory("Set need buy volume : " + MathUtils.toCurrencyStringEx2(nNeedBoughtVolume)); 
+//		if (bWriteToHistory && getNeedBoughtVolume().compareTo(nNeedBoughtVolume) != 0 && nNeedBoughtVolume.compareTo(BigDecimal.ZERO) > 0)
+//			addToHistory("Set need buy volume : " + MathUtils.toCurrencyStringEx2(nNeedBoughtVolume)); 
 		m_nNeedBoughtVolume = nNeedBoughtVolume;
 	}
 	
@@ -221,12 +221,12 @@ public class TradeInfo extends BaseObject implements Serializable
 	{
 		if (nTradeSum.compareTo(BigDecimal.ZERO) == 0)
 		{
-			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 	
+			addToHistory("Set trade sum : 0"); 	
 			return;
 		}
 		
-		if (bWriteToHistory && m_nTradeSum.compareTo(nTradeSum) != 0)
-			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 
+//		if (bWriteToHistory && m_nTradeSum.compareTo(nTradeSum) != 0)
+//			addToHistory("Set trade sum : " + MathUtils.toCurrencyStringEx2(nTradeSum)); 
 		m_nTradeSum = nTradeSum;
 	}
 	
@@ -250,7 +250,7 @@ public class TradeInfo extends BaseObject implements Serializable
 		m_nReceivedSum = m_nReceivedSum.add(nReceivedSum);
 		m_nSoldVolume = m_nSoldVolume.add(nSellVolume);
 		getTradeControler().addSell(nReceivedSum, nSellVolume);
-		if (nReceivedSum.compareTo(BigDecimal.ZERO) != 0 && nSellVolume.compareTo(BigDecimal.ZERO) != 0)
+		if (nReceivedSum.compareTo(BigDecimal.ZERO) != 0 && nSellVolume.compareTo(new BigDecimal(0.0000001)) > 0)
 			addToHistory("Sell: " + MathUtils.toCurrencyStringEx2(getAveragedSoldPrice()) + " / " + MathUtils.toCurrencyStringEx2(nSellVolume) + " / " + MathUtils.toCurrencyStringEx3(nReceivedSum)); 
 	}
 

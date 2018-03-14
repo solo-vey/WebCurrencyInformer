@@ -48,7 +48,8 @@ public class WorkerFactory
 
 	public static MainWorker getMainWorker()
 	{
-		return s_oThreadToWorkers.get(Thread.currentThread().getId());
+		final MainWorker oMainWorker = s_oThreadToWorkers.get(Thread.currentThread().getId());
+		return (null != oMainWorker ? oMainWorker : (MainWorker)getCurrentMainWorker());
 	}
 	
 	public static ITransport getTransport()

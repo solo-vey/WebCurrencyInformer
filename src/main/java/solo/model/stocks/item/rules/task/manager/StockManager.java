@@ -34,15 +34,18 @@ import solo.utils.ResourceUtils;
 
 public class StockManager implements IStockManager
 {
+	private static final String OPERATIONS_ALL = "all";
+	private static final String OPERATION_TRACK_TRADES = "trackTrades";
+	private static final String OPERATION_CHECK_RATES = "checkRates";
+	
 	final protected StockManagesInfo m_oStockManagesInfo;
-	final protected boolean m_bIsTrackTrades;
+	final protected String m_strOperations = OPERATIONS_ALL;
 	final protected IManagerStrategy m_oManagerStrategy;
 	final protected ManagerHistory m_oManagerHistory;
 	
 	public StockManager(final IStockExchange oStockExchange)
 	{
 		m_oStockManagesInfo = load(oStockExchange);
-		m_bIsTrackTrades = true;
 		m_oManagerHistory = new ManagerHistory(oStockExchange);
 		m_oManagerStrategy = new BaseManagerStrategy(oStockExchange);
 	}
@@ -77,6 +80,9 @@ public class StockManager implements IStockManager
 
 	protected void checkUnprofitability()
 	{
+		if (!getIsOperationAvalible(OPERATION_CHECK_RATES))
+			return;
+			
 		final Map<BigDecimal, RateInfo> oUnProfitabilityRates = getManagerStrategy().getUnProfitabilityRates();
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oUnProfitabilityRates.entrySet())
 		{
@@ -115,6 +121,9 @@ public class StockManager implements IStockManager
 	
 	protected void checkProfitableRates()
 	{
+		if (!getIsOperationAvalible(OPERATION_CHECK_RATES))
+			return;
+		
 		final Map<BigDecimal, RateInfo> oMoreProfitabilityRates = getManagerStrategy().getMoreProfitabilityRates();
 		if (oMoreProfitabilityRates.size()== 0)
 			return;
@@ -165,11 +174,18 @@ public class StockManager implements IStockManager
 	{
 		for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())
 		{
-			if (ManagerUtils.isHasTestControlers(oRateInfo))
-				continue;
+			if (!ManagerUtils.isHasTestControlers(oRateInfo))
+			{
+				ManagerUtils.createTestControler(oRateInfo);
+				addToHistory("Start test controler [" + oRateInfo + "]");
+			}
 			
-			ManagerUtils.createTestControler(oRateInfo);
-			addToHistory("Start test controler [" + oRateInfo + "]");
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
+			if (!ManagerUtils.isHasTestControlers(oReverseRateInfo))
+			{
+				ManagerUtils.createTestControler(oReverseRateInfo);
+				addToHistory("Start test reverse controler [" + oReverseRateInfo + "]");
+			}	
 		}
 	}
 	
@@ -193,7 +209,7 @@ public class StockManager implements IStockManager
 
 	void trackTrades(final TaskTrade oTaskTrade)
 	{
-		if (!m_bIsTrackTrades)
+		if (!getIsOperationAvalible(OPERATION_TRACK_TRADES))
 			return;
 		
 		final RateInfo oRateInfo = oTaskTrade.getTradeInfo().getRateInfo();
@@ -240,6 +256,11 @@ public class StockManager implements IStockManager
 			oControler.setControlerState(ControlerState.WAIT);
 			addToHistory("Stop controler [" + oRateInfo + "] [" + oControler.getTradesInfo().getRuleID() + "]");
 		}
+	}
+	
+	protected boolean getIsOperationAvalible(final String strOperaion)
+	{
+		return (m_strOperations.equals(OPERATIONS_ALL) || m_strOperations.toLowerCase().contains(";" + strOperaion.toLowerCase() + ";"));
 	}
 
 	@Override public StockManagesInfo getInfo()

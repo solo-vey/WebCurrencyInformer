@@ -1,16 +1,17 @@
 package solo.model.stocks.item.command.system;
 
 import java.io.File;
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.LinkedList;
 import java.util.List;
-
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.analyse.Candlestick;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
 
@@ -39,8 +40,12 @@ public class GetRateChartCommand extends BaseCommand
     	
     	final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
     	final RateAnalysisResult oAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
-    	final String strMessage = GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
+    	String strMessage = GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
     	
+		final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(m_oRateInfo); 
+		final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(m_oRateInfo); 
+		strMessage += "\r\nAv [" + nAverageRateProfitabilityPercent + " %] Min [" + nMinRateHourProfitabilityPercent + "%]";
+   	
     	final List<List<String>> aButtons = new LinkedList<List<String>>();
     	List<String> aLine = new LinkedList<String>();
     	for(final RateInfo oRateInfo : WorkerFactory.getStockSource().getRates())

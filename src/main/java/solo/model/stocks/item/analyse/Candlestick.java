@@ -70,7 +70,8 @@ public class Candlestick implements Serializable
 			if (null == m_oLastOrderDate || m_oLastOrderDate.before(oOrder.getCreated()))
 				oCandle.setValue(oOrder.getPrice());
 		}
-		m_oLastOrderDate = oRateAnalysisResult.getTrades().get(0).getCreated();
+		if (oRateAnalysisResult.getTrades().size() > 0)
+			m_oLastOrderDate = oRateAnalysisResult.getTrades().get(0).getCreated();
 	}
 	
 	public BigDecimal getAverageMinPrice(int nStepCount)

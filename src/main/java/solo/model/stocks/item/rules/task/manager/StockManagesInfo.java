@@ -3,13 +3,18 @@ package solo.model.stocks.item.rules.task.manager;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
+import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.BaseObject;
+import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
+import solo.model.stocks.worker.WorkerFactory;
+import solo.utils.ResourceUtils;
 
 public class StockManagesInfo extends BaseObject implements Serializable
 {
@@ -115,6 +120,46 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			String strMessage = StringUtils.EMPTY;
 			for(final Entry<Integer, RateTradesBlock> oHourTradesInfo  : getRateLast24Hours().getPeriods().entrySet())
 				strMessage += oHourTradesInfo.getKey() + "\r\n" + oHourTradesInfo.getValue() + "\r\n";
+			return strMessage;
+		}
+		
+		if (strType.equalsIgnoreCase("RATELASTHOURS"))
+		{
+			String strMessage = StringUtils.EMPTY;
+			final int nHoursCount = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
+			final List<Entry<Integer, RateTradesBlock>> aHoursTrades = ManagerUtils.getHoursTrades(nHoursCount);
+			final Map<RateInfo, List<Entry<Integer, TradesBlock>>> aRates = ManagerUtils.convertFromHoursTradesToRateTrades(aHoursTrades);
+			
+			final TreeMap<BigDecimal, RateInfo> aSorted = new TreeMap<BigDecimal, RateInfo>();
+			final Map<RateInfo, TradesBlock> oRateTotals = getRateLast24Hours().getTotal().getRateTrades();
+			for(final Entry<RateInfo, TradesBlock> oTradesInfo : oRateTotals.entrySet())
+			{
+				if (!oTradesInfo.getKey().getIsReverse())
+					aSorted.put(oTradesInfo.getValue().getPercent(), oTradesInfo.getKey());
+			}
+			
+			for(final RateInfo oRateInfo : aSorted.values())
+			{
+				String strRateMessage = oRateInfo + " : ";
+				strRateMessage += "24h " + oRateTotals.get(oRateInfo).asString("only_percent") + ", ";
+				final List<Entry<Integer, TradesBlock>> oRateTrades = aRates.get(oRateInfo);
+				if (null != oRateTrades)
+				{
+					for(final Entry<Integer, TradesBlock> oHourTrades : oRateTrades)
+						strRateMessage += oHourTrades.getKey() + oHourTrades.getValue().asString("only_percent") + ", ";
+				}
+				
+				final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
+				strRateMessage += "\r\n                ";
+				strRateMessage += "24h" + oRateTotals.get(oReverseRateInfo).asString("only_percent") + ", ";
+				final List<Entry<Integer, TradesBlock>> oReverseRateTrades = aRates.get(oReverseRateInfo);
+				if (null != oReverseRateTrades)
+				{
+					for(final Entry<Integer, TradesBlock> oHourTrades : oReverseRateTrades)
+						strRateMessage += oHourTrades.getKey() + oHourTrades.getValue().asString("only_percent") + ", ";
+				}
+				strMessage = strRateMessage + "\r\n" + strMessage; 
+			}
 			return strMessage;
 		}
 		

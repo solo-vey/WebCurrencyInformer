@@ -21,7 +21,7 @@ public class RemoveOrderCommand extends BaseCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		WorkerFactory.getStockExchange().getStockSource().removeOrder(m_strOrderId);
+		WorkerFactory.getStockExchange().getStockSource().removeOrder(m_strOrderId, null);
 		
 		WorkerFactory.getMainWorker().sendSystemMessage("Order " + m_strOrderId + " deleted. " + BaseCommand.getCommand(GetStockInfoCommand.NAME));
 	}

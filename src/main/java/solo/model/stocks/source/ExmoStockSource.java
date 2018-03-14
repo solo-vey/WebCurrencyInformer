@@ -391,9 +391,9 @@ public class ExmoStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("serial")
-	@Override public Order removeOrder(final String strOrderId)
+	@Override public Order removeOrder(final String strOrderId, final RateInfo oOriginalRateInfo)
 	{
-		super.removeOrder(strOrderId);
+		super.removeOrder(strOrderId, oOriginalRateInfo);
 		
         System.out.println("Remove order: " + strOrderId);
         final Date oDateStartRemove = new Date();
@@ -422,7 +422,10 @@ public class ExmoStockSource extends BaseStockSource
 					if (oCanceledOrder.isCanceled())
 					{
 				        System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + " " + oCanceledOrder.getInfoShort());
-						return oCanceledOrder;
+						if (!oOriginalRateInfo.getIsReverse())
+							return oCanceledOrder;
+						
+						return TradeUtils.makeReveseOrder(oCanceledOrder);
 					}
 					Thread.sleep(200);
 					nTryCount--;

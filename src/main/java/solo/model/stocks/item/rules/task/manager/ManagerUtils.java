@@ -1,13 +1,13 @@
 package solo.model.stocks.item.rules.task.manager;
 
 import java.math.BigDecimal;
+import java.util.AbstractMap;
 import java.util.Calendar;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
@@ -33,6 +33,20 @@ public class ManagerUtils
 	public static boolean isTestObject(final Object oObject)
 	{
 		return oObject instanceof ITest;
+	}
+	
+	public static boolean isHasRealRules(final RateInfo oRateInfo)
+	{
+		boolean bIsHasRealRule = false;
+		for(final IRule oRule : WorkerFactory.getStockExchange().getRules().getRules().values())
+		{
+			if (!oRule.getRateInfo().equals(oRateInfo))
+				continue;
+			
+			bIsHasRealRule |= (!isTestObject(oRule)); 
+		}
+		
+		return bIsHasRealRule;
 	}
 	
 	public static boolean isHasRealControlers(final RateInfo oRateInfo)
@@ -96,7 +110,7 @@ public class ManagerUtils
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			WorkerFactory.getStockExchange().getRules().addRule(oRule);
 			
-			System.out.printf("Create test trade controler [" + oRateInfo + "]\\r\n");
+			System.out.printf("Create test trade controler [" + oRateInfo + "]\r\n");
 		}
 		catch(final Exception e)
 		{
@@ -182,23 +196,65 @@ public class ManagerUtils
 		final BigDecimal nCommissionAnMargin = nCommission.add(nMargin);
 		return nDelta.add(nCommissionAnMargin.negate());
 	}
+
+	public static BigDecimal get24HoursRateProfitabilityPercent(final RateInfo oRateInfo)
+	{
+		final int nBackViewProfitabilityHours = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
+		return getAverageRateProfitabilityPercent(oRateInfo, nBackViewProfitabilityHours);
+	}
 	
-	public static BigDecimal getAverageRateProfitabilityPercent(final RateInfo oRateInfo, final int nHoursCount)
+	public static BigDecimal getAverageRateProfitabilityPercent(final RateInfo oRateInfo)
+	{
+		final int nBackViewProfitabilityHours = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
+		return getAverageRateProfitabilityPercent(oRateInfo, nBackViewProfitabilityHours);
+	}
+	
+	public static List<Entry<Integer, RateTradesBlock>> getHoursTrades(final int nHoursCount)
 	{
 		final StockManagesInfo oStockManagesInfo = WorkerFactory.getStockExchange().getManager().getInfo();
 		final Map<Integer, RateTradesBlock> oRatePriodTrades = oStockManagesInfo.getRateLast24Hours().getPeriods();
 		
 		final int nStartHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-		BigDecimal nTotalPercent = BigDecimal.ZERO;
+		final List<Entry<Integer, RateTradesBlock>> aResult = new LinkedList<Entry<Integer, RateTradesBlock>>();
 		for(int nPos = 1; nPos <= nHoursCount; nPos++)
 		{
 			final int nHour = (nStartHour - nPos >= 0 ? nStartHour - nPos : (nStartHour - nPos) + 24);
 			final RateTradesBlock oHourRateTradesBlock = oRatePriodTrades.get(nHour);
-			if (null == oHourRateTradesBlock)
-				continue;
+			if (null != oHourRateTradesBlock)
+				aResult.add(new AbstractMap.SimpleEntry<Integer, RateTradesBlock>(nHour, oHourRateTradesBlock));
+		}
+		
+		return aResult;
+	}
+	
+	public static Map<RateInfo, List<Entry<Integer, TradesBlock>>> convertFromHoursTradesToRateTrades(final List<Entry<Integer, RateTradesBlock>> aHoursTrades)
+	{
+		final Map<RateInfo, List<Entry<Integer, TradesBlock>>> aRates = new HashMap<RateInfo, List<Entry<Integer, TradesBlock>>>();
+		for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
+		{
+			final RateTradesBlock oHourRateTradesBlock = oTradeInfo.getValue();
+			for(final Entry<RateInfo, TradesBlock> oRateTradeBlock : oHourRateTradesBlock.getRateTrades().entrySet())
+			{	
+				if (null == aRates.get(oRateTradeBlock.getKey()))
+					aRates.put(oRateTradeBlock.getKey(), new LinkedList<Entry<Integer, TradesBlock>>());
+				aRates.get(oRateTradeBlock.getKey()).add(new AbstractMap.SimpleEntry<Integer, TradesBlock>(oTradeInfo.getKey(), oRateTradeBlock.getValue()));
+			}
+		}
+		
+		return aRates;
+	}
+	
+	public static BigDecimal getAverageRateProfitabilityPercent(final RateInfo oRateInfo, final int nHoursCount)
+	{
+		BigDecimal nTotalPercent = BigDecimal.ZERO;
+		final List<Entry<Integer, RateTradesBlock>> aHoursTrades = getHoursTrades(nHoursCount);
+		for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
+		{
+			final RateTradesBlock oHourRateTradesBlock = oTradeInfo.getValue();
 			final TradesBlock oRateTradesBlock = oHourRateTradesBlock.getRateTrades().get(oRateInfo);
 			if (null == oRateTradesBlock)
 				continue;
+			
 			final BigDecimal nPercent = oRateTradesBlock.getPercent();
 			nTotalPercent = nTotalPercent.add(nPercent);
 		}
@@ -206,20 +262,19 @@ public class ManagerUtils
 		return MathUtils.getBigDecimal(nTotalPercent.doubleValue() / nHoursCount, 3);
 	}
 	
+	public static BigDecimal getMinRateHourProfitabilityPercent(final RateInfo oRateInfo)
+	{
+		final int nBackViewProfitabilityHours = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
+		return getMinRateHourProfitabilityPercent(oRateInfo, nBackViewProfitabilityHours);
+	}
+	
 	public static BigDecimal getMinRateHourProfitabilityPercent(final RateInfo oRateInfo, final int nHoursCount)
 	{
-		final StockManagesInfo oStockManagesInfo = WorkerFactory.getStockExchange().getManager().getInfo();
-		final Map<Integer, RateTradesBlock> oRatePriodTrades = oStockManagesInfo.getRateLast24Hours().getPeriods();
-		
-		final int nStartHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
 		BigDecimal nMinPercent = new BigDecimal(Integer.MAX_VALUE);
-		for(int nPos = 1; nPos <= nHoursCount; nPos++)
+		final List<Entry<Integer, RateTradesBlock>> aHoursTrades = getHoursTrades(nHoursCount);
+		for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
 		{
-			final int nHour = (nStartHour - nPos >= 0 ? nStartHour - nPos : (nStartHour - nPos) + 24);
-			final RateTradesBlock oHourRateTradesBlock = oRatePriodTrades.get(nHour);
-			if (null == oHourRateTradesBlock)
-				continue;
-			
+			final RateTradesBlock oHourRateTradesBlock = oTradeInfo.getValue();
 			final TradesBlock oRateTradesBlock = oHourRateTradesBlock.getRateTrades().get(oRateInfo);
 			if (null == oRateTradesBlock)
 				continue;

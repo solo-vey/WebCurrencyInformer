@@ -123,49 +123,51 @@ public class TradeUtils
 	
 	public static BigDecimal getRoundedPrice(final RateInfo oRateInfo, final BigDecimal nPrice)
 	{
-		return MathUtils.getBigDecimal(nPrice.doubleValue(), getPricePrecision(oRateInfo));
+		return MathUtils.getBigDecimal(nPrice, getPricePrecision(oRateInfo));
 	}
 	
 	public static BigDecimal getRoundedVolume(final RateInfo oRateInfo, final BigDecimal nVolume)
 	{
-		return MathUtils.getBigDecimal(nVolume.doubleValue(), getVolumePrecision(oRateInfo));
+		return MathUtils.getBigDecimal(nVolume, getVolumePrecision(oRateInfo));
 	}
 
 	public static BigDecimal getMinTradeVolume(final RateInfo oOriginalRateInfo)
 	{
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		
-		final BigDecimal nStockMinTradeVolume = WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinQuantity();
-		if (nStockMinTradeVolume.compareTo(BigDecimal.ZERO) > 0)
-			return nStockMinTradeVolume;
-		
-		final String strMarket = getMarket(oRateInfo); 
-		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		String strMinVolume = ResourceUtils.getResource("stock." + strMarket + ".min_volume", oStockExchange.getStockProperties(), StringUtils.EMPTY);
-		if (StringUtils.isBlank(strMinVolume))
-		{	
-			final String strCurrency = oRateInfo.getCurrencyFrom().toString().toLowerCase();
-			strMinVolume = ResourceUtils.getResource("stock." + strCurrency + ".min_volume", oStockExchange.getStockProperties(), "0.000001");
+		BigDecimal nMinTradeVolume = WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinQuantity();
+		if (nMinTradeVolume.compareTo(BigDecimal.ZERO) == 0)
+		{
+			final String strMarket = getMarket(oRateInfo); 
+			final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+			String strMinVolume = ResourceUtils.getResource("stock." + strMarket + ".min_volume", oStockExchange.getStockProperties(), StringUtils.EMPTY);
+			if (StringUtils.isBlank(strMinVolume))
+			{	
+				final String strCurrency = oRateInfo.getCurrencyFrom().toString().toLowerCase();
+				strMinVolume = ResourceUtils.getResource("stock." + strCurrency + ".min_volume", oStockExchange.getStockProperties(), "0.000001");
+			}
+			nMinTradeVolume = MathUtils.getBigDecimal(Double.parseDouble(strMinVolume), TradeUtils.getVolumePrecision(oRateInfo));
 		}
-		final BigDecimal nMinTradeVolume = MathUtils.getBigDecimal(Double.parseDouble(strMinVolume), TradeUtils.getVolumePrecision(oRateInfo));
 		
 		if (!oOriginalRateInfo.getIsReverse())
-			return nMinTradeVolume;
+			return TradeUtils.getRoundedPrice(oOriginalRateInfo, nMinTradeVolume);
 		
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
 		final BigDecimal nSellPrice = oRateAnalysisResult.getAsksOrders().get(0).getPrice();
-		return nMinTradeVolume.multiply(nSellPrice);
+		return TradeUtils.getRoundedPrice(oOriginalRateInfo, nMinTradeVolume.multiply(nSellPrice));
 	}
 	
-	public static BigDecimal getMinTradeSum(final RateInfo oRateInfo)
+	public static BigDecimal getMinTradeSum(final RateInfo oOriginalRateInfo)
 	{
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getLastAnalysisResult();
-		final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(oRateInfo);
-		final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(oRateInfo).getBidsOrders().get(0).getPrice();
+		final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(oOriginalRateInfo);
+		final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(oOriginalRateInfo).getBidsOrders().get(0).getPrice();
 		final BigDecimal nMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01));
 				
-		final BigDecimal nStockMinTradeSum = WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinAmount();
+		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
+		final BigDecimal nStockMinTradeSum = (!oOriginalRateInfo.getIsReverse() ? WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinAmount()
+												: WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinQuantity());
 		return (nStockMinTradeSum.compareTo(BigDecimal.ZERO) > 0 && nStockMinTradeSum.compareTo(nMinTradeSum) > 0 ? nStockMinTradeSum : nMinTradeSum);
 	}
 
@@ -257,7 +259,7 @@ public class TradeUtils
 		Order oRemoveOrder = new Order(Order.ERROR, strMessage);
 		while (nTryCount > 0)
 		{
-			oRemoveOrder = oStockSource.removeOrder(oGetOrder.getId());
+			oRemoveOrder = oStockSource.removeOrder(oGetOrder.getId(), oRateInfo);
 			if (oRemoveOrder.isCanceled())
 				return oRemoveOrder;
 

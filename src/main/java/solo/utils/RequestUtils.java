@@ -397,9 +397,13 @@ public class RequestUtils
 		}
 	}
 	
-	protected static Semaphore getSemaphore(final HttpUriRequest oHttpUriRequest)
+	public static Semaphore getSemaphore(final HttpUriRequest oHttpUriRequest)
 	{
-		final String strHost = oHttpUriRequest.getURI().getHost();
+		return getSemaphore(oHttpUriRequest.getURI().getHost());
+	}
+	
+	public static Semaphore getSemaphore(final String strHost)
+	{
 		if (!s_oAllSemaphores.containsKey(strHost))
 			s_oAllSemaphores.put(strHost, new Semaphore(MAX_PARALEL_QUERY, true));
 

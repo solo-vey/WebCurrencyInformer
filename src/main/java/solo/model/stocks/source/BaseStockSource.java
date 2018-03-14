@@ -161,7 +161,7 @@ public class BaseStockSource implements IStockSource
 		return null;
 	}
 
-	@Override public Order removeOrder(String strOrderId)
+	@Override public Order removeOrder(String strOrderId, final RateInfo oRateInfo)
 	{
 		return null;
 	}

@@ -1,5 +1,6 @@
 package solo.model.stocks.item.command.rule;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -16,13 +17,14 @@ import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
+import solo.model.stocks.item.rules.task.manager.RateTradesBlock;
 import solo.model.stocks.item.rules.task.manager.TradesBlock;
-import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
+import solo.utils.ResourceUtils;
 
 /** Формат комманды 
  */
@@ -38,10 +40,9 @@ public class GetRulesCommand extends BaseCommand
 	public void execute() throws Exception
 	{
 		super.execute();
-		final IStockManager oManager = WorkerFactory.getStockExchange().getManager();
 		final String strType = getParameter("#type#").toLowerCase();
 		
-		final Map<String, List<IRule>> aRulesByRate = new HashMap<String, List<IRule>>();
+		final Map<RateInfo, List<IRule>> aRulesByRate = new HashMap<RateInfo, List<IRule>>();
 		int nAllCount = 0;
 		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
@@ -50,32 +51,32 @@ public class GetRulesCommand extends BaseCommand
 				continue;
 			
 			nAllCount++;
-			final String strRate = oRuleInfo.getValue().getRateInfo().toString();
-			if (strType.contains("rate:") && !strType.contains("rate:" + strRate))
+			final RateInfo oRateInfo = oRuleInfo.getValue().getRateInfo();
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo); 
+			if (strType.contains("rate:") && !strType.contains("rate:" + oRateInfo) && !strType.contains("rate:" + oReverseRateInfo))
 				continue;
 			
-			if (!aRulesByRate.containsKey(strRate))
-				aRulesByRate.put(strRate, new LinkedList<IRule>());
+			final RateInfo oOriginalRateInfo = (oRateInfo.getIsReverse() ? RateInfo.getReverseRate(oRateInfo) : oRateInfo); 
+			if (!aRulesByRate.containsKey(oOriginalRateInfo))
+				aRulesByRate.put(oOriginalRateInfo, new LinkedList<IRule>());
 			
-			aRulesByRate.get(strRate).add(oRuleInfo.getValue());
+			aRulesByRate.get(oOriginalRateInfo).add(oRuleInfo.getValue());
 		}
 		
+		RateInfo oSelectedRateInfo = null;
 		final boolean bIsShowIfHasReal = !strType.contains("onlytestrules");
 	   	final List<List<String>> aButtons = new LinkedList<List<String>>();
-		for(final Entry<String, List<IRule>> oRateRules : aRulesByRate.entrySet())
+		for(final Entry<RateInfo, List<IRule>> oRateRules : aRulesByRate.entrySet())
     	{
-			boolean bIsHasRealRule = false;
-			RateInfo oRateInfo = null;
-			for(final IRule oRule : oRateRules.getValue())
-			{
-				bIsHasRealRule |= !(oRule instanceof ITest); 
-				oRateInfo = oRule.getRateInfo();
-			}
-			if (bIsHasRealRule != bIsShowIfHasReal)
-				continue;
+			final RateInfo oRateInfo = oRateRules.getKey();
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo); 
 			
-			if (!strType.contains("rate:") && bIsShowIfHasReal)
+			if (!strType.contains("rate:"))
 			{
+				final boolean bIsHasRealRule = ManagerUtils.isHasRealRules(oRateInfo) || ManagerUtils.isHasRealRules(oReverseRateInfo);
+				if (bIsHasRealRule != bIsShowIfHasReal)
+					continue;
+				
 				String strState = StringUtils.EMPTY;
 				for(final IRule oRule : oRateRules.getValue())
 				{
@@ -86,22 +87,21 @@ public class GetRulesCommand extends BaseCommand
 					if (null != oTradeControler && !ManagerUtils.isTestObject(oTradeControler))
 						strState += oTradeControler.getControlerState() + ";";
 				}
+				strState = (StringUtils.isNotBlank(strState) ?  "[" + strState + "]" : StringUtils.EMPTY);
+			
+				final BigDecimal nAveragePercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo); 
+				final BigDecimal nReversePercent = ManagerUtils.getAverageRateProfitabilityPercent(oReverseRateInfo); 
 				
-				final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
-				final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?");
-				
-				aButtons.add(Arrays.asList("[" + oRateRules.getKey() + "] [" + strState + "][" + strPercent + "]=/rules_rate:" + oRateRules.getKey()));
+				aButtons.add(Arrays.asList("[" + oRateRules.getKey() + "]" + strState + "[" + nAveragePercent + "%][" + nReversePercent + "%]=/rules_rate:" + oRateRules.getKey()));
 			}
 			else
 			{		
+				oSelectedRateInfo = oRateInfo;
 				for(final IRule oRule : oRateRules.getValue())
 				{
 					final String strRuleInfo = oRule.getInfo();
-					
-					final TradesBlock oRateInfoTradesBlock = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
-					final String strPercent = (null != oRateInfoTradesBlock ? oRateInfoTradesBlock.getPercent() + "%" : "?");
-
-					aButtons.add(Arrays.asList(strRuleInfo + "[" + strPercent + "]=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRule.getID())));
+					final BigDecimal nPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRule.getRateInfo()); 
+					aButtons.add(Arrays.asList(strRuleInfo + "[" + nPercent + "%]=" + CommandFactory.makeCommandLine(GetTradeInfoCommand.class, GetTradeInfoCommand.RULE_ID_PARAMETER, oRule.getID())));
 				}
 			}
      	}
@@ -112,6 +112,28 @@ public class GetRulesCommand extends BaseCommand
 		if (!bIsShowIfHasReal && aButtons.size() < nAllCount)
 			aButtons.add(Arrays.asList("#### SHOW REAL RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", StringUtils.EMPTY)));
 			
-		WorkerFactory.getMainWorker().sendSystemMessage("Rules [" + (aButtons.size() > 0 ? aButtons.size() - 1 : 0) + "]. BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
+		String strMessage = "Rules [" + (aButtons.size() > 0 ? aButtons.size() - 1 : 0) + "].";
+		if (null != oSelectedRateInfo)
+		{
+			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oSelectedRateInfo); 
+			final BigDecimal nMinRateHourProfitabilityPercent = ManagerUtils.getMinRateHourProfitabilityPercent(oSelectedRateInfo); 
+			
+			strMessage = "Av [" + nAverageRateProfitabilityPercent + " %] Min [" + nMinRateHourProfitabilityPercent + "%]";
+			
+			final int nHoursCount = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
+			final List<Entry<Integer, RateTradesBlock>> aHoursTrades = ManagerUtils.getHoursTrades(nHoursCount + 1);
+			final Map<RateInfo, List<Entry<Integer, TradesBlock>>> aRates = ManagerUtils.convertFromHoursTradesToRateTrades(aHoursTrades);
+			
+			final IStockManager oManager = WorkerFactory.getStockExchange().getManager();
+			strMessage += "\r\n24h " + oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oSelectedRateInfo).asString("only_percent") + ", ";
+			final List<Entry<Integer, TradesBlock>> oRateTrades = aRates.get(oSelectedRateInfo);
+			if (null != oRateTrades)
+			{
+				for(final Entry<Integer, TradesBlock> oHourTrades : oRateTrades)
+					strMessage += oHourTrades.getKey() + oHourTrades.getValue().asString("only_percent") + ", ";
+			}
+
+		}
+		WorkerFactory.getMainWorker().sendSystemMessage(strMessage + "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));
 	}
 }

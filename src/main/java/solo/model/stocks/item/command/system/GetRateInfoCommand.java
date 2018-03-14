@@ -14,7 +14,6 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
-import solo.model.stocks.item.rules.task.manager.TradesBlock;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -94,20 +93,22 @@ public class GetRateInfoCommand extends BaseCommand
 		final BigDecimal nTradePrice = oAnalysisResult.getTopTradePrice();
 		final String strTradeType = (nTradePrice.compareTo(nAskBottomPrice) > 0 ? "^" : nTradePrice.compareTo(nBidTopPrice) < 0 ? "v" : "-");
 		
-		final TradesBlock oTradesData = WorkerFactory.getStockExchange().getManager().getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
-		final boolean bIsLostMoney = (null != oTradesData &&  oTradesData.getPercent().compareTo(BigDecimal.ZERO) < 0);
+		final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo); 
+		final boolean bIsLostMoney = (nAverageRateProfitabilityPercent.compareTo(BigDecimal.ZERO) < 0);
 		final String strStyle = (bIsLostMoney ? "<code>" : StringUtils.EMPTY);
 		final String strCloseStyle = (bIsLostMoney ? "</code>" : StringUtils.EMPTY);
 		
 		String strData = strStyle + MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
 						MathUtils.toCurrencyStringEx3(nBidPrice) + " / " +  
 						MathUtils.toCurrencyStringEx3(nTradePrice) + "[" + strTradeType + "]" +
-						(null != oTradesData ? " [" + oTradesData.getPercent() + "%]" : StringUtils.EMPTY) +
+						" [" + nAverageRateProfitabilityPercent + "%]" +
 						"\r\n";
+		
 		strData += (bIsLostMoney ? "[" + oRateInfo.toString().toUpperCase() + "] " : "[" + oRateInfo + "] ")  + 
 					MathUtils.toCurrencyStringEx3(nDelta) + " / " + 
 					MathUtils.toCurrencyStringEx3(nCommisionAndMargin) + " / " + 
 					MathUtils.toCurrencyStringEx3(nDelta.add(nCommisionAndMargin.negate())) + "\r\n" + strCloseStyle;
+		
 		return strData;
 	}
 	
@@ -121,18 +122,14 @@ public class GetRateInfoCommand extends BaseCommand
 		
 		final BigDecimal nAskPrice = oRateStateShort.getAskPrice();
 		final BigDecimal nDelta = nAskPrice.add(oRateStateShort.getBidPrice().negate());
-		final BigDecimal nExtraMagin = ManagerUtils.getExtraMargin(oRateInfo, oRateStateShort);
-		final BigDecimal nExtraPercent = MathUtils.getBigDecimal(nExtraMagin.doubleValue() / nAskPrice.doubleValue() * 100, 2);
-		
-		final TradesBlock oTradesData = WorkerFactory.getStockExchange().getManager().getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oRateInfo);
+		final BigDecimal nPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo);
 		
 		aButtons.add(Arrays.asList(
 						MathUtils.toCurrencyStringEx3(nBtcVolume) + 
 						" [" + oRateInfo + "] " +
 						MathUtils.toCurrencyStringEx3(nAskPrice) + " / " +   
-						MathUtils.toCurrencyStringEx3(nDelta) + " / " +   
-						MathUtils.toCurrencyStringEx3(nExtraPercent) + "%" +   
-						(null != oTradesData ? " [" + oTradesData.getPercent() + "%]" : StringUtils.EMPTY) + 
+						MathUtils.toCurrencyStringEx3(nDelta) +   
+						" [" + nPercent + "%]" + 
 						"=/addrate_" + oRateInfo));
 	}
 }

@@ -28,6 +28,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.ITest;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
@@ -54,7 +55,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 	private void checkOrders(final RateInfo oRateInfo, final RateState oRateState)
 	{
 		final List<Order> oRateOrders = m_oStockSourceData.getRateOrders(oRateInfo);
-		if (null == oRateOrders || oRateOrders.size() == 0)
+		if (null == oRateOrders || oRateOrders.size() == 0 || oRateState.getTrades().size() == 0)
 			return;
 		
 		final DateFormat oDateFormat = new SimpleDateFormat("HH:mm:ss");
@@ -76,12 +77,9 @@ public class TestStockSource extends BaseStockSource implements ITest
 			if (oRandom.nextDouble() >= nChance.doubleValue())
 				continue;
 			
-			BigDecimal nTradeOrderVolume = oTradeOrder.getVolume();
+			final BigDecimal nTradeOrderVolume = oTradeOrder.getVolume();
 			for(final Order oOrder : oRateOrders)
-			{
-				if (nTradeOrderVolume.compareTo(BigDecimal.ZERO) <= 0)
-					break;
-				
+			{				
 				if (null != oTradeOrder.getSide() && oTradeOrder.getSide().equals(oOrder.getSide()))
 					continue;
 				
@@ -89,7 +87,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 					continue;
 				
 				//System.err.println(strDate + oRateInfo + "\tTRADE " + oTradeOrder.getInfoShort());
-				//System.err.println(strDate + "\t" + "Order " + oOrder.getInfoShort());
+				//System.err.println(strDate + "\t" + "Order " + oOrder.getInfoShort() + " - " + oOrder.getId());
 				if (OrderSide.BUY.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) >= 0)
 				{
 					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
@@ -99,13 +97,11 @@ public class TestStockSource extends BaseStockSource implements ITest
 						oOrder.setState(Order.DONE);
 						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
-						nTradeOrderVolume = nOrderVolumeDelta.negate();
 					}
 					else
 					{
 						System.err.println(strDate + oRateInfo + " Order [" + oOrder.getId() + "] buy [" + nTradeOrderVolume + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setVolume(nOrderVolumeDelta);
-						nTradeOrderVolume = BigDecimal.ZERO;
 					}
 				}
 				
@@ -118,13 +114,11 @@ public class TestStockSource extends BaseStockSource implements ITest
 						oOrder.setState(Order.DONE);
 						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
-						nTradeOrderVolume = nOrderVolumeDelta.negate();
 					}
 					else
 					{
 						System.err.println(strDate + oRateInfo + " Order [" + oOrder.getId() + "] sell [" + nTradeOrderVolume + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setVolume(nOrderVolumeDelta);
-						nTradeOrderVolume = BigDecimal.ZERO;
 					}
 				}
 			}
@@ -152,7 +146,21 @@ public class TestStockSource extends BaseStockSource implements ITest
 		return oUserInfo;
 	}
 	
-	@Override public Order getOrder(final String strOrderId, final RateInfo oRateInfo)
+	@Override public Order getOrder(final String strOrderId, final RateInfo oOriginalRateInfo)
+	{
+		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
+
+		final Order oGetOrder = findOrder(strOrderId, oRateInfo);
+		if (null == oGetOrder)
+			return new Order(strOrderId, Order.NONE, "Order is absent");
+		
+		if (!oOriginalRateInfo.getIsReverse())
+			return oGetOrder;
+			
+		return TradeUtils.makeReveseOrder(oGetOrder);			
+	}
+
+	protected Order findOrder(final String strOrderId, final RateInfo oRateInfo)
 	{
 		synchronized (this)
 		{			
@@ -174,20 +182,27 @@ public class TestStockSource extends BaseStockSource implements ITest
 					return oOrder;
 			}	
 		}
-			
-		return new Order(strOrderId, Order.NONE, "Order is absent");
+		
+		return null;
 	}
 	
-	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
+	@Override public Order addOrder(final OrderSide oOriginalSide, final RateInfo oOriginalRateInfo, final BigDecimal nOriginalVolume, final BigDecimal nOriginalPrice)
 	{
-		synchronized (this)
+		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
+		final OrderSide oSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalSide);
+		final BigDecimal nVolume = (oOriginalRateInfo.getIsReverse() ? nOriginalVolume.multiply(nOriginalPrice) : nOriginalVolume);
+		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION) : nOriginalPrice);
+        //if (oOriginalRateInfo.getIsReverse())
+        //	System.out.println("Add reverse order: " + oSide + " " + oOriginalRateInfo + " " + nVolume + " " + nPrice);
+        
+        synchronized (this)
 		{			
 			try
 			{
 		        checkOrderParameters(oSide, oRateInfo, nPrice);
-
+		       
 		        final Order oOrder = new Order();
-				oOrder.setId("test_" + m_oStockSourceData.getLastOrderID() + "_" + (new Date().getTime()));
+				oOrder.setId(oOriginalRateInfo + "_" + m_oStockSourceData.getLastOrderID() + "_" + (new Date().getTime()));
 				oOrder.setSide(oSide);
 				oOrder.setVolume(nVolume);
 				oOrder.setPrice(nPrice);
@@ -198,7 +213,11 @@ public class TestStockSource extends BaseStockSource implements ITest
 				m_oStockSourceData.save();
 				
 				//System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
-				return oOrder;
+				
+				if (!oOriginalRateInfo.getIsReverse())
+					return oOrder;
+				
+				return TradeUtils.makeReveseOrder(oOrder);
 			}
 			catch (Exception e)
 			{
@@ -208,11 +227,11 @@ public class TestStockSource extends BaseStockSource implements ITest
 		}
 	}
 	
-	@Override public Order removeOrder(final String strOrderId)
+	@Override public Order removeOrder(final String strOrderId, final RateInfo oOriginalRateInfo)
 	{
 		synchronized (this)
 		{			
-			super.removeOrder(strOrderId);
+			super.removeOrder(strOrderId, oOriginalRateInfo);
 			
 			for(final List<Order> aOrders : m_oStockSourceData.getRateOrders().values())
 			{
@@ -228,7 +247,10 @@ public class TestStockSource extends BaseStockSource implements ITest
 					m_oStockSourceData.save();
 						
 			        //System.out.println("Remove order complete. " + strOrderId);
-					return oOrder;
+					if (null == oOriginalRateInfo || !oOriginalRateInfo.getIsReverse())
+						return oOrder;
+					
+					return TradeUtils.makeReveseOrder(oOrder);
 				}
 			}
 			

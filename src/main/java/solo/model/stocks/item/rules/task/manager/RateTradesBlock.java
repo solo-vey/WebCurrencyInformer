@@ -49,10 +49,21 @@ public class RateTradesBlock implements Serializable
 		String strResult = StringUtils.EMPTY;
 		final TreeMap<BigDecimal, Entry<RateInfo, TradesBlock>> aSorted = new TreeMap<BigDecimal, Entry<RateInfo, TradesBlock>>();
 		for(final Entry<RateInfo, TradesBlock> oTradesInfo : getRateTrades().entrySet())
+		{
+			if (oTradesInfo.getKey().getIsReverse())
+				continue;
+			
 			aSorted.put(oTradesInfo.getValue().getPercent(), oTradesInfo);
+		}
 		
 		for(final Entry<RateInfo, TradesBlock> oTradesInfo : aSorted.values())
-			strResult = oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + "\r\n" + strResult;
+		{
+			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oTradesInfo.getKey());
+			final TradesBlock oReverseTradeBlock = getRateTrades().get(oReverseRateInfo);
+			strResult = oTradesInfo.getKey() + " : " + oTradesInfo.getValue() + 
+						(null != oReverseTradeBlock ? " / " + oReverseTradeBlock : StringUtils.EMPTY) +
+						"\r\n" + strResult;
+		}
 		return strResult;
 	}
 }
