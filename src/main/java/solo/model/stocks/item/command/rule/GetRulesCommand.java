@@ -132,7 +132,8 @@ public class GetRulesCommand extends BaseCommand
 			final Map<RateInfo, List<Entry<Integer, TradesBlock>>> aRates = ManagerUtils.convertFromHoursTradesToRateTrades(aHoursTrades);
 			
 			final IStockManager oManager = WorkerFactory.getStockExchange().getManager();
-			strMessage += "\r\n24h " + oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oSelectedRateInfo).asString("only_percent") + ", ";
+			final TradesBlock o24HourRateTrade = oManager.getInfo().getRateLast24Hours().getTotal().getRateTrades().get(oSelectedRateInfo);
+			strMessage += "\r\n" + (null  != o24HourRateTrade ? "24h " + o24HourRateTrade.asString("only_percent") + ", " : StringUtils.EMPTY);
 			final List<Entry<Integer, TradesBlock>> oRateTrades = aRates.get(oSelectedRateInfo);
 			if (null != oRateTrades)
 			{
