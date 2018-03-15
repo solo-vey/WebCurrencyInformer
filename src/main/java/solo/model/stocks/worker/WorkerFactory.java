@@ -24,7 +24,7 @@ public class WorkerFactory
 	
 	static
 	{
-		registerMainWorker(new MainWorker(Stocks.Kuna));
+//		registerMainWorker(new MainWorker(Stocks.Kuna));
 //		registerMainWorker(new MainWorker(Stocks.BtcTrade));
 		registerMainWorker(new MainWorker(Stocks.Exmo));
 		registerMainWorker(new MainWorker(Stocks.Cryptopia));
