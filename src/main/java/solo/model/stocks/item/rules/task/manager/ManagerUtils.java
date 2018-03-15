@@ -76,7 +76,8 @@ public class ManagerUtils
 				continue;
 			
 			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-			bIsHasRealWorkingRules |= (null != oControler && ControlerState.WORK.equals(oControler.getControlerState())); 
+			bIsHasRealWorkingRules |= (null != oControler && 
+										(ControlerState.WORK.equals(oControler.getControlerState()) || ControlerState.WAIT.equals(oControler.getControlerState()))); 
 		}
 		
 		return bIsHasRealWorkingRules;
