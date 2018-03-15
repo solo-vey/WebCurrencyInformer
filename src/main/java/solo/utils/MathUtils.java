@@ -4,6 +4,8 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.text.DecimalFormat;
 
+import org.apache.commons.lang.StringUtils;
+
 public class MathUtils
 {
 	public static BigDecimal getBigDecimal(final BigDecimal nValue, final int nScale)
@@ -56,25 +58,27 @@ public class MathUtils
 		if (null == oValue)
 			return "NaN";
 
-		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= 0)
+		if (oValue.doubleValue() >= 10 || oValue.doubleValue() <= -10)
 			return toCurrencyString(oValue);
 
 		if (oValue.compareTo(BigDecimal.ZERO) == 0)
 			return "0";
 		
-		if (oValue.doubleValue() > 0.001)
+		final String strPrefix = (oValue.compareTo(BigDecimal.ZERO) < 0 ? "-" : StringUtils.EMPTY);
+		final BigDecimal nPositiveValue = (oValue.compareTo(BigDecimal.ZERO) >= 0 ? oValue : oValue.negate());
+		if (nPositiveValue.doubleValue() > 0.001)
 		{
 			final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
-			return oDecimalFormat.format(oValue.doubleValue()).replace(",", ".").trim();
+			return strPrefix + oDecimalFormat.format(nPositiveValue.doubleValue()).replace(",", ".").trim();
 		}
 
-		if (oValue.doubleValue() > 0.000001)
+		if (nPositiveValue.doubleValue() > 0.000001)
 		{
 			final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
-			return oDecimalFormat.format(oValue.doubleValue() * 1000).replace(",", ".").trim() + "(-3)";
+			return strPrefix + oDecimalFormat.format(nPositiveValue.doubleValue() * 1000).replace(",", ".").trim() + "(-3)";
 		}
 
 		final DecimalFormat oDecimalFormat = new DecimalFormat("#.########");
-		return oDecimalFormat.format(oValue.doubleValue() * 1000000).replace(",", ".").trim() + "(-6)";
+		return strPrefix + oDecimalFormat.format(nPositiveValue.doubleValue() * 1000000).replace(",", ".").trim() + "(-6)";
 	}
 }
