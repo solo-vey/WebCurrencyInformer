@@ -152,7 +152,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 
 		final Order oGetOrder = findOrder(strOrderId, oRateInfo);
 		if (null == oGetOrder)
-			return new Order(strOrderId, Order.NONE, "Order is absent");
+			return new Order(StringUtils.EMPTY, Order.NONE, "Order is absent");
 		
 		if (!oOriginalRateInfo.getIsReverse())
 			return oGetOrder;
