@@ -7,7 +7,8 @@ public enum MessageLevel
 	DEBUG(100),
 	TESTTRADERESULT(900),
 	TRADERESULT(1000),
-	ERROR(2000);
+	ERROR(2000),
+	NONE(Integer.MAX_VALUE);
 	
 	protected int m_nLevel;
 	

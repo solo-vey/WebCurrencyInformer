@@ -17,7 +17,6 @@ import solo.model.stocks.item.command.rule.AddRuleCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
-import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeControler;
@@ -85,7 +84,7 @@ public class GetTradeInfoCommand extends BaseCommand
 			List<List<String>> aButtons = new LinkedList<List<String>>();
 			aButtons.addAll(Arrays.asList(
 								Arrays.asList("Chart=chart_" + oTradeControler.getTradesInfo().getRateInfo(), 
-										(ControlerState.WORK.equals(oTradeControler.getControlerState()) ? "Stop=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_-1" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
+										(oTradeControler.getControlerState().isWork() ? "Stop=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_-1" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
 										strNewStrategy + "=" + strSetParam + TradeControler.TRADE_STRATEGY_PARAMETER + "_" + strNewStrategy, 
 										"Remove=/removerule_" + m_nRuleID)));
 			

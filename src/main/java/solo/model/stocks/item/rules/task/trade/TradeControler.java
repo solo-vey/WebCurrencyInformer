@@ -98,13 +98,21 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	@Override public ControlerState getControlerState()
 	{
+		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		if (m_nMaxTrades == 0)
-			return ControlerState.WAIT;
+			return (aTaskTrades.size() == 0? ControlerState.WAIT : ControlerState.GOTO_WAIT);
 		
 		if (m_nMaxTrades > 0)
-			return ControlerState.WORK;
+		{
+			boolean bIsHasProblem = StringUtils.isNotBlank(getTradesInfo().getCurrentState());
+			for(final ITradeTask oTradeTask : aTaskTrades)
+			{
+				final Order oOrder = oTradeTask.getTradeInfo().getOrder();
+				bIsHasProblem |= (null == oOrder || StringUtils.isNotBlank(oOrder.getMessage()));
+			}
+			return (bIsHasProblem ? ControlerState.WORK_ERROR : ControlerState.WORK);
+		}
 		
-		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		return (aTaskTrades.size() > 0 ? ControlerState.STOPPING : ControlerState.STOPPED);
 	}
 	
@@ -113,11 +121,11 @@ public class TradeControler extends TaskBase implements ITradeControler
 		if (oControlerState.equals(getControlerState()))
 			return;
 		
-		if (ControlerState.WAIT.equals(oControlerState))
+		if (oControlerState.isWait())
 			m_nMaxTrades = 0;
-		else if (ControlerState.STOPPING.equals(oControlerState) || ControlerState.STOPPED.equals(oControlerState))
+		else if (oControlerState.isStop())
 			m_nMaxTrades = -1;
-		else if (ControlerState.WORK.equals(oControlerState))
+		else if (oControlerState.isWork())
 			m_nMaxTrades = getParameterAsInt(MAX_TARDES, 1);
 		
 		final String strMessage = "Set new controler state [" + getRateInfo() + "] [" + getID() + "] - " + oControlerState;
@@ -140,7 +148,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		}
 		
 		return strInfo + 
-				(!ControlerState.WORK.equals(getControlerState()) ? "[" + getControlerState() + "]" : StringUtils.EMPTY) + 
+				(!getControlerState().isWork() ? "[" + getControlerState() + "]" : StringUtils.EMPTY) + 
 				getTradesInfo().getCurrentState();   
 	}
 	

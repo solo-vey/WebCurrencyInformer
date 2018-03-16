@@ -17,7 +17,7 @@ public class StockWorker extends BaseWorker
 	
 	public StockWorker(final IStockExchange oStockExchange, final MainWorker oMainWorker)
 	{
-		super(ResourceUtils.getIntFromResource("check.stock.timeout", oStockExchange.getStockProperties(), 4000), oMainWorker.getStock());
+		super(ResourceUtils.getIntFromResource("check.manager.timeout", oStockExchange.getStockProperties(), 60000), oMainWorker.getStock());
 		m_oStockExchange = oStockExchange;
 		m_oMainWorker = oMainWorker;
 	}

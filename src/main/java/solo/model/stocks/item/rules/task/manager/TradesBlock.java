@@ -6,7 +6,6 @@ import java.math.BigDecimal;
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.item.rules.task.trade.TradeInfo;
-import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.utils.MathUtils;
 
 public class TradesBlock implements Serializable
@@ -62,11 +61,11 @@ public class TradesBlock implements Serializable
 	
 	public BigDecimal getPercent()
 	{
-		if (getSpendSum().compareTo(BigDecimal.ZERO) == 0)
+		if (getSpendSum().compareTo(BigDecimal.ZERO) == 0 || getReceivedSum().compareTo(BigDecimal.ZERO) == 0)
 			return BigDecimal.ZERO;
 		
-		final BigDecimal nAveregeTradeSum = MathUtils.getBigDecimal(getSpendSum().doubleValue() / m_nCount, TradeUtils.DEFAULT_PRICE_PRECISION);
-		return MathUtils.getBigDecimal(getDelta().doubleValue() / nAveregeTradeSum.doubleValue() * 100, 2);
+		final double nAveregeTradeSum = getSpendSum().doubleValue() / m_nCount;
+		return MathUtils.getBigDecimal(getDelta().doubleValue() / nAveregeTradeSum * 100, 2);
 	}
 	
 	public void addTrade(final TradesBlock oTradesBlock)

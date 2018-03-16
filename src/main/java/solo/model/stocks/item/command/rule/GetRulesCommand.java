@@ -2,12 +2,13 @@ package solo.model.stocks.item.command.rule;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
@@ -69,9 +70,17 @@ public class GetRulesCommand extends BaseCommand
 		RateInfo oSelectedRateInfo = null;
 		final boolean bIsShowIfHasReal = !strType.contains("onlytestrules");
 	   	final List<List<String>> aButtons = new LinkedList<List<String>>();
-		for(final Entry<RateInfo, List<IRule>> oRateRules : aRulesByRate.entrySet())
-    	{
-			final RateInfo oRateInfo = oRateRules.getKey();
+	   	
+	   	final List<RateInfo> oRates = new LinkedList<RateInfo>(aRulesByRate.keySet());
+	   	Collections.sort(oRates, new Comparator<RateInfo>() {
+	   	    @Override
+	   	    public int compare(RateInfo oRateInfo1, RateInfo oRateInfo2) {
+	   	        return oRateInfo1.toString().compareTo(oRateInfo2.toString());
+	   	    }
+	   	});
+	   	for(final RateInfo oRateInfo : oRates)
+	   	{
+	   		List<IRule> oRateRules = aRulesByRate.get(oRateInfo);
 			final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo); 
 			
 			if (!strType.contains("rate:"))
@@ -81,7 +90,7 @@ public class GetRulesCommand extends BaseCommand
 					continue;
 				
 				String strState = StringUtils.EMPTY;
-				for(final IRule oRule : oRateRules.getValue())
+				for(final IRule oRule : oRateRules)
 				{
 					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
 					final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
@@ -95,12 +104,12 @@ public class GetRulesCommand extends BaseCommand
 				final BigDecimal nAveragePercent = ManagerUtils.getAverageRateProfitabilityPercent(oRateInfo); 
 				final BigDecimal nReversePercent = ManagerUtils.getAverageRateProfitabilityPercent(oReverseRateInfo); 
 				
-				aButtons.add(Arrays.asList("[" + oRateRules.getKey() + "]" + strState + "[" + nAveragePercent + "%][" + nReversePercent + "%]=/rules_rate:" + oRateRules.getKey()));
+				aButtons.add(Arrays.asList("[" + oRateInfo + "]" + strState + "[" + nAveragePercent + "%][" + nReversePercent + "%]=/rules_rate:" + oRateInfo));
 			}
 			else
 			{		
 				oSelectedRateInfo = oRateInfo;
-				for(final IRule oRule : oRateRules.getValue())
+				for(final IRule oRule : oRateRules)
 				{
 					final String strRuleInfo = oRule.getInfo();
 					final BigDecimal nPercent = ManagerUtils.getAverageRateProfitabilityPercent(oRule.getRateInfo()); 

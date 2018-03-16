@@ -17,7 +17,6 @@ import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.StockUserInfo;
-import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TTradeControler;
@@ -76,8 +75,7 @@ public class ManagerUtils
 				continue;
 			
 			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
-			bIsHasRealWorkingRules |= (null != oControler && 
-										(ControlerState.WORK.equals(oControler.getControlerState()) || ControlerState.WAIT.equals(oControler.getControlerState()))); 
+			bIsHasRealWorkingRules |= (null != oControler && (oControler.getControlerState().isWork() || oControler.getControlerState().isWait())); 
 		}
 		
 		return bIsHasRealWorkingRules;
@@ -247,20 +245,28 @@ public class ManagerUtils
 	
 	public static BigDecimal getAverageRateProfitabilityPercent(final RateInfo oRateInfo, final int nHoursCount)
 	{
-		BigDecimal nTotalPercent = BigDecimal.ZERO;
-		final List<Entry<Integer, RateTradesBlock>> aHoursTrades = getHoursTrades(nHoursCount);
-		for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
+		try
 		{
-			final RateTradesBlock oHourRateTradesBlock = oTradeInfo.getValue();
-			final TradesBlock oRateTradesBlock = oHourRateTradesBlock.getRateTrades().get(oRateInfo);
-			if (null == oRateTradesBlock)
-				continue;
+			BigDecimal nTotalPercent = BigDecimal.ZERO;
+			final List<Entry<Integer, RateTradesBlock>> aHoursTrades = getHoursTrades(nHoursCount);
+			for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
+			{
+				final RateTradesBlock oHourRateTradesBlock = oTradeInfo.getValue();
+				final TradesBlock oRateTradesBlock = oHourRateTradesBlock.getRateTrades().get(oRateInfo);
+				if (null == oRateTradesBlock)
+					continue;
+				
+				final BigDecimal nPercent = oRateTradesBlock.getPercent();
+				nTotalPercent = nTotalPercent.add(nPercent);
+			}
 			
-			final BigDecimal nPercent = oRateTradesBlock.getPercent();
-			nTotalPercent = nTotalPercent.add(nPercent);
+			return MathUtils.getBigDecimal(nTotalPercent.doubleValue() / nHoursCount, 3);
 		}
-		
-		return MathUtils.getBigDecimal(nTotalPercent.doubleValue() / nHoursCount, 3);
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("getAverageRateProfitabilityPercent", e);
+			return BigDecimal.ZERO;
+		}
 	}
 	
 	public static BigDecimal getMinRateHourProfitabilityPercent(final RateInfo oRateInfo)
@@ -295,7 +301,7 @@ public class ManagerUtils
 		for(final IRule oRule : oRules.getRules().values())
 		{
 			final ITradeControler oTradeControler = TradeUtils.getRuleAsTradeControler(oRule);
-			if (null == oTradeControler || ManagerUtils.isTestObject(oTradeControler) || ControlerState.STOPPED.equals(oTradeControler.getControlerState()))
+			if (null == oTradeControler || ManagerUtils.isTestObject(oTradeControler) || oTradeControler.getControlerState().isStopped())
 				continue;
 			
 			final TradesInfo oTradesInfo = oTradeControler.getTradesInfo();

@@ -199,115 +199,124 @@ public class TaskTrade extends TaskBase implements ITradeTask
 
 	protected Order createBuyOrder(BigDecimal oBuyPrice)
 	{
-		final BigDecimal oVolume = calculateOrderVolume(getTradeInfo().getNeedSpendSum(), oBuyPrice);
-		final Order oBuyOrder = addOrder(OrderSide.BUY, oVolume, oBuyPrice);
-		if (oBuyOrder.isNull())
+		synchronized (this)
+		{
+			final BigDecimal oVolume = calculateOrderVolume(getTradeInfo().getNeedSpendSum(), oBuyPrice);
+			final Order oBuyOrder = addOrder(OrderSide.BUY, oVolume, oBuyPrice);
+			if (oBuyOrder.isNull())
+				return oBuyOrder;
+			
+			getTradeInfo().setNeedBoughtVolume(oBuyOrder.getVolume(), true);
+			getTradeInfo().setTradeSum(oBuyOrder.getSum().add(getTradeInfo().getSpendSum()), true);
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oBuyOrder.getInfo());
+			getTradeInfo().addToHistory(oBuyOrder.getSide() + " / " + MathUtils.toCurrencyStringEx3(oBuyOrder.getPrice()) + " / " + MathUtils.toCurrencyStringEx3(oBuyOrder.getSum()));
 			return oBuyOrder;
-		
-		getTradeInfo().setNeedBoughtVolume(oBuyOrder.getVolume(), true);
-		getTradeInfo().setTradeSum(oBuyOrder.getSum().add(getTradeInfo().getSpendSum()), true);
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oBuyOrder.getInfo());
-		getTradeInfo().addToHistory(oBuyOrder.getSide() + " / " + MathUtils.toCurrencyStringEx3(oBuyOrder.getPrice()) + " / " + MathUtils.toCurrencyStringEx3(oBuyOrder.getSum()));
-		return oBuyOrder;
+		}
 	}
 
 	protected Order createSellOrder(BigDecimal oSellPrice)
 	{
-		final BigDecimal oSellOrderPrice = getTradeInfo().trimSellPrice(oSellPrice); 
-		BigDecimal oSellOrderVolume = getTradeInfo().getNeedSellVolume(); 
-		oSellOrderVolume = TradeUtils.getRoundedVolume(m_oRateInfo, oSellOrderVolume); 
-		Order oSellOrder = addOrder(OrderSide.SELL, oSellOrderVolume, oSellOrderPrice);
-		if (oSellOrder.isNull())
+		synchronized (this)
+		{
+			final BigDecimal oSellOrderPrice = getTradeInfo().trimSellPrice(oSellPrice); 
+			BigDecimal oSellOrderVolume = getTradeInfo().getNeedSellVolume(); 
+			oSellOrderVolume = TradeUtils.getRoundedVolume(m_oRateInfo, oSellOrderVolume); 
+			Order oSellOrder = addOrder(OrderSide.SELL, oSellOrderVolume, oSellOrderPrice);
+			if (oSellOrder.isNull())
+				return oSellOrder;
+	
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oSellOrder.getInfo() + "/" + getTradeInfo().getCriticalPriceString());
+			getTradeInfo().addToHistory(oSellOrder.getSide() + " / " + MathUtils.toCurrencyStringEx3(oSellOrder.getPrice()) + " / " + getTradeInfo().getCriticalPriceString());
 			return oSellOrder;
-
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, "Create " + oSellOrder.getInfo() + "/" + getTradeInfo().getCriticalPriceString());
-		getTradeInfo().addToHistory(oSellOrder.getSide() + " / " + MathUtils.toCurrencyStringEx3(oSellOrder.getPrice()) + " / " + getTradeInfo().getCriticalPriceString());
-		return oSellOrder;
+		}
 	}
 	
 	protected void setNewOrderPrice(final BigDecimal oNewPrice, final Order oGetOrder)
 	{
-		final BigDecimal nRoundedNewPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oNewPrice);
-		final BigDecimal nRoundedOrderPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oGetOrder.getPrice());
-		final BigDecimal nDeltaOrderPrice = (nRoundedNewPrice.compareTo(nRoundedOrderPrice) > 0 ? nRoundedNewPrice.add(nRoundedOrderPrice.negate()) 
-																		: nRoundedOrderPrice.add(nRoundedNewPrice.negate()));
-		final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice();
-		if (nDeltaOrderPrice.compareTo(BigDecimal.ZERO) >= 0 && nDeltaOrderPrice.compareTo(nMinChangePrice) < 0)
-			return;
-		
-		if (oGetOrder.isCanceled() || oGetOrder.isDone())
-			return;
-
-		final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
-		if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0)
-			return;
-
-		final Date oOrderDateCreate = oGetOrder.getCreated();
-		final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, getRateInfo(), getStockSource());
-		if (oRemoveOrder.isException())
-			return;
-		
-		if (oRemoveOrder.isDone())
+		synchronized (this)
 		{
-			getTradeInfo().setOrder(oRemoveOrder);
-			WorkerFactory.getStockExchange().getRules().save();
-			return;
-		}
-		
-		if (oRemoveOrder.isCanceled())
-		{
-			if (OrderSide.SELL.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
+			final BigDecimal nRoundedNewPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oNewPrice);
+			final BigDecimal nRoundedOrderPrice = TradeUtils.getRoundedPrice(m_oRateInfo, oGetOrder.getPrice());
+			final BigDecimal nDeltaOrderPrice = (nRoundedNewPrice.compareTo(nRoundedOrderPrice) > 0 ? nRoundedNewPrice.add(nRoundedOrderPrice.negate()) 
+																			: nRoundedOrderPrice.add(nRoundedNewPrice.negate()));
+			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice();
+			if (nDeltaOrderPrice.compareTo(BigDecimal.ZERO) >= 0 && nDeltaOrderPrice.compareTo(nMinChangePrice) < 0)
+				return;
+			
+			if (oGetOrder.isCanceled() || oGetOrder.isDone())
+				return;
+	
+			final BigDecimal nMinTradeVolume = TradeUtils.getMinTradeVolume(m_oRateInfo);
+			if (oGetOrder.getVolume().compareTo(nMinTradeVolume) < 0)
+				return;
+	
+			final Date oOrderDateCreate = oGetOrder.getCreated();
+			final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, getRateInfo(), getStockSource());
+			if (oRemoveOrder.isException())
+				return;
+			
+			if (oRemoveOrder.isDone())
 			{
-				final BigDecimal nDeltaSellVolume = getTradeInfo().getNeedSellVolume().add(oRemoveOrder.getVolume().negate());
-				if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) > 0)
-					getTradeInfo().getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
+				getTradeInfo().setOrder(oRemoveOrder);
+				WorkerFactory.getStockExchange().getRules().save();
+				return;
 			}
-			updateOrderTradeInfo(oRemoveOrder);
-		}
-		
-		final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(getTradeInfo().getNeedSpendSum(), oNewPrice) : getTradeInfo().getNeedSellVolume());
-		if (oNewVolume.compareTo(nMinTradeVolume) < 0)
-		{
-			getTradeInfo().getHistory().addToHistory("Volume is small [" + oNewVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
-			getTradeInfo().setOrder(oRemoveOrder);
+			
+			if (oRemoveOrder.isCanceled())
+			{
+				if (OrderSide.SELL.equals(oRemoveOrder.getSide()) && null != oRemoveOrder.getVolume())
+				{
+					final BigDecimal nDeltaSellVolume = getTradeInfo().getNeedSellVolume().add(oRemoveOrder.getVolume().negate());
+					if (nDeltaSellVolume.compareTo(BigDecimal.ZERO) > 0)
+						getTradeInfo().getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
+				}
+				updateOrderTradeInfo(oRemoveOrder);
+			}
+			
+			final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? calculateOrderVolume(getTradeInfo().getNeedSpendSum(), oNewPrice) : getTradeInfo().getNeedSellVolume());
+			if (oNewVolume.compareTo(nMinTradeVolume) < 0)
+			{
+				getTradeInfo().getHistory().addToHistory("Volume is small [" + oNewVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
+				getTradeInfo().setOrder(oRemoveOrder);
+				WorkerFactory.getStockExchange().getRules().save();
+				return;
+			}
+	
+			final Order oAddOrder = addOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
+			if (oAddOrder.isError() || oAddOrder.isException())
+			{
+				getTradeInfo().getHistory().addToLog("Can't add order " + oAddOrder.getInfoShort());
+				getTradeInfo().setOrder(Order.NULL);
+				WorkerFactory.getStockExchange().getRules().save();
+				return;
+			}
+			
+			if (null != oOrderDateCreate)
+				oAddOrder.setCreated(oOrderDateCreate);
+			getTradeInfo().setOrder(oAddOrder);
+			
+			if (oGetOrder.getSide().equals(OrderSide.BUY))
+			{
+				getTradeInfo().setNeedBoughtVolume(oAddOrder.getVolume(), false);
+				getTradeInfo().setTradeSum(oAddOrder.getSum().add(getTradeInfo().getSpendSum()), false);
+			}
+	
+			final String strMessage = "- " + oGetOrder.getInfoShort() + "\r\n+ " + oAddOrder.getInfo();
+			WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, strMessage);
 			WorkerFactory.getStockExchange().getRules().save();
-			return;
+			
+			String strLogMessage = oAddOrder.getInfoShort(); 
+			final RateAnalysisResult oAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(m_oRateInfo);
+			final List<Order> oOrders = (oGetOrder.getSide().equals(OrderSide.BUY) ? oAnalysisResult.getBidsOrders() : oAnalysisResult.getAsksOrders());
+			final List<Order> oTrades = oAnalysisResult.getTrades();
+			strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + 
+					(oOrders.size() > 1 ? MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" : StringUtils.EMPTY) + 
+					(oOrders.size() > 2 ? MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice()) : StringUtils.EMPTY);
+			strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oTrades.get(0).getPrice()) + ";\t" + 
+					(oTrades.size() > 1 ? MathUtils.toCurrencyStringEx2(oTrades.get(1).getPrice()) + ";\t" : StringUtils.EMPTY) + 
+					(oTrades.size() > 2 ? MathUtils.toCurrencyStringEx2(oTrades.get(2).getPrice()) : StringUtils.EMPTY);
+			getTradeInfo().getHistory().addToLog(strLogMessage + "\r\n");
 		}
-
-		final Order oAddOrder = addOrder(oGetOrder.getSide(), oNewVolume, oNewPrice);
-		if (oAddOrder.isError() || oAddOrder.isException())
-		{
-			getTradeInfo().getHistory().addToLog("Can't add order " + oAddOrder.getInfoShort());
-			getTradeInfo().setOrder(Order.NULL);
-			WorkerFactory.getStockExchange().getRules().save();
-			return;
-		}
-		
-		if (null != oOrderDateCreate)
-			oAddOrder.setCreated(oOrderDateCreate);
-		getTradeInfo().setOrder(oAddOrder);
-		
-		if (oGetOrder.getSide().equals(OrderSide.BUY))
-		{
-			getTradeInfo().setNeedBoughtVolume(oAddOrder.getVolume(), false);
-			getTradeInfo().setTradeSum(oAddOrder.getSum().add(getTradeInfo().getSpendSum()), false);
-		}
-
-		final String strMessage = "- " + oGetOrder.getInfoShort() + "\r\n+ " + oAddOrder.getInfo();
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRACE, strMessage);
-		WorkerFactory.getStockExchange().getRules().save();
-		
-		String strLogMessage = oAddOrder.getInfoShort(); 
-		final RateAnalysisResult oAnalysisResult = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(m_oRateInfo);
-		final List<Order> oOrders = (oGetOrder.getSide().equals(OrderSide.BUY) ? oAnalysisResult.getBidsOrders() : oAnalysisResult.getAsksOrders());
-		final List<Order> oTrades = oAnalysisResult.getTrades();
-		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oOrders.get(0).getPrice()) + ";\t" + 
-				(oOrders.size() > 1 ? MathUtils.toCurrencyStringEx2(oOrders.get(1).getPrice()) + ";\t" : StringUtils.EMPTY) + 
-				(oOrders.size() > 2 ? MathUtils.toCurrencyStringEx2(oOrders.get(2).getPrice()) : StringUtils.EMPTY);
-		strLogMessage += "\t-\t" + MathUtils.toCurrencyStringEx2(oTrades.get(0).getPrice()) + ";\t" + 
-				(oTrades.size() > 1 ? MathUtils.toCurrencyStringEx2(oTrades.get(1).getPrice()) + ";\t" : StringUtils.EMPTY) + 
-				(oTrades.size() > 2 ? MathUtils.toCurrencyStringEx2(oTrades.get(2).getPrice()) : StringUtils.EMPTY);
-		getTradeInfo().getHistory().addToLog(strLogMessage + "\r\n");
 	}
 
 	protected Order addOrder(final OrderSide oOrderSide, final BigDecimal oVolume, final BigDecimal oPrice)
@@ -400,9 +409,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	
 	public void remove()
 	{
-		setTradeControler(ITradeControler.NULL);
-		if (!getTradeInfo().getOrder().isNull())
-			getStockSource().removeOrder(getTradeInfo().getOrder().getId(), null);
+		synchronized (this)
+		{
+			setTradeControler(ITradeControler.NULL);
+			if (!getTradeInfo().getOrder().isNull())
+				getStockSource().removeOrder(getTradeInfo().getOrder().getId(), null);
+		}
 	}
 	
 	@Override public ITradeControler getTradeControler()

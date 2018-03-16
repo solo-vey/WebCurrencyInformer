@@ -4,7 +4,7 @@ import java.io.Serializable;
 
 import solo.model.currency.Currency;
 
-public class RateInfo implements Serializable
+public class RateInfo implements Serializable, Comparable<RateInfo>
 {
 	private static final long serialVersionUID = -7207375688298563812L;
 	
@@ -68,5 +68,13 @@ public class RateInfo implements Serializable
 	@Override public int hashCode()
 	{
 		return toString().hashCode();
+	}
+
+	@Override public int compareTo(final RateInfo oRateInfo)
+	{
+		if (oRateInfo == null)
+			return -1;
+		
+		return oRateInfo.toString().compareToIgnoreCase(toString());
 	}
 }
