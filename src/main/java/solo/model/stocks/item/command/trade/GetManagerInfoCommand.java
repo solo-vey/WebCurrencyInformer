@@ -13,6 +13,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.rules.task.manager.IStockManager;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
+import solo.model.stocks.item.rules.task.manager.StockManager;
 import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -40,6 +41,18 @@ public class GetManagerInfoCommand extends BaseCommand
 		final String strType = getParameter(TYPE_PARAMETER);
 		
 		String strMessage = StringUtils.EMPTY;
+		if (strType.equalsIgnoreCase("STOP"))
+		{
+			oManager.setOperations(StockManager.OPERATIONS_NONE);
+			strMessage = "Manager is stopped";
+		}
+		else
+		if (strType.equalsIgnoreCase("START"))
+		{
+			oManager.setOperations(StockManager.OPERATIONS_ALL);
+			strMessage = "Manager is working";
+		}
+		else
 		if (strType.equalsIgnoreCase("HISTORY"))
 			strMessage = oManager.getHistory().toString();
 		else
@@ -48,9 +61,10 @@ public class GetManagerInfoCommand extends BaseCommand
 		else
 			strMessage = oManager.getInfo().asString(strType);
 		
+		final String strOperationCommand = (oManager.getOperations().equalsIgnoreCase(StockManager.OPERATIONS_NONE) ? "Start=manager_start" : "Stop=manager_stop");
 		strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months", "All=manager"),
 																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "RateLastHours=manager_ratelasthours", "History=manager_history"),
-																		Arrays.asList("Info=manager_info", "Parameters=setstockparameter_?", "Stocks=setCurrentStock")));
+																		Arrays.asList(strOperationCommand, "Info=manager_info", "Parameters=setstockparameter_?", "Stocks=setCurrentStock")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 

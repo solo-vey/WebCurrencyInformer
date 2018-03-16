@@ -41,7 +41,8 @@ public class StockWorker extends BaseWorker
 
 	public void startRateWorker(final RateInfo oRateInfo)
 	{
-		final StockRateWorker oStockRateWorker = new StockRateWorker(m_oMainWorker, oRateInfo, m_nTimeOut);
+		final int nStockTimeOut = ResourceUtils.getIntFromResource("check.stock.timeout", WorkerFactory.getStockExchange().getStockProperties(), 4000);
+		final StockRateWorker oStockRateWorker = new StockRateWorker(m_oMainWorker, oRateInfo, nStockTimeOut);
 		if (m_aStockRateWorkers.contains(oStockRateWorker))
 			return;
 		

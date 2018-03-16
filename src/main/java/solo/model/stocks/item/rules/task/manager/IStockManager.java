@@ -2,6 +2,8 @@ package solo.model.stocks.item.rules.task.manager;
 
 import java.math.BigDecimal;
 
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 
@@ -11,6 +13,9 @@ public interface IStockManager
 
 	void manage(final StateAnalysisResult oStateAnalysisResult);
 	
+	String getOperations();
+	void setOperations(final String strOperations);
+
 	void tradeStart(final TaskTrade oTaskTrade);
 	void tradeDone(final TaskTrade oTaskTrade);
 	void buyDone(final TaskTrade oTaskTrade);
@@ -25,6 +30,9 @@ public interface IStockManager
 class NullStockManager implements IStockManager
 {
 	final protected StockManagesInfo m_oStockManagesInfo = new StockManagesInfo();
+	
+	@Override public String getOperations() { return StringUtils.EMPTY; }
+	@Override public void setOperations(final String strOperations) {}
 	
 	@Override public void manage(final StateAnalysisResult oStateAnalysisResult) {}
 	

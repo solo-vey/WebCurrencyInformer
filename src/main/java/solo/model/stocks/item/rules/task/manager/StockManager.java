@@ -12,6 +12,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
 import solo.CurrencyInformer;
@@ -41,12 +42,13 @@ import solo.utils.ResourceUtils;
 
 public class StockManager implements IStockManager
 {
-	private static final String OPERATIONS_ALL = "all";
-	private static final String OPERATION_TRACK_TRADES = "trackTrades";
-	private static final String OPERATION_CHECK_RATES = "checkRates";
+	public static final String OPERATIONS_ALL = "all";
+	public static final String OPERATIONS_NONE = StringUtils.EMPTY;
+	public static final String OPERATION_TRACK_TRADES = "trackTrades";
+	public static final String OPERATION_CHECK_RATES = "checkRates";
 	
 	final protected StockManagesInfo m_oStockManagesInfo;
-	final protected String m_strOperations = OPERATIONS_ALL;
+	protected String m_strOperations = OPERATIONS_ALL;
 	final protected IManagerStrategy m_oManagerStrategy;
 	final protected ManagerHistory m_oManagerHistory;
 	
@@ -64,6 +66,9 @@ public class StockManager implements IStockManager
 	
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{		
+		if (!getIsOperationAvalible(OPERATIONS_ALL))
+			return;
+		
 		final Map<BigDecimal, RateInfo> oProfitabilityRates = getManagerStrategy().getProfitabilityRates();
 		final Map<BigDecimal, RateInfo> oUnProfitabilityRates = getManagerStrategy().getUnProfitabilityRates();
 
@@ -135,7 +140,7 @@ public class StockManager implements IStockManager
 		for(final ITradeTask oTaskTrade : oRemoveTrades)
 		{
 			WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);
-			addToHistory("Remove hung up trade [" + oTaskTrade.getRateInfo() + "] [" + oTaskTrade.getID() + "]", MessageLevel.TRADERESULT);
+			addToHistory("Remove hung up trade [" + oTaskTrade.getRateInfo() + "] [" + oTaskTrade.getID() + "]", MessageLevel.TRADERESULTDEBUG);
 		}		
 	}
 	
@@ -196,7 +201,7 @@ public class StockManager implements IStockManager
 			oMoney.put(oCurrencyTo, new CurrencyAmount(nFreeSum.add(nSum.negate()), nLocked.add(nSum)));
 			
 			ManagerUtils.createTradeControler(oRateInfo);
-			addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]", MessageLevel.TRADERESULT);
+			addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]", MessageLevel.TRADERESULTDEBUG);
 		}
 	}
 	
@@ -223,7 +228,7 @@ public class StockManager implements IStockManager
 					continue;
 				
 				oControler.setControlerState(ControlerState.STOPPING);
-				addToHistory("Stopping controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Bad profit [" + oRateProfitabilityInfo.getKey() + "]", MessageLevel.TRADERESULT);
+				addToHistory("Stopping controler [" + oRule.getRateInfo() + "] [" + oRule.getID() + "]. Bad profit [" + oRateProfitabilityInfo.getKey() + "]", MessageLevel.TRADERESULTDEBUG);
 			}
 		}
 	}
@@ -248,7 +253,7 @@ public class StockManager implements IStockManager
 		for(final ITradeTask oTaskTrade : oRemoveTrades)
 		{
 			WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);
-			addToHistory("Remove BUY trade [" + oTaskTrade.getRateInfo() + "] [" + oTaskTrade.getID() + "] in STOPPING controler", MessageLevel.TRADERESULT);
+			addToHistory("Remove BUY trade [" + oTaskTrade.getRateInfo() + "] [" + oTaskTrade.getID() + "] in STOPPING controler", MessageLevel.TRADERESULTDEBUG);
 		}
 	}
 
@@ -280,7 +285,7 @@ public class StockManager implements IStockManager
 			for(final RateInfo oRateInfo : oProspectiveRates)
 			{
 				WorkerFactory.getMainWorker().addCommand(new AddRateCommand(oRateInfo.toString()));
-				addToHistory("Start prospective rate [" + oRateInfo + "]", MessageLevel.TRADERESULT);
+				addToHistory("Start prospective rate [" + oRateInfo + "]", MessageLevel.TRADERESULTDEBUG);
 			}
 		}
 		catch(final Exception e)
@@ -340,6 +345,16 @@ public class StockManager implements IStockManager
 		}
 	}
 	
+	@Override public String getOperations() 
+	{ 
+		return m_strOperations; 
+	}
+	
+	@Override public void setOperations(final String strOperations) 
+	{
+		m_strOperations = strOperations;
+	}
+	
 	protected boolean getIsOperationAvalible(final String strOperaion)
 	{
 		return (m_strOperations.equals(OPERATIONS_ALL) || m_strOperations.toLowerCase().contains(";" + strOperaion.toLowerCase() + ";"));
@@ -385,7 +400,7 @@ public class StockManager implements IStockManager
 	protected void addToHistory(final String strMessage, final MessageLevel oMessageLevel)
 	{
 		m_oManagerHistory.addMessage(strMessage);
-		WorkerFactory.getMainWorker().sendMessage(MessageLevel.TRADERESULT, strMessage);
+		WorkerFactory.getMainWorker().sendMessage(oMessageLevel, strMessage);
 	}
 	
 	public void save()
