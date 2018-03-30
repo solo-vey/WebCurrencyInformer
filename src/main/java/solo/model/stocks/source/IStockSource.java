@@ -8,6 +8,7 @@ import java.util.Map;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.OrderTrade;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
@@ -31,4 +32,5 @@ public interface IStockSource
 	StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception;
 	List<Order> getTrades(RateInfo m_oRateInfo, final int nPage, final int nCount);
 	RateParamters getRateParameters(final RateInfo oRateInfo);
+	List<OrderTrade> getTrades(final String strOrderID, final RateInfo oRateInfo);
 }

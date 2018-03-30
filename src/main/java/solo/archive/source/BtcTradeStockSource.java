@@ -1,4 +1,4 @@
-package solo.model.stocks.source;
+package solo.archive.source;
 
 import java.io.InputStream;
 import java.math.BigDecimal;
@@ -23,6 +23,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
+import solo.model.stocks.source.BaseStockSource;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;

@@ -12,7 +12,9 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.currency.Currency;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
+import solo.model.stocks.item.rules.task.trade.TestTradeInfo;
 import solo.model.stocks.item.rules.task.trade.TradeInfo;
 import solo.model.stocks.worker.WorkerFactory;
 
@@ -48,7 +50,21 @@ public class CurrencyTradesBlock implements Serializable
 		
 		final RateInfo oRateInfo = new RateInfo(oCurrency, Currency.BTC);
 		final RateAnalysisResult oBtcToCurrencyRate = WorkerFactory.getStockExchange().getLastAnalysisResult().getRateAnalysisResult(oRateInfo);
+		BigDecimal oBtcBidPrice = null;
 		if (null != oBtcToCurrencyRate)
+			oBtcBidPrice = oBtcToCurrencyRate.getBestBidPrice();
+		else
+		{
+			try
+			{
+				final RateStateShort oBtcToCurrencyRateState = WorkerFactory.getStockSource().getAllRateState().get(oRateInfo);
+				if (null != oBtcToCurrencyRateState)
+					oBtcBidPrice = oBtcToCurrencyRateState.getBidPrice();
+			}
+			catch(final Exception e) {}
+		}
+			
+		if (null != oBtcBidPrice)
 		{
 			BigDecimal nSpendSumInCurrency = oTradeInfo.getSpendSum();
 			final BigDecimal nNeedSellVolume = oTradeInfo.getNeedSellVolume();
@@ -58,12 +74,11 @@ public class CurrencyTradesBlock implements Serializable
 				nSpendSumInCurrency = nSpendSumInCurrency.add(nNeedSellSum.negate());
 			}
 			
-			final BigDecimal oBtcBidPrice = oBtcToCurrencyRate.getBestBidPrice();
 			final BigDecimal nSpendSum = nSpendSumInCurrency.multiply(oBtcBidPrice);
 			final BigDecimal nReceivedSum = oTradeInfo.getReceivedSum().multiply(oBtcBidPrice);
-			final TradeInfo oBtcTradeInfo = new TradeInfo(oRateInfo, -1);
-			oBtcTradeInfo.addBuy(nSpendSum, BigDecimal.ZERO);
-			oBtcTradeInfo.addSell(nReceivedSum, BigDecimal.ZERO);
+			final TradeInfo oBtcTradeInfo = new TestTradeInfo(oRateInfo, -1);
+			oBtcTradeInfo.addBuy(null, nSpendSum, BigDecimal.ZERO);
+			oBtcTradeInfo.addSell(null, nReceivedSum, BigDecimal.ZERO);
 			
 			if (!m_oCurrencyTrades.containsKey(Currency.BTC))
 				m_oCurrencyTrades.put(Currency.BTC, new TradesBlock());

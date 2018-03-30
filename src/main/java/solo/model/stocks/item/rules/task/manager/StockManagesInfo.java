@@ -1,5 +1,10 @@
 package solo.model.stocks.item.rules.task.manager;
 
+import java.io.FileInputStream;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
 import java.util.Calendar;
@@ -10,7 +15,9 @@ import java.util.Map.Entry;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.CurrencyInformer;
 import solo.model.stocks.BaseObject;
+import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.worker.WorkerFactory;
@@ -141,7 +148,8 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			for(final RateInfo oRateInfo : aSorted.values())
 			{
 				String strRateMessage = oRateInfo + " : ";
-				strRateMessage += "24h " + oRateTotals.get(oRateInfo).asString("only_percent") + ", ";
+				if (null != oRateTotals.get(oRateInfo))
+					strRateMessage += "24h " + oRateTotals.get(oRateInfo).asString("only_percent") + ", ";
 				final List<Entry<Integer, TradesBlock>> oRateTrades = aRates.get(oRateInfo);
 				if (null != oRateTrades)
 				{
@@ -151,7 +159,8 @@ public class StockManagesInfo extends BaseObject implements Serializable
 				
 				final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
 				strRateMessage += "\r\n                ";
-				strRateMessage += "24h" + oRateTotals.get(oReverseRateInfo).asString("only_percent") + ", ";
+				if (null != oRateTotals.get(oReverseRateInfo))
+					strRateMessage += "24h" + oRateTotals.get(oReverseRateInfo).asString("only_percent") + ", ";
 				final List<Entry<Integer, TradesBlock>> oReverseRateTrades = aRates.get(oReverseRateInfo);
 				if (null != oReverseRateTrades)
 				{
@@ -190,5 +199,45 @@ public class StockManagesInfo extends BaseObject implements Serializable
 			return getMonthsTotal().getPeriods().get(oCalendar.get(Calendar.MONTH) + 1).toString();
 		
 		return "Unknown type [" + strType + "] of info [TOTAL, HOURS, HOUR, DAYS, DAY, MONTHS, MONTH, LAST24HOURS, RATELAST24HOURS, RATELAST24FORHOURS]";
+	}
+	
+	public static void save(final StockManagesInfo oStockManagesInfo)
+	{
+		try 
+		{
+	         final FileOutputStream oFileStream = new FileOutputStream(getFileName(WorkerFactory.getStockExchange()));
+	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
+	         oStream.writeObject(oStockManagesInfo);
+	         oStream.close();
+	         oFileStream.close();
+		} 
+		catch (IOException e) 
+		{
+			WorkerFactory.onException("Save manager info exception", e);
+		}			
+	}
+
+	public static StockManagesInfo load(final IStockExchange oStockExchange)
+	{
+		try 
+		{
+	         final FileInputStream oFileStream = new FileInputStream(getFileName(oStockExchange));
+	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
+	         final StockManagesInfo oStockManagesInfo = (StockManagesInfo) oStream.readObject();
+	         oStream.close();
+	         oFileStream.close();
+	         
+	         return oStockManagesInfo;
+		} 
+		catch (final Exception e) 
+		{
+			WorkerFactory.onException("Load manager info exception", e);
+			return new StockManagesInfo();
+	    }			
+	}
+	
+	protected static String getFileName(final IStockExchange oStockExchange)
+	{
+		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + oStockExchange.getStockName() + "\\manager.ser";
 	}
 }

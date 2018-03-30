@@ -8,6 +8,9 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
+
+import org.apache.commons.lang.StringUtils;
+
 import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
@@ -17,6 +20,8 @@ import solo.model.stocks.item.RateStateShort;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.StockUserInfo;
+import solo.model.stocks.item.rules.task.money.Money;
+import solo.model.stocks.item.rules.task.money.TradeMoney;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TTradeControler;
@@ -117,23 +122,37 @@ public class ManagerUtils
 		}
 	}
 	
-	public static void createTradeControler(RateInfo oRateInfo)
+	public static String createTradeControler(final RateInfo oRateInfo, final BigDecimal nSum)
 	{
+		final IStockManager oStockManager = WorkerFactory.getStockExchange().getManager();
+		final Money oMoney = oStockManager.getMoney();
+			
+		TradeMoney oTradeMoney = null;
 		try
-		{
-			final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2)));	
+		{		
 			if (nSum.compareTo(BigDecimal.ZERO) <= 0)
-				throw new Exception("Unknown min trade sum for [" + oRateInfo + "]");
+				throw new Exception("Trade sum is negative [" + nSum + "]");
+			
+			oTradeMoney = oMoney.reserveMoney(oRateInfo, nSum);
+			if (null == oTradeMoney)
+				throw new Exception("Can't reserve money [" + oRateInfo + "] [" + nSum + "]. Money [" + oMoney.getFreeMoney(oRateInfo.getCurrencyTo()) + "]");
 			
 			final String strRuleInfo = TradeControler.NAME + "_" + oRateInfo + "_" + nSum;
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			WorkerFactory.getStockExchange().getRules().addRule(oRule);
+			oTradeMoney.setTradeID(oRule.getID());
+			oMoney.save();
 			
-			System.out.printf("Create trade controler [" + oRateInfo + "]\\r\n");
+			System.out.printf("Create trade controler [" + oRateInfo + "]\r\n");
+			return StringUtils.EMPTY;
 		}
 		catch(final Exception e)
 		{
+			if (null != oTradeMoney)
+				oMoney.freeMoney(oRateInfo, oTradeMoney);
+				
 			WorkerFactory.onException("Can't create trade controler [" + oRateInfo + "]", e);
+			return e.getMessage();
 		}
 	}
 	

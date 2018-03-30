@@ -301,7 +301,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			final TaskTrade oTaskTrade = ((TaskTrade)oRule);
 			
 			if (nNeedSellVolume.compareTo(BigDecimal.ZERO) > 0)
-				oTaskTrade.getTradeInfo().addBuy(nNeedSellVolumeSum, nNeedSellVolume);
+				oTaskTrade.getTradeInfo().addBuy(oTaskTrade, nNeedSellVolumeSum, nNeedSellVolume);
 			
 			getTradeStrategy().startNewTrade(oTaskTrade, this);
 			oTaskTrade.setTradeControler(this);
@@ -325,7 +325,14 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
-			oTaskTrade.setTradeControler(ITradeControler.NULL);
+		{
+			if (ManagerUtils.isTestObject(this))
+				WorkerFactory.getStockExchange().getRules().removeRule(oTaskTrade);
+			else
+				oTaskTrade.setTradeControler(ITradeControler.NULL);
+		}
+		
+		WorkerFactory.getStockExchange().getManager().getMoney().freeMoney(this);
 	}
 	
 	public void tradeStart(final TaskTrade oTaskTrade) 
@@ -357,22 +364,25 @@ public class TradeControler extends TaskBase implements ITradeControler
 		}
 	}	
 
-	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
+	public void addBuy(final TaskTrade oTaskTrade, final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
 	{
 		getTradesInfo().addBuy(nSpendSum, nBuyVolume);
+		WorkerFactory.getStockExchange().getManager().addBuy(oTaskTrade, nSpendSum, nBuyVolume);
+
 		if (nSpendSum.compareTo(BigDecimal.ZERO) != 0 || nBuyVolume.compareTo(BigDecimal.ZERO) != 0)
 			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getRateInfo().toString() +  " Buy : " + MathUtils.toCurrencyStringEx2(nSpendSum) + 
 					" / " + MathUtils.toCurrencyStringEx2(nBuyVolume));
-		WorkerFactory.getStockExchange().getManager().addBuy(nSpendSum, nBuyVolume);
+		
 	}
 	
-	public void addSell(final BigDecimal nReceivedSum, final BigDecimal nSoldVolume) 
+	public void addSell(final TaskTrade oTaskTrade, final BigDecimal nReceivedSum, final BigDecimal nSoldVolume) 
 	{
 		getTradesInfo().addSell(nReceivedSum, nSoldVolume);
+		WorkerFactory.getStockExchange().getManager().addSell(oTaskTrade, nReceivedSum, nSoldVolume);
+
 		if (nReceivedSum.compareTo(BigDecimal.ZERO) != 0 || nSoldVolume.compareTo(BigDecimal.ZERO) != 0)
 			WorkerFactory.getMainWorker().sendMessage(MessageLevel.DEBUG, getRateInfo().toString() +  " Sell : " + MathUtils.toCurrencyStringEx2(nReceivedSum) + 
 					" / " + MathUtils.toCurrencyStringEx2(nSoldVolume));
-		WorkerFactory.getStockExchange().getManager().addSell(nReceivedSum, nSoldVolume);
 	}
 	
 	@Override public String getParameter(final String strParameterName)

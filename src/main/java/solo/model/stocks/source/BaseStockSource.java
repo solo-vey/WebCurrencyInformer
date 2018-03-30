@@ -18,6 +18,7 @@ import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.OrderTrade;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
@@ -259,5 +260,15 @@ public class BaseStockSource implements IStockSource
 	{
 		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rates.ser";
 		return strStockEventsFileName;
+	}
+
+	protected OrderTrade convert2Trade(final Object oInputTrade, final RateInfo bIsReverse)
+	{
+		return new OrderTrade();
+	}
+
+	@Override public List<OrderTrade> getTrades(final String strOrderID, final RateInfo oRateInfo)
+	{
+		return null;
 	}
 }

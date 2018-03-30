@@ -27,15 +27,24 @@ public class Order extends BaseObject implements Serializable
 	public final static Order NULL = new Order(StringUtils.EMPTY, NONE, "Null order"); 
 	
 	protected String m_strID;
-	protected BigDecimal m_nPrice;
 	protected String m_strState;
 	protected OrderSide m_oSide;
-	protected BigDecimal m_nVolume;
 	protected Date m_oCreated;
 	protected String m_strMessage;
 	
+	protected BigDecimal m_nPrice;
+	protected BigDecimal m_nVolume;
+	protected BigDecimal m_nSum = null;
+	
+	protected Order m_oOriginalOrder = null;
+	
 	public Order()
 	{
+	}
+	
+	public Order(final Order oOriginalOrder)
+	{
+		m_oOriginalOrder = oOriginalOrder;
 	}
 	
 	public Order(final String strID, final String strState, final String strMessage)
@@ -86,16 +95,6 @@ public class Order extends BaseObject implements Serializable
 		m_strID = strID;
 	}
 	
-	public BigDecimal getPrice()
-	{
-		return m_nPrice;
-	}
-	
-	public void setPrice(final BigDecimal nPrice)
-	{
-		m_nPrice = nPrice;
-	}
-	
 	public OrderSide getSide()
 	{
 		return m_oSide;
@@ -135,6 +134,16 @@ public class Order extends BaseObject implements Serializable
 			m_strState = EXCEPTION;
 	}
 	
+	public BigDecimal getPrice()
+	{
+		return m_nPrice;
+	}
+	
+	public void setPrice(final BigDecimal nPrice)
+	{
+		m_nPrice = nPrice;
+	}
+	
 	public BigDecimal getVolume()
 	{
 		return m_nVolume;
@@ -147,8 +156,16 @@ public class Order extends BaseObject implements Serializable
 	
 	public BigDecimal getSum()
 	{
+		if (null != m_nSum)
+			return m_nSum;
+		
 		return (null == m_nPrice || null == m_nVolume ? BigDecimal.ZERO : m_nPrice.multiply(m_nVolume));
 	}
+	
+	public void setSum(final BigDecimal nSum)
+	{
+		m_nSum = nSum;
+	}	
 	
 	public Date getCreated()
 	{
@@ -177,6 +194,11 @@ public class Order extends BaseObject implements Serializable
 	{
 		return (null != m_strMessage ? m_strMessage : StringUtils.EMPTY);
 	}
+	
+	public Order getOriginalOrder()
+	{
+		return m_oOriginalOrder;
+	}
 
 	public String getInfoShort()
 	{
@@ -184,9 +206,12 @@ public class Order extends BaseObject implements Serializable
 			return "Null order" + (StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY)
 			 	+ (StringUtils.isNotBlank(getState()) ? ". State [" + getState() + "]" : StringUtils.EMPTY);
 		
+		final String strOriinalInfoShort = (null != getOriginalOrder() ? getOriginalOrder().getInfoShort() : StringUtils.EMPTY);
+		
 		return getSide() + "/" + MathUtils.toCurrencyStringEx3(getPrice()) + 
 			"/" + MathUtils.toCurrencyStringEx3(getSum()) +
-			(StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY);
+			(StringUtils.isNotBlank(getMessage()) ? " " + getMessage() : StringUtils.EMPTY) + 
+			(StringUtils.isNotBlank(strOriinalInfoShort) ? " Original : " + strOriinalInfoShort : StringUtils.EMPTY);
 	}
 	
 	public String getInfo()

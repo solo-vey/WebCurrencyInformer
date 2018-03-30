@@ -14,7 +14,7 @@ public class TradeInfoTest extends BaseTest
     {
     	//	Arrange
     	final TradeInfo oTradeInfo = new TradeInfo(RateInfo.ETH_UAH, 0);
-    	oTradeInfo.addBuy(new BigDecimal(1000), new BigDecimal(0.1));
+    	oTradeInfo.addBuy(null, new BigDecimal(1000), new BigDecimal(0.1));
     	oTradeInfo.setCriticalPrice(new BigDecimal(10020));
     	
     	//	Act

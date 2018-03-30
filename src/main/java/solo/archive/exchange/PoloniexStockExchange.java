@@ -1,6 +1,7 @@
-package solo.model.stocks.exchange;
+package solo.archive.exchange;
 
-import solo.model.stocks.source.PoloniexStockSource;
+import solo.archive.source.PoloniexStockSource;
+import solo.model.stocks.exchange.BaseStockExchange;
 
 public class PoloniexStockExchange extends BaseStockExchange
 {

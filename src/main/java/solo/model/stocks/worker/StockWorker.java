@@ -31,12 +31,13 @@ public class StockWorker extends BaseWorker
 	{
 		if (!m_bIsManualStopped)
 			return;
-		super.startWorker();
 		
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
 		
 		for(final RateInfo oRateInfo : m_oStockExchange.getStockSource().getRates())
 			startRateWorker(oRateInfo);
+		
+		super.startWorker();
 	}
 
 	public void startRateWorker(final RateInfo oRateInfo)

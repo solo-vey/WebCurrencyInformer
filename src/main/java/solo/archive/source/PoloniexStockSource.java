@@ -1,4 +1,4 @@
-package solo.model.stocks.source;
+package solo.archive.source;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
@@ -20,6 +20,7 @@ import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.source.BaseStockSource;
 import solo.model.stocks.source.utils.Exmo;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
@@ -186,7 +187,7 @@ public class PoloniexStockSource extends BaseStockSource
 			try { Thread.sleep(250); }
 			catch (InterruptedException e) { break; }
 			nTryCount -= (oGetOrder.isException() ? 1 : 5);
-			System.out.println("Get order repeat : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getState());
+			System.out.println("Get order repeat : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getInfoShort());
 		}
 		
 		return oGetOrder;

@@ -32,7 +32,7 @@ public class SellTaskTrade extends TaskTrade
 	{
 		super.starTask();
 		
-		getTradeInfo().addBuy(BigDecimal.ZERO, getParameterAsBigDecimal(TRADE_VOLUME));
+		getTradeInfo().addBuy(this, BigDecimal.ZERO, getParameterAsBigDecimal(TRADE_VOLUME));
 		getTradeInfo().setCriticalPrice(BigDecimal.ZERO);
 		getTradeInfo().setOrder(Order.NULL);
 		getTradeInfo().setTaskSide(OrderSide.SELL);

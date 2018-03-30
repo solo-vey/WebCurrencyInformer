@@ -16,6 +16,7 @@ import solo.model.stocks.item.command.trade.GetTradeInfoCommand;
 import solo.model.stocks.item.command.trade.ManageStock;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.model.stocks.item.command.trade.SetTaskParameterCommand;
+import solo.model.stocks.item.command.rule.AddControlerCommand;
 import solo.model.stocks.item.command.rule.AddRuleCommand;
 import solo.model.stocks.item.command.rule.CheckRateRulesCommand;
 import solo.model.stocks.item.command.rule.GetRulesCommand;
@@ -63,6 +64,7 @@ public class CommandFactory
 		registerCommandClass(SetCurrentStockCommand.NAME, SetCurrentStockCommand.class, CommandGroup.SYSTEM);
 
 		registerCommandClass(AddRuleCommand.NAME, 		AddRuleCommand.class, CommandGroup.RULES);
+		registerCommandClass(AddControlerCommand.NAME, 	AddControlerCommand.class, CommandGroup.RULES);
 		registerCommandClass(GetRulesCommand.NAME,		GetRulesCommand.class, CommandGroup.RULES);
 		registerCommandClass(RemoveRuleCommand.NAME,	RemoveRuleCommand.class, CommandGroup.RULES);
 		registerCommandClass(RemoveAllRulesCommand.NAME,RemoveAllRulesCommand.class, CommandGroup.RULES);

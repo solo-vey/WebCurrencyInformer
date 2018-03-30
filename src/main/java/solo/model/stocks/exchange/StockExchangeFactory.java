@@ -13,7 +13,7 @@ public class StockExchangeFactory
 //		registerStockExchange(Stocks.Kuna, 		new KunaStockExchange());
 //		registerStockExchange(Stocks.BtcTrade,	new BtcTradeStockExchange());
 		registerStockExchange(Stocks.Exmo, 		new ExmoStockExchange());
-		registerStockExchange(Stocks.Cryptopia,	new СryptopiaStockExchange());
+//		registerStockExchange(Stocks.Cryptopia,	new СryptopiaStockExchange());
 //		registerStockExchange(Stocks.Poloniex,	new PoloniexStockExchange());
 	}
 	

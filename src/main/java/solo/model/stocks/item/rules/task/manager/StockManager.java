@@ -1,10 +1,5 @@
 package solo.model.stocks.item.rules.task.manager;
 
-import java.io.FileInputStream;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.LinkedList;
@@ -15,9 +10,6 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
-import solo.CurrencyInformer;
-import solo.model.currency.Currency;
-import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
@@ -25,9 +17,8 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateStateShort;
-import solo.model.stocks.item.Rules;
-import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.command.system.AddRateCommand;
+import solo.model.stocks.item.rules.task.money.Money;
 import solo.model.stocks.item.rules.task.strategy.manager.BaseManagerStrategy;
 import solo.model.stocks.item.rules.task.strategy.manager.IManagerStrategy;
 import solo.model.stocks.item.rules.task.trade.ControlerState;
@@ -44,19 +35,23 @@ public class StockManager implements IStockManager
 {
 	public static final String OPERATIONS_ALL = "all";
 	public static final String OPERATIONS_NONE = StringUtils.EMPTY;
-	public static final String OPERATION_TRACK_TRADES = "trackTrades";
-	public static final String OPERATION_CHECK_RATES = "checkRates";
+	public static final String OPERATION_TRACK_TRADES = ";trackTrades;";
+	public static final String OPERATION_CHECK_RATES = ";checkRates;";
+	public static final String OPERATIONS_DEFAULT = OPERATION_TRACK_TRADES;
 	
 	final protected StockManagesInfo m_oStockManagesInfo;
-	protected String m_strOperations = OPERATIONS_ALL;
+	final protected Money m_oMoney;
+	protected String m_strOperations = OPERATIONS_NONE;
 	final protected IManagerStrategy m_oManagerStrategy;
 	final protected ManagerHistory m_oManagerHistory;
 	
 	public StockManager(final IStockExchange oStockExchange)
 	{
-		m_oStockManagesInfo = load(oStockExchange);
+		m_oStockManagesInfo = StockManagesInfo.load(oStockExchange);
+		m_oMoney = Money.load(oStockExchange);
 		m_oManagerHistory = new ManagerHistory(oStockExchange);
 		m_oManagerStrategy = new BaseManagerStrategy(oStockExchange);
+		setOperations(OPERATIONS_DEFAULT);
 	}
 	
 	protected IManagerStrategy getManagerStrategy()
@@ -66,32 +61,24 @@ public class StockManager implements IStockManager
 	
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{		
+		startTestControlers();
+		removeStoppedControlers();
+		
 		if (!getIsOperationAvalible(OPERATIONS_ALL))
 			return;
 		
 		final Map<BigDecimal, RateInfo> oProfitabilityRates = getManagerStrategy().getProfitabilityRates();
 		final Map<BigDecimal, RateInfo> oUnProfitabilityRates = getManagerStrategy().getUnProfitabilityRates();
 
-		startTestControlers();
 		lookForProspectiveRate();
 		checkUnprofitability(oUnProfitabilityRates);
-		removeStoppedControlers();
 		removeHandUpTrades(oProfitabilityRates, oUnProfitabilityRates);
 		checkProfitableRates(oProfitabilityRates);
 	}
-
-	protected Map<Currency, CurrencyAmount> getMoney()
+	
+	@Override public Money getMoney()
 	{
-		try
-		{
-			final StockUserInfo oUserInfo = WorkerFactory.getStockSource().getUserInfo(null);
-			final Rules oRules = WorkerFactory.getStockExchange().getRules();
-			return ManagerUtils.calculateStockMoney(oUserInfo, oRules);
-		}
-		catch(final Exception e)
-		{
-			return null;
-		}
+		return m_oMoney;
 	}	
 	
 	protected void removeStoppedControlers()
@@ -187,21 +174,12 @@ public class StockManager implements IStockManager
 		if (oCreateControlers.size() == 0)
 			return;
 		
-		final Map<Currency, CurrencyAmount> oMoney = getMoney();
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oCreateControlers)
 		{
 			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
-			final Currency oCurrencyTo = oRateInfo.getCurrencyTo();
 			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
-			final BigDecimal nFreeSum = (oMoney.containsKey(oCurrencyTo) ? oMoney.get(oCurrencyTo).getBalance() : BigDecimal.ZERO);
-			if (nSum.compareTo(nFreeSum) > 0)
-				continue;
-			
-			final BigDecimal nLocked = (oMoney.containsKey(oCurrencyTo) ? oMoney.get(oCurrencyTo).getLocked() : BigDecimal.ZERO);
-			oMoney.put(oCurrencyTo, new CurrencyAmount(nFreeSum.add(nSum.negate()), nLocked.add(nSum)));
-			
-			ManagerUtils.createTradeControler(oRateInfo);
-			addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]", MessageLevel.TRADERESULTDEBUG);
+			if (ManagerUtils.createTradeControler(oRateInfo, nSum).isEmpty())
+				addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]", MessageLevel.TRADERESULTDEBUG);
 		}
 	}
 	
@@ -357,7 +335,7 @@ public class StockManager implements IStockManager
 	
 	protected boolean getIsOperationAvalible(final String strOperaion)
 	{
-		return (m_strOperations.equals(OPERATIONS_ALL) || m_strOperations.toLowerCase().contains(";" + strOperaion.toLowerCase() + ";"));
+		return (m_strOperations.equals(OPERATIONS_ALL) || m_strOperations.toLowerCase().contains(strOperaion.toLowerCase()));
 	}
 
 	@Override public StockManagesInfo getInfo()
@@ -368,28 +346,36 @@ public class StockManager implements IStockManager
 	@Override public void tradeStart(final TaskTrade oTaskTrade) 
 	{
 		m_oStockManagesInfo.tradeStart(oTaskTrade);
-		save();
+		StockManagesInfo.save(m_oStockManagesInfo);
 	}
 	
 	@Override public void tradeDone(final TaskTrade oTaskTrade) 
 	{
 		trackTrades(oTaskTrade);
 		m_oStockManagesInfo.tradeDone(oTaskTrade);
-		save();
+		StockManagesInfo.save(m_oStockManagesInfo);
 	}
 
 	@Override public void buyDone(final TaskTrade oTaskTrade) 
 	{
 		m_oStockManagesInfo.buyDone(oTaskTrade);
-		save();
+		StockManagesInfo.save(m_oStockManagesInfo);
 	}
 	
-	@Override public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
+	@Override public void addBuy(final TaskTrade oTaskTrade, final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
 	{
+		if (null == oTaskTrade)
+			return;
+		
+		m_oMoney.addBuy(oTaskTrade.getTradeControler(), nSpendSum, nBuyVolume);
 	}
 	
-	@Override public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) 
+	@Override public void addSell(final TaskTrade oTaskTrade, final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) 
 	{
+		if (null == oTaskTrade)
+			return;
+		
+		m_oMoney.addSell(oTaskTrade.getTradeControler(), nReceiveSum, nSoldVolume);
 	} 
 	
 	@Override public ManagerHistory getHistory()
@@ -401,45 +387,5 @@ public class StockManager implements IStockManager
 	{
 		m_oManagerHistory.addMessage(strMessage);
 		WorkerFactory.getMainWorker().sendMessage(oMessageLevel, strMessage);
-	}
-	
-	public void save()
-	{
-		try 
-		{
-	         final FileOutputStream oFileStream = new FileOutputStream(getFileName(WorkerFactory.getStockExchange()));
-	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
-	         oStream.writeObject(m_oStockManagesInfo);
-	         oStream.close();
-	         oFileStream.close();
-		} 
-		catch (IOException e) 
-		{
-			WorkerFactory.onException("Save manager info exception", e);
-		}			
-	}
-
-	public StockManagesInfo load(final IStockExchange oStockExchange)
-	{
-		try 
-		{
-	         final FileInputStream oFileStream = new FileInputStream(getFileName(oStockExchange));
-	         final ObjectInputStream oStream = new ObjectInputStream(oFileStream);
-	         final StockManagesInfo oStockManagesInfo = (StockManagesInfo) oStream.readObject();
-	         oStream.close();
-	         oFileStream.close();
-	         
-	         return oStockManagesInfo;
-		} 
-		catch (final Exception e) 
-		{
-			WorkerFactory.onException("Load manager info exception", e);
-			return new StockManagesInfo();
-	    }			
-	}
-
-	String getFileName(final IStockExchange oStockExchange)
-	{
-		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + oStockExchange.getStockName() + "\\manager.ser";
 	}
 }

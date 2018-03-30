@@ -1,6 +1,7 @@
-package solo.model.stocks.exchange;
+package solo.archive.exchange;
 
-import solo.model.stocks.source.BtcTradeStockSource;
+import solo.model.stocks.exchange.BaseStockExchange;
+import solo.archive.source.BtcTradeStockSource;
 
 public class BtcTradeStockExchange extends BaseStockExchange
 {

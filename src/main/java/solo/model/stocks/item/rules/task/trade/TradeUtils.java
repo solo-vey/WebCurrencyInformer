@@ -3,6 +3,7 @@ package solo.model.stocks.item.rules.task.trade;
 import java.math.BigDecimal;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -14,6 +15,7 @@ import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
+import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
@@ -154,6 +156,9 @@ public class TradeUtils
 		
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);
+		if (null == oRateAnalysisResult)
+			return BigDecimal.ZERO;
+		
 		final BigDecimal nSellPrice = oRateAnalysisResult.getAsksOrders().get(0).getPrice();
 		return TradeUtils.getRoundedPrice(oOriginalRateInfo, nMinTradeVolume.multiply(nSellPrice));
 	}
@@ -162,7 +167,11 @@ public class TradeUtils
 	{
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getLastAnalysisResult();
 		final BigDecimal oMinTradeVolume = TradeUtils.getMinTradeVolume(oOriginalRateInfo);
-		final BigDecimal oBuyPrice = oStateAnalysisResult.getRateAnalysisResult(oOriginalRateInfo).getBidsOrders().get(0).getPrice();
+		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oOriginalRateInfo);
+		if (null == oRateAnalysisResult)
+			return BigDecimal.ZERO;
+		
+		final BigDecimal oBuyPrice = oRateAnalysisResult.getBidsOrders().get(0).getPrice();
 		final BigDecimal nMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01));
 				
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
@@ -240,12 +249,14 @@ public class TradeUtils
 
 	public static Order makeReveseOrder(final Order oOrder)
 	{
-		final Order oReverseOrder = new Order();
+		final Order oReverseOrder = new Order(oOrder);
 		oReverseOrder.setCreated(oOrder.getCreated());
 		oReverseOrder.setId(oOrder.getId());
 		oReverseOrder.setState(oOrder.getState());
 		oReverseOrder.setVolume(oOrder.getSum());
 		oReverseOrder.setPrice(MathUtils.getBigDecimal(1.0 / oOrder.getPrice().doubleValue(), 16));
+		oReverseOrder.setSum(oOrder.getVolume());
+		
 		if (null != oOrder.getSide())
 			oReverseOrder.setSide(oOrder.getSide().equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL);
 
@@ -279,15 +290,85 @@ public class TradeUtils
 		return oRemoveOrder;
 	}
 	
+	public static Order findOrder(final RateInfo oOriginalRateInfo, final OrderSide oOriginalOrderSide, final IStockSource oStockSource, final BigDecimal nOrderVolume)
+	{
+		for(int nTry = 0; nTry < 3; nTry++)
+		{
+			final  Order oFindOrder = findOrderEx(oOriginalRateInfo, oOriginalOrderSide, oStockSource, nOrderVolume);
+			if (!oFindOrder.isNull())
+				return oFindOrder;
+			
+			WorkerFactory.onException("Find lost order. Try count [" + nTry + "]", null);
+			try { Thread.sleep(500); } catch (InterruptedException e) {}
+		}
+		
+		return Order.NULL;
+	}
+
+	public static Order findOrderEx(final RateInfo oOriginalRateInfo, final OrderSide oOriginalOrderSide, final IStockSource oStockSource, final BigDecimal nOrderVolume)
+	{
+		try
+		{
+			final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
+			final OrderSide oOrderSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalOrderSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalOrderSide);
+			
+			final List<Order> aTaskOrders = new LinkedList<Order>();
+			final Map<Integer, IRule> oRules = WorkerFactory.getStockExchange().getRules().getRules();
+			for(final IRule oRule : oRules.values())
+			{
+				final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+				if (null == oTradeTask)
+					continue;
+				
+				if (oTradeTask.getRateInfo().equals(oRateInfo))
+					aTaskOrders.add(oTradeTask.getTradeInfo().getOrder());	
+			}
+			
+			final StockUserInfo oUserInfo = oStockSource.getUserInfo(oRateInfo);
+			final List<Order> oAbsentOrders = new LinkedList<Order>();
+			for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
+			{
+				if (!aTaskOrders.contains(oOrder))
+						oAbsentOrders.add(oOrder);
+			}
+			
+			Order oBestOrder = Order.NULL;
+			for(final Order oOrder : oAbsentOrders)
+			{
+				if (!oOrderSide.equals(oOrder.getSide()))
+					continue;
+				
+				BigDecimal nBestDeltaVolume = nOrderVolume.add(oBestOrder.getVolume().negate());
+				nBestDeltaVolume = (nBestDeltaVolume.compareTo(BigDecimal.ZERO) < 0 ? nBestDeltaVolume.negate() : nBestDeltaVolume);
+				BigDecimal nDeltaVolume = nOrderVolume.add(oOrder.getVolume().negate());
+				nDeltaVolume = (nDeltaVolume.compareTo(BigDecimal.ZERO) < 0 ? nDeltaVolume.negate() : nDeltaVolume);
+				if (nDeltaVolume.compareTo(nBestDeltaVolume) < 0)
+					oBestOrder = oOrder;
+			}
+			
+			if (!oBestOrder.isNull())
+			{
+				System.out.println("Find lost order [" + oRateInfo + "] [" + nOrderVolume + "] [" + oBestOrder.getInfoShort() + "]");
+				return oBestOrder;
+			}
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't find lost order [" + oOriginalRateInfo + "] [" + oOriginalOrderSide + "] [" + nOrderVolume + "]", e);
+		}
+		
+		return Order.NULL;
+	}
+	
 	public static boolean isVerySmallSum(final RateInfo oRateInfo, final BigDecimal nSum)
 	{
-		final BigDecimal nRoundedSum = TradeUtils.getRoundedPrice(oRateInfo, nSum);
+		final BigDecimal nRoundedSum = MathUtils.getBigDecimal(nSum, getPricePrecision(oRateInfo) - 1);
 		return (nRoundedSum.compareTo(BigDecimal.ZERO) == 0);
 	}
 	
 	public static boolean isVerySmallVolume(final RateInfo oRateInfo, final BigDecimal nVolume)
 	{
-		final BigDecimal nRoundedVolume = TradeUtils.getRoundedVolume(oRateInfo, nVolume);
+		final BigDecimal nRoundedVolume = MathUtils.getBigDecimal(nVolume, getVolumePrecision(oRateInfo) - 1);
 		return (nRoundedVolume.compareTo(BigDecimal.ZERO) == 0);
 	}
 }

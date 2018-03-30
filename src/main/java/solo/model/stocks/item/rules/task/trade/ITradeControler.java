@@ -17,8 +17,8 @@ public interface ITradeControler extends Serializable
 	void tradeStart(final TaskTrade oTaskTrade);
 	void tradeDone(final TaskTrade oTaskTrade);
 	void buyDone(final TaskTrade oTaskTrade);
-	void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume); 
-	void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume);
+	void addBuy(final TaskTrade oTaskTrade, final BigDecimal nSpendSum, final BigDecimal nBuyVolume); 
+	void addSell(final TaskTrade oTaskTrade, final BigDecimal nReceiveSum, final BigDecimal nSoldVolume);
 	String getParameter(final String strParameterName);
 	void setParameter(final String strParameterName, final String strValue);
 	ControlerState getControlerState();
@@ -34,8 +34,8 @@ class NullTradeControler implements ITradeControler
 	@Override public void tradeStart(final TaskTrade oTaskTrade) {}
 	@Override public void tradeDone(final TaskTrade oTaskTrade) {}
 	@Override public void buyDone(final TaskTrade oTaskTrade) {}
-	@Override public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {} 
-	@Override public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {} 
+	@Override public void addBuy(final TaskTrade oTaskTrade, final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {} 
+	@Override public void addSell(final TaskTrade oTaskTrade, final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {} 
 	@Override public String getParameter(final String strParameterName) { return null; }
 	@Override public void setParameter(final String strParameterName, final String strValue) {}
 	@Override public ControlerState getControlerState()

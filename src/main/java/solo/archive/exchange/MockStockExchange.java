@@ -1,6 +1,7 @@
-package solo.model.stocks.exchange;
+package solo.archive.exchange;
 
-import solo.model.stocks.source.MockStockSource;
+import solo.archive.source.MockStockSource;
+import solo.model.stocks.exchange.BaseStockExchange;
 
 public class MockStockExchange extends BaseStockExchange
 {

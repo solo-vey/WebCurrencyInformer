@@ -1,13 +1,13 @@
-#Mon Mar 12 11:34:49 EET 2018
+#Fri Mar 30 18:59:40 EEST 2018
 eclipse.preferences.version=1
 encoding//src/main/java=UTF-8
+encoding//src/main/java/solo/archive/resourses/BinanceStockExchange.properties=UTF-8
+encoding//src/main/java/solo/archive/resourses/BtcTradeStockExchange.properties=UTF-8
 encoding//src/main/java/solo/archive/resourses/CryptopiaTelegramTransport.properties=UTF-8
-encoding//src/main/resources/BinanceStockExchange.properties=UTF-8
-encoding//src/main/resources/BtcTradeStockExchange.properties=UTF-8
+encoding//src/main/java/solo/archive/resourses/KunaStockExchange.properties=UTF-8
+encoding//src/main/java/solo/archive/resourses/MockStockExchange.properties=UTF-8
+encoding//src/main/java/solo/archive/resourses/PoloniexStockExchange.properties=UTF-8
+encoding//src/main/java/solo/archive/resourses/\u0421ryptopiaStockExchange.properties=UTF-8
 encoding//src/main/resources/ExmoStockExchange.properties=UTF-8
-encoding//src/main/resources/KunaStockExchange.properties=UTF-8
-encoding//src/main/resources/MockStockExchange.properties=UTF-8
-encoding//src/main/resources/PoloniexStockExchange.properties=UTF-8
 encoding//src/main/resources/TelegramTransport.properties=UTF-8
-encoding//src/main/resources/\u0421ryptopiaStockExchange.properties=UTF-8
 encoding//src/test/java=UTF-8

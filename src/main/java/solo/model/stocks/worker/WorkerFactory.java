@@ -1,5 +1,8 @@
 package solo.model.stocks.worker;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,7 +30,7 @@ public class WorkerFactory
 //		registerMainWorker(new MainWorker(Stocks.Kuna));
 //		registerMainWorker(new MainWorker(Stocks.BtcTrade));
 		registerMainWorker(new MainWorker(Stocks.Exmo));
-		registerMainWorker(new MainWorker(Stocks.Cryptopia));
+//		registerMainWorker(new MainWorker(Stocks.Cryptopia));
 //		registerMainWorker(new MainWorker(Stocks.Poloniex));
 	}
 	
@@ -86,7 +89,7 @@ public class WorkerFactory
 	{
 //		getMainWorker(Stocks.Kuna).startWorker();
 		getMainWorker(Stocks.Exmo).startWorker();
-		getMainWorker(Stocks.Cryptopia).startWorker();
+//		getMainWorker(Stocks.Cryptopia).startWorker();
 //		getMainWorker(Stocks.Poloniex).startWorker();
 		
 		s_oRootWorker.startWorker();
@@ -126,9 +129,12 @@ public class WorkerFactory
 	
 	public static void onException(final String strMessage, final Exception e)
 	{
-		System.err.printf(Thread.currentThread().getName() + 
-				(StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
-				" Thread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
+		final DateFormat oDateFormat = new SimpleDateFormat("HH:mm:ss");
+		final String strDate = oDateFormat.format(new Date()); 
+		
+		System.err.printf(strDate + " " +Thread.currentThread().getName() + 
+				(StringUtils.isNotBlank(strMessage) ? "\t" + strMessage : StringUtils.EMPTY) + 
+				"\tThread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
 		
 		try
 		{
@@ -137,7 +143,8 @@ public class WorkerFactory
 				return;
 			
 			final String strFullMessage = (StringUtils.isNotBlank(strMessage) ? " " + strMessage : StringUtils.EMPTY) + 
-										"Exception : " + CommonUtils.getExceptionMessage(e.getCause());			
+										(null != e ? "Exception : " + CommonUtils.getExceptionMessage(e.getCause()) : StringUtils.EMPTY);
+			
 			if (MessageLevel.DEBUG.isLevelHigh(oMainWorker.getStockExchange().getMessageLevel()))
 				getTransport().sendMessage(strFullMessage);
 			oMainWorker.getLastErrors().addError(strFullMessage);

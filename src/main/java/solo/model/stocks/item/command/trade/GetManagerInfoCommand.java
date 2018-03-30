@@ -43,15 +43,20 @@ public class GetManagerInfoCommand extends BaseCommand
 		String strMessage = StringUtils.EMPTY;
 		if (strType.equalsIgnoreCase("STOP"))
 		{
-			oManager.setOperations(StockManager.OPERATIONS_NONE);
-			strMessage = "Manager is stopped";
+			oManager.setOperations(StockManager.OPERATIONS_DEFAULT);
+			strMessage = "Manager uses only [" + StockManager.OPERATIONS_DEFAULT + "]";
 		}
 		else
 		if (strType.equalsIgnoreCase("START"))
 		{
 			oManager.setOperations(StockManager.OPERATIONS_ALL);
-			strMessage = "Manager is working";
+			strMessage = "Manager uses all operations";
 		}
+		else
+		if (strType.toUpperCase().startsWith("SYNCHONIZE:"))
+		{
+			strMessage = oManager.getMoney().synchonize(strType.toUpperCase().replace("SYNCHONIZE:", StringUtils.EMPTY));
+		}		
 		else
 		if (strType.equalsIgnoreCase("HISTORY"))
 			strMessage = oManager.getHistory().toString();
@@ -61,10 +66,11 @@ public class GetManagerInfoCommand extends BaseCommand
 		else
 			strMessage = oManager.getInfo().asString(strType);
 		
-		final String strOperationCommand = (oManager.getOperations().equalsIgnoreCase(StockManager.OPERATIONS_NONE) ? "Start=manager_start" : "Stop=manager_stop");
+		final String strOperationCommand = (oManager.getOperations().equalsIgnoreCase(StockManager.OPERATIONS_DEFAULT) ? "Start=manager_start" : "Stop=manager_stop");
 		strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(Arrays.asList(Arrays.asList("Days=manager_days", "Hours=manager_hours", "Months=manager_months", "All=manager"),
 																		Arrays.asList("Last24H=manager_last24hours", "RateLast24H=manager_ratelast24hours", "RateLastHours=manager_ratelasthours", "History=manager_history"),
-																		Arrays.asList(strOperationCommand, "Info=manager_info", "Parameters=setstockparameter_?", "Stocks=setCurrentStock")));
+																		Arrays.asList(strOperationCommand, "Info=manager_info", "Parameters=setstockparameter_?", "Stocks=setCurrentStock"),
+																		Arrays.asList("Synchonize Info=manager_synchonize:info", "Synchonize=manager_synchonize:synchronize")));
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);
 	}
 

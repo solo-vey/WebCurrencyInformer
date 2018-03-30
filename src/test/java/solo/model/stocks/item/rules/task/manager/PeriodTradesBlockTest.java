@@ -24,20 +24,20 @@ public class PeriodTradesBlockTest
     	for(int nPos = 1; nPos <= 24; nPos++)
     	{
     		final TradeInfo oTradeInfo = new TradeInfo(oRateInfo, 0);
-    		oTradeInfo.addBuy(new BigDecimal(nPos), new BigDecimal(nPos));
+    		oTradeInfo.addBuy(null, new BigDecimal(nPos), new BigDecimal(nPos));
     		oPeriodTradesBlock.addTrade(nPos, oTradeInfo);
     	}
     	
     	for(int nPos = 1; nPos < 15; nPos++)
     	{
     		final TradeInfo oTradeInfo = new TradeInfo(oRateInfo, 0);
-    		oTradeInfo.addBuy(new BigDecimal(nPos), new BigDecimal(nPos));
+    		oTradeInfo.addBuy(null, new BigDecimal(nPos), new BigDecimal(nPos));
     		oPeriodTradesBlock.addTrade(nPos, oTradeInfo);
     	}
     	
     	//	Act
 		final TradeInfo oTradeInfo = new TradeInfo(oRateInfo, 0);
-		oTradeInfo.addBuy(new BigDecimal(15), new BigDecimal(15));
+		oTradeInfo.addBuy(null, new BigDecimal(15), new BigDecimal(15));
 		oPeriodTradesBlock.addTrade(15, oTradeInfo);
     	
     	//	Assert

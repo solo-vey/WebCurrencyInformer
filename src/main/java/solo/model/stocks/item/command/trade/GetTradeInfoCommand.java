@@ -13,7 +13,7 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
-import solo.model.stocks.item.command.rule.AddRuleCommand;
+import solo.model.stocks.item.command.rule.AddControlerCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.trade.SimpleTradeStrategy;
@@ -102,9 +102,11 @@ public class GetTradeInfoCommand extends BaseCommand
 			if (ManagerUtils.isTestObject(oTradeControler))
 			{
 				final RateInfo oRateInfo = oTradeControler.getTradesInfo().getRateInfo();
-				final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2)));	
-				aButtons.add(Arrays.asList("Create controler [" + nSum + "]=" + CommandFactory.makeCommandLine(AddRuleCommand.class, 
-							AddRuleCommand.RULE_TYPE, TradeControler.NAME) + "_" + oRateInfo + "_" + nSum));
+				final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2)));
+				if (nSum.compareTo(BigDecimal.ZERO) > 0)
+					aButtons.add(Arrays.asList("Create controler [" + nSum + "]=" + 
+							CommandFactory.makeCommandLine(AddControlerCommand.class, AddControlerCommand.RATE_PARAMETER, oRateInfo,
+							AddControlerCommand.SUM_PARAMETER, nSum)));
 			}
 			
 			strMessage += (!strMessage.contains("BUTTONS\r\n") ? "BUTTONS\r\n" : ",") + TelegramTransport.getButtons(aButtons);

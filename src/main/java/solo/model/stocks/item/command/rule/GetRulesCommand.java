@@ -51,7 +51,8 @@ public class GetRulesCommand extends BaseCommand
 		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
 			final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRuleInfo.getValue());
-			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL))
+			if (null != oTradeTask && !oTradeTask.getTradeControler().equals(ITradeControler.NULL) &&
+					WorkerFactory.getStockExchange().getRules().getRules().containsValue(oTradeTask.getTradeControler()))
 				continue;
 			
 			nAllCount++;

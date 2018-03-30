@@ -1,6 +1,7 @@
-package solo.model.stocks.exchange;
+package solo.archive.exchange;
 
-import solo.model.stocks.source.CryptopiaStockSource;
+import solo.archive.source.CryptopiaStockSource;
+import solo.model.stocks.exchange.BaseStockExchange;
 
 public class СryptopiaStockExchange extends BaseStockExchange
 {

@@ -4,6 +4,7 @@ import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.HashMap;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -15,6 +16,7 @@ import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
+import solo.model.stocks.item.OrderTrade;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.RateState;
@@ -192,6 +194,61 @@ public class ExmoStockSource extends BaseStockSource
 		return oOrder;
 	}
 	
+	@SuppressWarnings("unchecked")
+	@Override protected OrderTrade convert2Trade(final Object oInputTrade, final RateInfo oRateInfo)
+	{
+		final OrderTrade oOrderTrade = super.convert2Trade(oInputTrade, oRateInfo);	
+		if (null == oInputTrade)
+			return oOrderTrade;
+		
+		if (!(oInputTrade instanceof Map<?, ?>))
+			return oOrderTrade;
+
+		final Map<String, Object> oMapOrderTrade = (Map<String, Object>)oInputTrade;  
+		if (null != oMapOrderTrade.get("trade_id"))
+			oOrderTrade.setId(oMapOrderTrade.get("trade_id").toString());
+
+		if (null != oMapOrderTrade.get("type"))
+		{
+			oOrderTrade.setSide(oMapOrderTrade.get("type").toString());
+			if (oRateInfo.getIsReverse())
+				oOrderTrade.setSide(OrderSide.BUY.equals(oOrderTrade.getSide()) ? OrderSide.SELL : OrderSide.BUY);
+		}
+
+		if (null != oMapOrderTrade.get("price"))
+		{
+			BigDecimal nPrice = MathUtils.fromString(oMapOrderTrade.get("price").toString());
+			nPrice = (oRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1 / nPrice.doubleValue(), TradeUtils.getPricePrecision(oRateInfo)) : nPrice);
+			oOrderTrade.setPrice(nPrice);
+		}
+		
+		if (null != oMapOrderTrade.get("quantity"))
+		{
+			final BigDecimal nQuantity = MathUtils.fromString(oMapOrderTrade.get("quantity").toString());
+			if (!oRateInfo.getIsReverse())
+				oOrderTrade.setVolume(nQuantity);
+			else
+				oOrderTrade.setSum(nQuantity);
+		}
+		
+		if (null != oMapOrderTrade.get("amount"))
+		{
+			final BigDecimal nAmount = MathUtils.fromString(oMapOrderTrade.get("amount").toString());
+			if (!oRateInfo.getIsReverse())
+				oOrderTrade.setSum(nAmount);
+			else
+				oOrderTrade.setVolume(nAmount);
+		}
+		
+		if (null != oMapOrderTrade.get("date"))
+		{
+			final Integer nDate = (Integer)oMapOrderTrade.get("date");
+			oOrderTrade.setCreated(new Date(((long)nDate) * 1000));
+		}
+		
+		return oOrderTrade;
+	}
+	
 	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
@@ -225,27 +282,34 @@ public class ExmoStockSource extends BaseStockSource
 	@SuppressWarnings("unchecked")
 	public void setUserOrders(final StockUserInfo oUserInfo, final RateInfo oRequestRateInfo) throws Exception
 	{
-		if (RateInfo.NULL.equals(oRequestRateInfo))
-			return;
-		
-		final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-		final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
-		final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);
-		
-		final List<RateInfo> aRates = (null == oRequestRateInfo ? getRates() : Arrays.asList(oRequestRateInfo));
-		for(final RateInfo oRateInfo : aRates)
+		try
 		{
-			final String strMarket = getRateIdentifier(oRateInfo);
-			final List<Object> oRateOrders = (List<Object>) oAllOrdersData.get(strMarket);
-			if (null == oRateOrders)
-				continue;
+			if (RateInfo.NULL.equals(oRequestRateInfo))
+				return;
 			
-			for(final Object oOrderInfo : oRateOrders)
+			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+			final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
+			final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);
+			
+			final List<RateInfo> aRates = (null == oRequestRateInfo ? getRates() : Arrays.asList(oRequestRateInfo));
+			for(final RateInfo oRateInfo : aRates)
 			{
-				final Order oOrder = convert2Order(oOrderInfo);
-				oOrder.setState("wait");
-				oUserInfo.addOrder(oRateInfo, oOrder); 
+				final String strMarket = getRateIdentifier(oRateInfo);
+				final List<Object> oRateOrders = (List<Object>) oAllOrdersData.get(strMarket);
+				if (null == oRateOrders)
+					continue;
+				
+				for(final Object oOrderInfo : oRateOrders)
+				{
+					final Order oOrder = convert2Order(oOrderInfo);
+					oOrder.setState("wait");
+					oUserInfo.addOrder(oRateInfo, oOrder); 
+				}
 			}
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't setUserOrders [" + oRequestRateInfo + "]", e);
 		}
 	}
 	
@@ -272,12 +336,15 @@ public class ExmoStockSource extends BaseStockSource
 			try { Thread.sleep((oGetOrder.isException() ? 250 : 100)); }
 			catch (InterruptedException e) { break; }
 			nTryCount -= (oGetOrder.isException() ? 1 : 5);
-			System.out.println("Get order repeat [" + nTryCount + "][" + ((new Date()).getTime() - oDateStartGet.getTime()) + "] : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getState() + " " + oGetOrder.getMessage());
+			System.out.println("Get order repeat [" + nTryCount + "][" + ((new Date()).getTime() - oDateStartGet.getTime()) + "] : " + strOrderId + 
+								" " + oOriginalRateInfo + " " + oGetOrder.getState() + " " + oGetOrder.getInfoShort() + ". " + oGetOrder.getMessage());
 		}
 		
 		if (oGetOrder.isDone() && oOriginalRateInfo.getIsReverse())
-			return TradeUtils.makeReveseOrder(oGetOrder);
+			oGetOrder = TradeUtils.makeReveseOrder(oGetOrder);
 		
+		System.out.println("Get order result " + strOrderId +  " " + oOriginalRateInfo + " " + oGetOrder.getState() + " " + oGetOrder.getInfoShort() + 
+							". " + oGetOrder.getMessage());
 		return oGetOrder;
 	}
 	
@@ -301,46 +368,104 @@ public class ExmoStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			return new Order(Order.EXCEPTION, e.getMessage());
+			WorkerFactory.onException("Can't getOrderInternal", e);
+			
+			return new Order(strOrderId, Order.EXCEPTION, e.getMessage());
+		}
+	}
+	
+	@SuppressWarnings("serial")
+	public List<OrderTrade> getTrades(final String strOrderID, final RateInfo oRateInfo)
+	{
+		final List<OrderTrade> oTrades = new LinkedList<OrderTrade>();
+		
+		try
+		{
+			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
+				put("order_id", strOrderID);
+			}});
+			
+			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
+			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
+				return oTrades;
+			
+			final Object oTradesData = oOrderData.get("trades");
+			if (!(oTradesData instanceof List<?>))
+				return oTrades;
+
+			final List<?> oListTrades = (List<?>)oTradesData;
+			for(final Object oTrade : oListTrades)
+			{
+				final OrderTrade oOrderTrade = convert2Trade(oTrade, oRateInfo);
+				oTrades.add(oOrderTrade);
+			}
+	
+			return oTrades;
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't getTrades [" + strOrderID + "] [" + oRateInfo + "]", e);
+			
+			return oTrades;
 		}
 	}
 
 	@SuppressWarnings("serial")
 	protected Order getOrderTrades(final String strOrderId) throws Exception
 	{
-		final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-		final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
-			put("order_id", strOrderId);
-		}});
-		
-		final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
-		if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
-			return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
-
-		final Order oOrder = convert2Order(oOrderData);			
-		oOrder.setState(Order.DONE);
-		oOrder.setId(strOrderId);
-
-		return oOrder;
+		try
+		{
+			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+			final String oOrderJson = oUserInfoRequest.Request("order_trades", new HashMap<String, String>() {{
+				put("order_id", strOrderId);
+			}});
+			
+			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
+			if (null != oOrderData.get("result") && "false".equals(oOrderData.get("result").toString()))
+				return new Order(strOrderId, Order.ERROR, oOrderData.get("error").toString());
+	
+			final Order oOrder = convert2Order(oOrderData);			
+			oOrder.setState(Order.DONE);
+			oOrder.setId(strOrderId);
+	
+			return oOrder;
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't getOrderTrades [" + strOrderId + "]", e);
+			
+			return new Order(strOrderId, Order.EXCEPTION, e.getMessage());
+		}
 	}
 
 	@SuppressWarnings("serial")
 	protected Order findOrderInCanceled(final String strOrderId) throws Exception
 	{
-		final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-		final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
-			put("limit", "25");
-		}});
-		
-		final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
-		for(final Object oOrderData : oUserCenceledOrders)
+		try
 		{
-			final Order oCanceledOrder = convert2Order(oOrderData);
-			if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
+			final Exmo oUserCenceledOrdersRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+			final String strUserCenceledOrdersJson = oUserCenceledOrdersRequest.Request("user_cancelled_orders", new HashMap<String, String>() {{
+				put("limit", "25");
+			}});
+			
+			if (strUserCenceledOrdersJson.equalsIgnoreCase("{}"))
+				return Order.NULL;
+			
+			final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);
+			for(final Object oOrderData : oUserCenceledOrders)
 			{
-				oCanceledOrder.setState(Order.CANCEL);
-				return oCanceledOrder;
+				final Order oCanceledOrder = convert2Order(oOrderData);
+				if (oCanceledOrder.getId().equalsIgnoreCase(strOrderId))
+				{
+					oCanceledOrder.setState(Order.CANCEL);
+					return oCanceledOrder;
+				}
 			}
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("Can't findOrderInCanceled [" + strOrderId + "]", e);
 		}
 		
 		return Order.NULL;
@@ -348,6 +473,7 @@ public class ExmoStockSource extends BaseStockSource
 
 	@Override public Order addOrder(final OrderSide oOriginalSide, final RateInfo oOriginalRateInfo, BigDecimal nOriginalVolume, BigDecimal nOriginalPrice)
 	{
+		nOriginalPrice = TradeUtils.getRoundedPrice(oOriginalRateInfo, nOriginalPrice);
         System.out.println("Add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice);
 
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
@@ -355,7 +481,7 @@ public class ExmoStockSource extends BaseStockSource
 		final BigDecimal nVolume = (oOriginalRateInfo.getIsReverse() ? nOriginalVolume.multiply(nOriginalPrice) : nOriginalVolume);
 		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION) : nOriginalPrice);
         if (oOriginalRateInfo.getIsReverse())
-        	System.out.println("Add reverse order: " + oSide + " " + oOriginalRateInfo + " " + nVolume + " " + nPrice);
+        	System.out.println("Add reverse order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice);
 
 		try
 		{
@@ -375,9 +501,12 @@ public class ExmoStockSource extends BaseStockSource
 			if ("true".equals(oOrderData.get("result").toString()))
 			{
 				final String strOrderId = oOrderData.get("order_id").toString(); 
-				final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);
-				if (!oOriginalRateInfo.getIsReverse())
-					oOrder.setVolume(nOriginalVolume);
+				final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);	
+				if (oOrder.isNull())
+				{
+					oOrder.setId(strOrderId);
+					System.err.println("Set NULL order id after add: " + oOrder.getId() + " " + oOrder.getInfoShort());
+				}
 
 				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
 				return oOrder;

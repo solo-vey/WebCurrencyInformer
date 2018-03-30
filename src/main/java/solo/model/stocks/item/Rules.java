@@ -13,6 +13,7 @@ import java.util.Map.Entry;
 
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
@@ -41,7 +42,9 @@ public class Rules
 		
 		m_oRules.put(m_nLastRuleID, oRule);
 		oRule.setID(m_nLastRuleID);
-		System.err.printf("Add rule : " + oRule);
+		if (!ManagerUtils.isTestObject(oRule))
+			System.out.printf("Add rule : " + oRule);
+		
 		m_nLastRuleID++;
 		save();
 	}

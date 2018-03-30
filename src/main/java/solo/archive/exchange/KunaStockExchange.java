@@ -1,6 +1,7 @@
-package solo.model.stocks.exchange;
+package solo.archive.exchange;
 
-import solo.model.stocks.source.KunaStockSource;
+import solo.archive.source.KunaStockSource;
+import solo.model.stocks.exchange.BaseStockExchange;
 
 public class KunaStockExchange extends BaseStockExchange
 {

@@ -1,4 +1,4 @@
-package solo.model.stocks.source;
+package solo.archive.source;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -14,6 +14,7 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.StockRateStates;
+import solo.model.stocks.source.BaseStockSource;
 import solo.utils.ResourceUtils;
 
 public class MockStockSource extends BaseStockSource

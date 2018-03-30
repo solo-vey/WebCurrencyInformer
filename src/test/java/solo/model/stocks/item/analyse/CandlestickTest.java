@@ -28,7 +28,7 @@ public class CandlestickTest extends BaseTest
     	final File oFile = new File(oCandlestick.getFileName());
     	Assert.assertTrue(oFile.isFile());
     	
-    	System.err.print(oCandlestick.getMax(24));
+    	System.out.print(oCandlestick.getMax(24));
     }
 
     @Test public void testCandlestickHistory() throws Exception
@@ -42,7 +42,7 @@ public class CandlestickTest extends BaseTest
     	final List<String> aHistoryInfo = oCandlestick.getHistoryInfo();
     	
     	//	Assert
-    	System.err.print(aHistoryInfo.toString().replace("\r", "").replace("},", "},\r\n"));
+    	System.out.print(aHistoryInfo.toString().replace("\r", "").replace("},", "},\r\n"));
     }
 
     @Test public void testAverageMaxPrice() throws Exception

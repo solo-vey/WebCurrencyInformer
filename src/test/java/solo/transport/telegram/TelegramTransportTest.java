@@ -24,7 +24,7 @@ public class TelegramTransportTest
     	final Map<String, Object> oResult = (Map<String, Object>) oTelegram.sendMessage("Привет");
 
         //	Assert
-    	System.err.printf("Send message result " + oResult + "\r\n");
+    	System.out.printf("Send message result " + oResult + "\r\n");
     }
 
 	@Test
@@ -38,7 +38,7 @@ public class TelegramTransportTest
 
         //	Assert
     	if (null != oMessages)
-    		System.err.printf("Get messages result " + oMessages.getMessages().get(0).getText() + "\r\n");
+    		System.out.printf("Get messages result " + oMessages.getMessages().get(0).getText() + "\r\n");
     }
 	
 
@@ -56,6 +56,6 @@ public class TelegramTransportTest
 		oTelegram.deleteMessage(oMessage.getID());
    	
         //	Assert
-    	System.err.printf("Delete sended messages \r\n");
+    	System.out.printf("Delete sended messages \r\n");
     }
 }
