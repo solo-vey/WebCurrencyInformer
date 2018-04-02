@@ -37,7 +37,7 @@ public class StockManager implements IStockManager
 	public static final String OPERATIONS_NONE = StringUtils.EMPTY;
 	public static final String OPERATION_TRACK_TRADES = ";trackTrades;";
 	public static final String OPERATION_CHECK_RATES = ";checkRates;";
-	public static final String OPERATIONS_DEFAULT = OPERATION_TRACK_TRADES;
+	public static final String OPERATIONS_DEFAULT = OPERATIONS_ALL;
 	
 	final protected StockManagesInfo m_oStockManagesInfo;
 	final protected Money m_oMoney;

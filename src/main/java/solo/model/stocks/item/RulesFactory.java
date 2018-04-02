@@ -10,6 +10,7 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.system.HelpCommand;
 import solo.model.stocks.item.rules.task.trade.BuyTaskTrade;
+import solo.model.stocks.item.rules.task.trade.BuyTradeControler;
 import solo.model.stocks.item.rules.task.trade.SellTaskTrade;
 import solo.model.stocks.item.rules.task.trade.TTaskTrade;
 import solo.model.stocks.item.rules.task.trade.TTradeControler;
@@ -26,9 +27,11 @@ public class RulesFactory
 		registerRuleClass(TaskTrade.NAME.toLowerCase(),  		TaskTrade.class);
 		registerRuleClass(BuyTaskTrade.NAME.toLowerCase(), 	 	BuyTaskTrade.class);
 		registerRuleClass(SellTaskTrade.NAME.toLowerCase(), 	SellTaskTrade.class);
-		registerRuleClass(TradeControler.NAME.toLowerCase(),  	TradeControler.class);
 		registerRuleClass(TTaskTrade.NAME.toLowerCase(),  		TTaskTrade.class);
+		
+		registerRuleClass(TradeControler.NAME.toLowerCase(),  	TradeControler.class);
 		registerRuleClass(TTradeControler.NAME.toLowerCase(),  	TTradeControler.class);
+		registerRuleClass(BuyTradeControler.NAME.toLowerCase(), BuyTradeControler.class);
 	}
 	
 	static protected void registerRuleClass(final String strTaskType, final Class<?> oClass)

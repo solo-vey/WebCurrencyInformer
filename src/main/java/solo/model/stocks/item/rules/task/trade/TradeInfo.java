@@ -352,7 +352,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public void setTaskSide(OrderSide oTaskSide)
 	{
-		if (oTaskSide.equals(m_oTaskSide))
+		if (null == oTaskSide || oTaskSide.equals(m_oTaskSide))
 			return;
 		
 		m_oTaskSide = oTaskSide;
