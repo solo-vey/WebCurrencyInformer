@@ -25,7 +25,7 @@ public class SetStockParameterCommand extends BaseCommand
 	{
 		super(strСommandLine, CommonUtils.mergeParameters(NAME_PARAMETER, VALUE_PARAMETER));
 		m_strName = getParameter(NAME_PARAMETER).replace("-", "_");
-		m_strValue = getParameter(VALUE_PARAMETER).replace("-", "_");
+		m_strValue = getParameter(VALUE_PARAMETER);
 	}
 	
 	public void execute() throws Exception

@@ -315,8 +315,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			final Order oRemoveOrder = TradeUtils.removeOrder(oGetOrder, getRateInfo(), getStockSource());
 			if (oRemoveOrder.isException())
 				return;
+			updateOrderTradeInfo(oGetOrder);
 			
-			if (oRemoveOrder.isDone())
+/*			if (oRemoveOrder.isDone())
 			{
 				getTradeInfo().setOrder(oRemoveOrder);
 				WorkerFactory.getStockExchange().getRules().save();
@@ -332,7 +333,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 						getTradeInfo().getHistory().addToHistory("nDeltaSellVolume on cancel volume [" + nDeltaSellVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
 				}
 				updateOrderTradeInfo(oRemoveOrder);
-			}
+			}*/
 			
 			final BigDecimal oNewVolume = (oGetOrder.getSide().equals(OrderSide.BUY) ? 
 											calculateOrderVolume(getTradeInfo().getNeedSpendSum(), oNewPrice) : 
@@ -341,7 +342,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			if (oNewVolume.compareTo(nMinTradeVolume) < 0)
 			{
 				getTradeInfo().getHistory().addToHistory("Volume is small [" + oNewVolume + "]. Remove order " + oRemoveOrder.getInfoShort());
-				getTradeInfo().setOrder(oRemoveOrder);
+				//getTradeInfo().setOrder(oRemoveOrder);
 				WorkerFactory.getStockExchange().getRules().save();
 				return;
 			}

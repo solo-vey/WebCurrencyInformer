@@ -2,6 +2,7 @@ package solo.model.stocks.item.rules.task.manager;
 
 import java.math.BigDecimal;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -10,6 +11,7 @@ import java.util.Map.Entry;
 import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang.time.DateUtils;
 
+import solo.model.currency.Currency;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
@@ -21,11 +23,13 @@ import solo.model.stocks.item.command.system.AddRateCommand;
 import solo.model.stocks.item.rules.task.money.Money;
 import solo.model.stocks.item.rules.task.strategy.manager.BaseManagerStrategy;
 import solo.model.stocks.item.rules.task.strategy.manager.IManagerStrategy;
+import solo.model.stocks.item.rules.task.trade.BuyTradeControler;
 import solo.model.stocks.item.rules.task.trade.ControlerState;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
+import solo.model.stocks.item.utils.PeriodTracker;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
@@ -45,6 +49,8 @@ public class StockManager implements IStockManager
 	final protected IManagerStrategy m_oManagerStrategy;
 	final protected ManagerHistory m_oManagerHistory;
 	
+	final protected PeriodTracker m_oSynchronizePeriodTracker = new PeriodTracker(30);
+	
 	public StockManager(final IStockExchange oStockExchange)
 	{
 		m_oStockManagesInfo = StockManagesInfo.load(oStockExchange);
@@ -62,20 +68,23 @@ public class StockManager implements IStockManager
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{		
 		startTestControlers();
-		removeStoppedControlers();
 		
 		if (!getIsOperationAvalible(OPERATIONS_ALL))
 			return;
-		
+				
 		final Map<BigDecimal, RateInfo> oProfitabilityRates = getManagerStrategy().getProfitabilityRates();
 		final Map<BigDecimal, RateInfo> oUnProfitabilityRates = getManagerStrategy().getUnProfitabilityRates();
 
 		lookForProspectiveRate();
 		checkUnprofitability(oUnProfitabilityRates);
+		removeStoppedControlers();
 		removeHandUpTrades(oProfitabilityRates, oUnProfitabilityRates);
-		checkProfitableRates(oProfitabilityRates);
+		
+		synchonizeMoney();
+		final Map<RateInfo, BigDecimal> oNoMoneyRates = checkProfitableRates(oProfitabilityRates);
+		createBuyConrolers(oProfitabilityRates, oNoMoneyRates);
 	}
-	
+
 	@Override public Money getMoney()
 	{
 		return m_oMoney;
@@ -153,10 +162,19 @@ public class StockManager implements IStockManager
 		return bIsHadStoppingControlers;
 	}
 	
-	protected void checkProfitableRates(final Map<BigDecimal, RateInfo> oProfitabilityRates)
+	protected void synchonizeMoney()
 	{
-		if (!getIsOperationAvalible(OPERATION_CHECK_RATES))
+		if (!m_oSynchronizePeriodTracker.getIsTrigerred())
 			return;
+		
+		m_oMoney.synchonize(Money.SYNCHRONIZE_FULL);
+	}
+	
+	protected Map<RateInfo, BigDecimal> checkProfitableRates(final Map<BigDecimal, RateInfo> oProfitabilityRates)
+	{
+		final Map<RateInfo, BigDecimal> oNoMoneyRates = new HashMap<RateInfo, BigDecimal>();
+		if (!getIsOperationAvalible(OPERATION_CHECK_RATES))
+			return oNoMoneyRates;
 		
 		final List<Entry<BigDecimal, RateInfo>> oCreateControlers = new LinkedList<Entry<BigDecimal, RateInfo>>();
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oProfitabilityRates.entrySet())
@@ -172,7 +190,7 @@ public class StockManager implements IStockManager
 		}
 		
 		if (oCreateControlers.size() == 0)
-			return;
+			return oNoMoneyRates;
 		
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oCreateControlers)
 		{
@@ -180,9 +198,72 @@ public class StockManager implements IStockManager
 			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
 			if (ManagerUtils.createTradeControler(oRateInfo, nSum).isEmpty())
 				addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]", MessageLevel.TRADERESULTDEBUG);
+			else
+			{
+				final IStockManager oStockManager = WorkerFactory.getStockExchange().getManager();
+				final Money oMoney = oStockManager.getMoney();
+				final BigDecimal nFreeMoney = oMoney.getFreeMoney(oRateInfo.getCurrencyTo());
+				
+				final BigDecimal nInsufficientAmount = nSum.add(nFreeMoney.negate());
+				oNoMoneyRates.put(oRateInfo, nInsufficientAmount);
+			}
+		}
+		
+		return oNoMoneyRates;
+	}
+	
+	protected void createBuyConrolers(final Map<BigDecimal, RateInfo> oProfitabilityRates, final Map<RateInfo, BigDecimal> oNoMoneyRates)
+	{
+		if (oNoMoneyRates.size() == 0)
+			return;
+		
+		try
+		{
+			final Map<RateInfo, RateStateShort> oRateStates = WorkerFactory.getStockSource().getAllRateState();
+			for(final Entry<RateInfo, BigDecimal> oNeedMoneyInfo : oNoMoneyRates.entrySet())
+			{
+				final BigDecimal nNeedMoney = oNeedMoneyInfo.getValue();
+				final RateInfo oRateInfo = oNeedMoneyInfo.getKey();
+				final Currency oMoneyCurrency = oRateInfo.getCurrencyTo();
+				final Currency oSellCurency = findSellCurrency(oMoneyCurrency, nNeedMoney);
+				if (null == oSellCurency)
+					continue;
+				
+				BigDecimal nControlerSum = BigDecimal.ZERO;
+				final RateInfo oControlerRateInfo = new RateInfo(oMoneyCurrency, oSellCurency);
+				if (oRateStates.containsKey(oControlerRateInfo))
+				{
+					final BigDecimal nPrice = oRateStates.get(oControlerRateInfo).getBidPrice();
+					nControlerSum = nNeedMoney.multiply(nPrice);
+				}
+				else
+				{
+					final RateInfo oReverseControlerRateInfo = RateInfo.getReverseRate(oControlerRateInfo);
+					if (oRateStates.containsKey(oReverseControlerRateInfo))
+					{
+						final BigDecimal nPrice = MathUtils.getBigDecimal(1 / oRateStates.get(oReverseControlerRateInfo).getBidPrice().doubleValue(), TradeUtils.getPricePrecision(oReverseControlerRateInfo));
+						nControlerSum = nNeedMoney.multiply(nPrice);
+					}
+				}
+					
+				if (nControlerSum.compareTo(BigDecimal.ZERO) > 0)
+				{
+					System.err.println("Need create buy controler [" + oControlerRateInfo + "] [" + nControlerSum + "]");
+					//ManagerUtils.createBuyTradeControler(oControlerRateInfo, nControlerSum);
+				}
+			}
+		}
+		catch(final Exception e)
+		{
+			WorkerFactory.onException("createBuyConrolers. Exception. ", e);
 		}
 	}
 	
+	protected Currency findSellCurrency(Currency oMoneyCurrency, BigDecimal nNeedMoney)
+	{
+		return null;
+	}
+
 	protected void checkUnprofitability(final Map<BigDecimal, RateInfo> oUnProfitabilityRates)
 	{
 		if (!getIsOperationAvalible(OPERATION_CHECK_RATES))
@@ -197,6 +278,9 @@ public class StockManager implements IStockManager
 				final IRule oRule = oRuleInfo.getValue();
 				final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule);
 				if (null == oControler || ManagerUtils.isTestObject(oControler))
+					continue;
+				
+				if (oControler instanceof BuyTradeControler)
 					continue;
 				
 				if (oControler.getControlerState().isStopping())

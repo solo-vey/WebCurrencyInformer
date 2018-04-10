@@ -39,7 +39,7 @@ import solo.model.stocks.worker.WorkerFactory;
 public class RequestUtils
 {
 	public final static int DEFAULT_TEMEOUT = 3;
-	public final static int MAX_PARALEL_QUERY = 5;
+	public final static int MAX_PARALEL_QUERY = 8;
 	
 	private static final Map<String, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<String, Semaphore>();
 	

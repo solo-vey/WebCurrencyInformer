@@ -22,6 +22,7 @@ import solo.model.stocks.item.RulesFactory;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.money.Money;
 import solo.model.stocks.item.rules.task.money.TradeMoney;
+import solo.model.stocks.item.rules.task.trade.BuyTradeControler;
 import solo.model.stocks.item.rules.task.trade.ITest;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.TTradeControler;
@@ -121,8 +122,18 @@ public class ManagerUtils
 			WorkerFactory.onException("Can't create test trade controler [" + oRateInfo + "]", e);
 		}
 	}
-	
+
 	public static String createTradeControler(final RateInfo oRateInfo, final BigDecimal nSum)
+	{
+		return createTradeControler(oRateInfo, nSum, TradeControler.NAME);
+	}
+
+	public static String createBuyTradeControler(final RateInfo oRateInfo, final BigDecimal nSum)
+	{
+		return createTradeControler(oRateInfo, nSum, BuyTradeControler.NAME);
+	}
+	
+	public static String createTradeControler(final RateInfo oRateInfo, final BigDecimal nSum, final String strControlerType)
 	{
 		final IStockManager oStockManager = WorkerFactory.getStockExchange().getManager();
 		final Money oMoney = oStockManager.getMoney();
@@ -137,7 +148,7 @@ public class ManagerUtils
 			if (null == oTradeMoney)
 				throw new Exception("Can't reserve money [" + oRateInfo + "] [" + nSum + "]. Money [" + oMoney.getFreeMoney(oRateInfo.getCurrencyTo()) + "]");
 			
-			final String strRuleInfo = TradeControler.NAME + "_" + oRateInfo + "_" + nSum;
+			final String strRuleInfo = strControlerType + "_" + oRateInfo + "_" + nSum;
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			WorkerFactory.getStockExchange().getRules().addRule(oRule);
 			oTradeMoney.setTradeID(oRule.getID());
@@ -234,7 +245,7 @@ public class ManagerUtils
 		
 		final int nStartHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
 		final List<Entry<Integer, RateTradesBlock>> aResult = new LinkedList<Entry<Integer, RateTradesBlock>>();
-		for(int nPos = 1; nPos <= nHoursCount; nPos++)
+		for(int nPos = 0; nPos < nHoursCount; nPos++)
 		{
 			final int nHour = (nStartHour - nPos >= 0 ? nStartHour - nPos : (nStartHour - nPos) + 24);
 			final RateTradesBlock oHourRateTradesBlock = oRatePriodTrades.get(nHour);

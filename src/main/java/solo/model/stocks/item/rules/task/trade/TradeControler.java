@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.Map;
 import org.apache.commons.lang.StringUtils;
 
-import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
 import solo.model.stocks.item.IRule;
@@ -268,12 +267,12 @@ public class TradeControler extends TaskBase implements ITradeControler
 			final BigDecimal nTotalSum = m_oTradesInfo.getSum().add(m_oTradesInfo.getSumToSell());
 			if (nTotalSum.compareTo(oMinTradeSum) < 0)
 			{
-				getTradesInfo().setCurrentState("Wait buy1. No money - " + MathUtils.toCurrencyStringEx2(nTotalSum) + " less " + MathUtils.toCurrencyStringEx2(oMinTradeSum));
+				getTradesInfo().setCurrentState("Wait buy. No money - " + MathUtils.toCurrencyStringEx2(nTotalSum) + " less " + MathUtils.toCurrencyStringEx2(oMinTradeSum));
 				return;
 			}
 				
 			BigDecimal nBuySum = MathUtils.getRoundedBigDecimal(nTotalSum.doubleValue() / m_nMaxTrades, TradeUtils.getVolumePrecision(getRateInfo()));
-			BigDecimal nFreeCurrencyAmount = WorkerFactory.getStockExchange().getManager().getMoney().getFreeMoney(getRateInfo().getCurrencyTo());
+			/*BigDecimal nFreeCurrencyAmount = WorkerFactory.getStockExchange().getManager().getMoney().getFreeMoney(getRateInfo().getCurrencyTo());
 			if (ManagerUtils.isTestObject(this))
 			{
 				final CurrencyAmount oCurrencyAmount = getStockSource().getUserInfo(getRateInfo()).getMoney().get(getRateInfo().getCurrencyTo());
@@ -292,7 +291,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 					getTradesInfo().setCurrentState("Wait buy. No money on balance - " + MathUtils.toCurrencyStringEx2(nBuySum) + " more " + MathUtils.toCurrencyStringEx2(nFreeCurrencyAmount));
 					return;
 				}
-			}
+			}*/
 			
 			final BigDecimal nNeedSellVolume = m_oTradesInfo.getFreeVolume();
 			BigDecimal nNeedSellVolumeSum = BigDecimal.ZERO;

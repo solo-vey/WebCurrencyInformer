@@ -86,21 +86,21 @@ public class DropSellTradeStrategy extends SimpleTradeStrategy
 			return;
 		}
 		
-		final Date oHourDateCreate = DateUtils.addMinutes(new Date(), -60); 
+		final Date oHourDateCreate = DateUtils.addMinutes(new Date(), -180); 
 		final BigDecimal nBougthPrice = oTaskTrade.getTradeInfo().getAveragedBoughPrice(); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHourDateCreate))
 	    {
 	    	final double nDropPricePercent = (ManagerUtils.isTestObject(oTaskTrade) ? 0.5 : 0.98);
 	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nBougthPrice.doubleValue() * nDropPricePercent, TradeUtils.getPricePrecision(oRateInfo));
-	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "60 minutes critical price ");
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "180 minutes critical price ");
 			return;
 	    }
 	    
-		final Date oHalfHourDateCreate = DateUtils.addMinutes(new Date(), -30); 
+		final Date oHalfHourDateCreate = DateUtils.addMinutes(new Date(), -90); 
 	    if (null != oOrder.getCreated() && oOrder.getCreated().before(oHalfHourDateCreate))
 	    {
 	    	final BigDecimal nNewCriticalPrice = MathUtils.getBigDecimal(nBougthPrice.doubleValue() * 0.99, TradeUtils.getPricePrecision(oRateInfo));
-	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "30 minutes critical price ");
+	    	setNewCriticalPrice(nNewCriticalPrice, oTaskTrade, "90 minutes critical price ");
 			return;
 	    }
 		

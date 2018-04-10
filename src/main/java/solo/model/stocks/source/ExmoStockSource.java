@@ -485,6 +485,7 @@ public class ExmoStockSource extends BaseStockSource
 
 		try
 		{
+	        final Date oDateStartAdd = new Date();
 	        checkOrderParameters(oSide, oRateInfo, nPrice);
 			
 			super.addOrder(oSide, oRateInfo, nVolume, nPrice);
@@ -501,14 +502,23 @@ public class ExmoStockSource extends BaseStockSource
 			if ("true".equals(oOrderData.get("result").toString()))
 			{
 				final String strOrderId = oOrderData.get("order_id").toString(); 
-				final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);	
+				/*final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);	
 				if (oOrder.isNull())
 				{
 					oOrder.setId(strOrderId);
 					System.err.println("Set NULL order id after add: " + oOrder.getId() + " " + oOrder.getInfoShort());
-				}
+				}*/
+				
+				Order oOrder = new Order(strOrderId, Order.WAIT, StringUtils.EMPTY);
+				oOrder.setCreated(new Date());
+				oOrder.setPrice(nPrice);
+				oOrder.setVolume(nVolume);
+				oOrder.setSide(oSide);
+				
+				if (oOriginalRateInfo.getIsReverse())
+					oOrder = TradeUtils.makeReveseOrder(oOrder);
 
-				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
+				System.out.println("Add order complete: [" + ((new Date()).getTime() - oDateStartAdd.getTime()) + "]." + oOrder.getId() + " " + oOrder.getInfoShort());
 				return oOrder;
 			}
 			
@@ -541,7 +551,7 @@ public class ExmoStockSource extends BaseStockSource
 			final Map<String, Object> oOrderData = JsonUtils.json2Map(oOrderJson);
 			if (null != oOrderData.get("result") && "true".equals(oOrderData.get("result").toString()))
 			{
-				final Order oOrderTrades = getOrderTrades(strOrderId);
+				/*final Order oOrderTrades = getOrderTrades(strOrderId);
 				if (oOrderTrades.isError())
 				{
 			        System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + ". No trades");
@@ -565,6 +575,9 @@ public class ExmoStockSource extends BaseStockSource
 				}
 				
 		        System.out.println("Remove order complete. " + strOrderId + ". Can't read order after remove");
+				return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);*/
+				
+				System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId);
 				return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
 			}
 
