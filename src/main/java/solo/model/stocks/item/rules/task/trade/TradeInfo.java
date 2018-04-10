@@ -389,8 +389,13 @@ public class TradeInfo extends BaseObject implements Serializable
 	
 	public String getInfo()
 	{
-		return MathUtils.toCurrencyStringEx3(getReceivedSum()) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(getDelta()) + "\r\n" + 
-				MathUtils.toCurrencyStringEx3(getAveragedSoldPrice()) + " / " + MathUtils.toCurrencyStringEx3(getAveragedBoughPrice());
+		final BigDecimal nDelta = getDelta();
+		final String strPrefix = (nDelta.compareTo(BigDecimal.ZERO) < 0 ? "<code>" : StringUtils.EMPTY);
+		final String strSuffix = (nDelta.compareTo(BigDecimal.ZERO) < 0 ? "</code>" : StringUtils.EMPTY);
+		return strPrefix + 
+				//MathUtils.toCurrencyStringEx3(getReceivedSum()) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + 
+				MathUtils.toCurrencyStringEx3(getDelta()) + "\r\n" + 
+				MathUtils.toCurrencyStringEx3(getAveragedSoldPrice()) + " / " + MathUtils.toCurrencyStringEx3(getAveragedBoughPrice()) + strSuffix;
 	}
 	
 	/** Строковое представление документа */
