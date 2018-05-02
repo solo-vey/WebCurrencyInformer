@@ -131,6 +131,22 @@ public class Money implements Serializable
 				strResult = "Synchonize money.\r\n";
 				if (SYNCHRONIZE_INFO.equalsIgnoreCase(strType))
 					strResult += "Currency / Real / Stock / Reserved\r\n";
+				
+				final List<TradeMoney> oLostMoney = new LinkedList<TradeMoney>();
+				for(final TradeMoney oTradeMoney : getReserveMoney())
+				{
+					final int nRuleID = oTradeMoney.getTradeID();
+					if (!WorkerFactory.getStockExchange().getRules().getRules().containsKey(nRuleID))
+						oLostMoney.add(oTradeMoney);
+				}
+				
+				for(final TradeMoney oTradeMoney : oLostMoney)
+				{
+					getReserveMoney().remove(oTradeMoney);
+					strResult += "Remove lost money - " + oTradeMoney.getRateInfo() + " / ";
+					strResult += " / " + MathUtils.toCurrencyStringEx3(oTradeMoney.getSum()) + " / " + MathUtils.toCurrencyStringEx3(oTradeMoney.getVolume()) + " / " ;
+					strResult += "\r\n";
+				}
 
 				for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 				{
