@@ -82,6 +82,7 @@ public class CommandHistory
 		catch (final Exception e) 
 		{
 			System.err.printf("Load history exception : " + e.getMessage() + "\r\n");
+			save();
 	    }			
 	}
 

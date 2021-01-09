@@ -73,7 +73,7 @@ public class CryptopiaStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			WorkerFactory.onException("Can't add rate in stock source [" + getClass().getSimpleName() + "]", e);
+			//WorkerFactory.onException("Can't add rate in stock source [" + getClass().getSimpleName() + "]", e);
 		}
 	}
 	

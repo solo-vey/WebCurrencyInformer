@@ -270,13 +270,15 @@ public class TelegramTransport implements ITransport
     	final String strProxyHost = ResourceUtils.getResource("proxy.host", CurrencyInformer.PROPERTIES_FILE_NAME);
 		final int nProxyPort = ResourceUtils.getIntFromResource("proxy.port", CurrencyInformer.PROPERTIES_FILE_NAME, 0);
 		
-		RequestConfig requestConfig = RequestConfig.custom()
-	    		.setProxy(new HttpHost(strProxyHost, nProxyPort))
-	    		.build();
-		uploadFile.setConfig(requestConfig);		
+		if (!StringUtils.isBlank(strProxyHost) && 0 != nProxyPort)
+		{
+			RequestConfig requestConfig = RequestConfig.custom()
+		    		.setProxy(new HttpHost(strProxyHost, nProxyPort))
+		    		.build();
+			uploadFile.setConfig(requestConfig);		
+		}
     	  
     	HttpEntity multipart = builder.build(); 
-    	 
     	uploadFile.setEntity(multipart); 
     	 
     	CloseableHttpResponse postResponse = httpClient.execute(uploadFile); 

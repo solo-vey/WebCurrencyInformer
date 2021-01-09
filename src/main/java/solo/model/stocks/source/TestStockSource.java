@@ -354,7 +354,9 @@ class TestStockSourceData implements Serializable
 		catch (final Exception e) 
 		{
 			WorkerFactory.onException("Load test source info exception", e);
-			return new TestStockSourceData();
+			final TestStockSourceData oTestStockSourceData = new TestStockSourceData();
+			oTestStockSourceData.save();
+			return oTestStockSourceData;
 	    }			
 	}
 

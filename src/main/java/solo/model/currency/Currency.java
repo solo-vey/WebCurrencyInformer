@@ -10,31 +10,32 @@ public enum Currency
 	/** Ethereum Classic */
 	ETC("EthereumClassic"),
 	/** Electroneum */
-	ETN("Electroneum"), 
+	//ETN("Electroneum"), 
 	/** Waves */
 	WAVES("Waves"),
 	/** Xrp */
 	XRP("Xpr"),
 	/** Dash */
-	DASH("Dash"),
+	//DASH("Dash"),
 	/** Doge */
-	DOGE("Doge"),
+	//DOGE("Doge"),
 	/** Dot */
-	DOT("Dot"),
+	//DOT("Dot"),
 	/** Zec */
-	ZEC("Zec"),
+	//ZEC("Zec"),
 	/** Usdt */
-	USDT("Usdt"),
+	//USDT("Usdt"),
 	/** Xmr */
 	XMR("Xmr"),
 	/** WSX */
-	WSX("WSX"),
+	//WSX("WSX"),
 	/** Kick */
-	KICK("Kick"),
+	//KICK("Kick"),
 	/** Bch */
-	BCH("Bch"),
+	//BCH("Bch"),
 	/** OrmeusCoin */
-	ORME("Orme"),	
+	//ORME("Orme"),	
+	EXM("EXM"),
 	
 	/** доллары */
 	USD("Usd"),

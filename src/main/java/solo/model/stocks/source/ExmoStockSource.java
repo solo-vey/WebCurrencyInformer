@@ -36,7 +36,7 @@ public class ExmoStockSource extends BaseStockSource
 		super(oStockExchange);
 	}
 	
-	protected void initRates()
+	@Override protected void initRates()
 	{
 		super.initRates();
 		
@@ -61,14 +61,19 @@ public class ExmoStockSource extends BaseStockSource
 			final Currency oCurrencyTo = Currency.valueOf(oRateData.getKey().split("_")[1]);
 			final RateInfo oRateInfo = new RateInfo(oCurrencyFrom, oCurrencyTo);
 			
-			final Map<String, String> aRateDataParameters = (Map<String, String>) oRateData.getValue();
+			final Map<String, Object> aRateDataParameters = (Map<String, Object>) oRateData.getValue();
 			final RateParamters oRateParamters = new RateParamters();
-			oRateParamters.setMinQuantity(MathUtils.fromString(aRateDataParameters.get("min_quantity")));
-			oRateParamters.setMaxQuantity(MathUtils.fromString(aRateDataParameters.get("max_quantity")));
-			oRateParamters.setMinPrice(MathUtils.fromString(aRateDataParameters.get("min_price")));
-			oRateParamters.setMaxPrice(MathUtils.fromString(aRateDataParameters.get("max_price")));
-			oRateParamters.setMinAmount(MathUtils.fromString(aRateDataParameters.get("min_amount")));
-			oRateParamters.setMaxAmount(MathUtils.fromString(aRateDataParameters.get("max_amount")));
+			oRateParamters.setMinQuantity(MathUtils.fromString(aRateDataParameters.get("min_quantity").toString()));
+			oRateParamters.setMaxQuantity(MathUtils.fromString(aRateDataParameters.get("max_quantity").toString()));
+			oRateParamters.setMinPrice(MathUtils.fromString(aRateDataParameters.get("min_price").toString()));
+			oRateParamters.setMaxPrice(MathUtils.fromString(aRateDataParameters.get("max_price").toString()));
+			oRateParamters.setMinAmount(MathUtils.fromString(aRateDataParameters.get("min_amount").toString()));
+			oRateParamters.setMaxAmount(MathUtils.fromString(aRateDataParameters.get("max_amount").toString()));
+			oRateParamters.setCommissionMakerPercent(MathUtils.fromString(aRateDataParameters.get("commission_maker_percent").toString()));
+			oRateParamters.setCommissionTakerPercent(MathUtils.fromString(aRateDataParameters.get("commission_taker_percent").toString()));
+			final int nPricePrecision = (Integer)aRateDataParameters.get("price_precision");
+			oRateParamters.setPricePrecision(new BigDecimal(nPricePrecision));
+			
 			m_aAllRates.put(oRateInfo, oRateParamters);
 		}
 		catch(final Exception e)
@@ -479,7 +484,7 @@ public class ExmoStockSource extends BaseStockSource
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		final OrderSide oSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalSide);
 		final BigDecimal nVolume = (oOriginalRateInfo.getIsReverse() ? nOriginalVolume.multiply(nOriginalPrice) : nOriginalVolume);
-		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION) : nOriginalPrice);
+		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.getPricePrecision(oRateInfo)) : nOriginalPrice);
         if (oOriginalRateInfo.getIsReverse())
         	System.out.println("Add reverse order: " + oSide + " " + oRateInfo + " " + nVolume + " " + nPrice);
 

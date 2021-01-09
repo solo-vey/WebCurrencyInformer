@@ -196,6 +196,9 @@ public class ManagerUtils
 	
 	public static BigDecimal convertToBtcVolume(final RateInfo oRateInfo, final BigDecimal nVolume, final Map<RateInfo, RateStateShort> oAllRateState)
 	{
+		if (oRateInfo.getCurrencyFrom().equals(Currency.BTC))
+			return nVolume;
+		
 		final RateInfo oToBtcRateInfo = new RateInfo(oRateInfo.getCurrencyFrom(), Currency.BTC);
 		final RateStateShort oBtcToCurrencyRate = oAllRateState.get(oToBtcRateInfo);
 		if (null != oBtcToCurrencyRate)

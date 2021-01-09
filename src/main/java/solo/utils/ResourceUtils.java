@@ -113,7 +113,9 @@ public final class ResourceUtils
 
 		try 
 		{ 
-			final Integer nValue = Integer.parseInt(readProperty(strKey, oProperties).trim().replace("\t", StringUtils.EMPTY)); 
+			final String strProperty = readProperty(strKey, oProperties);
+			final String strTrimProperty = strProperty.replace('\t', ' ').trim();
+			final Integer nValue = Integer.parseInt(strTrimProperty); 
 			s_oLogger.info("Get propery [" + strKey + "] = [" + nValue + "]");
 			return nValue; 
 		} 
@@ -137,7 +139,9 @@ public final class ResourceUtils
 
 		try 
 		{ 
-			final Double nValue = Double.parseDouble(readProperty(strKey, oProperties).trim().replace("\t", StringUtils.EMPTY)); 
+			final String strProperty = readProperty(strKey, oProperties);
+			final String strTrimProperty = strProperty.replace('\t', ' ').trim();
+			final Double nValue = Double.parseDouble(strTrimProperty); 
 			s_oLogger.info("Get propery [" + strKey + "] = [" + nValue + "]");
 			return nValue; 
 		} 

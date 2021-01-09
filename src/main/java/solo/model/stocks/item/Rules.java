@@ -143,6 +143,7 @@ public class Rules
 		catch (final Exception e) 
 		{
 			WorkerFactory.onException("Load rules exception", e);
+			save();
 	    }			
 	}
 

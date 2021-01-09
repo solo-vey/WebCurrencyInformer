@@ -203,15 +203,20 @@ public class StockManagesInfo extends BaseObject implements Serializable
 	
 	public static void save(final StockManagesInfo oStockManagesInfo)
 	{
+		save(oStockManagesInfo, getFileName(WorkerFactory.getStockExchange()));		
+	}
+	
+	static void save(final StockManagesInfo oStockManagesInfo, final String strFileName)
+	{
 		try 
 		{
-	         final FileOutputStream oFileStream = new FileOutputStream(getFileName(WorkerFactory.getStockExchange()));
+	         final FileOutputStream oFileStream = new FileOutputStream(strFileName);
 	         final ObjectOutputStream oStream = new ObjectOutputStream(oFileStream);
 	         oStream.writeObject(oStockManagesInfo);
 	         oStream.close();
 	         oFileStream.close();
 		} 
-		catch (IOException e) 
+		catch (Exception e) 
 		{
 			WorkerFactory.onException("Save manager info exception", e);
 		}			
@@ -232,7 +237,9 @@ public class StockManagesInfo extends BaseObject implements Serializable
 		catch (final Exception e) 
 		{
 			WorkerFactory.onException("Load manager info exception", e);
-			return new StockManagesInfo();
+			final StockManagesInfo oStockManagesInfo = new StockManagesInfo();
+			save(oStockManagesInfo, getFileName(oStockExchange));
+			return oStockManagesInfo;
 	    }			
 	}
 	

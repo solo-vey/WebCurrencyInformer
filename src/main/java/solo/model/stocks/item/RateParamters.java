@@ -17,6 +17,10 @@ public class RateParamters implements Serializable
 	protected BigDecimal m_nMaxAmount = BigDecimal.ZERO;
 	protected BigDecimal m_nVolume = BigDecimal.ZERO;
 	protected BigDecimal m_nTradeFee = BigDecimal.ZERO;
+	
+	protected BigDecimal commissionMakerPercent = BigDecimal.ZERO;
+	protected BigDecimal commissionTakerPercent = BigDecimal.ZERO;
+	protected BigDecimal pricePrecision = BigDecimal.ZERO;
 
 	
 	public BigDecimal getMinQuantity()
@@ -58,6 +62,21 @@ public class RateParamters implements Serializable
 		return m_nTradeFee;
 	}
 	
+	public BigDecimal getCommissionMakerPercent()
+	{
+		return commissionMakerPercent;
+	}
+	
+	public BigDecimal getCommissionTakerPercent()
+	{
+		return commissionTakerPercent;
+	}
+	
+	public BigDecimal getPricePrecision()
+	{
+		return pricePrecision;
+	}
+	
 	public void setMinQuantity(final BigDecimal nMinQuantity)
 	{
 		m_nMinQuantity = nMinQuantity;
@@ -96,6 +115,21 @@ public class RateParamters implements Serializable
 	public void setTradeFee(final BigDecimal nTradeFee)
 	{
 		m_nTradeFee = nTradeFee;
+	}
+	
+	public void setCommissionMakerPercent(final BigDecimal nCommissionMakerPercent)
+	{
+		commissionMakerPercent = nCommissionMakerPercent;
+	}
+	
+	public void setCommissionTakerPercent(final BigDecimal nCommissionTakerPercent)
+	{
+		commissionTakerPercent = nCommissionTakerPercent;
+	}
+	
+	public void setPricePrecision(final BigDecimal nPricePrecision)
+	{
+		pricePrecision = nPricePrecision;
 	}
 	
 	/** Строковое представление документа */

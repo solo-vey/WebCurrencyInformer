@@ -14,6 +14,7 @@ import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
+import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockUserInfo;
 import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
@@ -83,6 +84,10 @@ public class TradeUtils
 	public static int getPricePrecision(final RateInfo oRateInfo)
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
+		final RateParamters oRateParamters = oStockExchange.getStockSource().getRateParameters(oRateInfo);
+		
+		if (null != oRateParamters && oRateParamters.getPricePrecision().intValue() > 0)
+			return oRateParamters.getPricePrecision().intValue();
 		
 		final String strMarket = getMarket(oRateInfo); 
 		final int nMarketPricePrecision = ResourceUtils.getIntFromResource("stock." + strMarket + ".price.precision", oStockExchange.getStockProperties(), Integer.MAX_VALUE);

@@ -11,7 +11,10 @@ import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.analyse.Candlestick;
 import solo.model.stocks.item.command.base.BaseCommand;
+import solo.model.stocks.item.command.base.CommandFactory;
+import solo.model.stocks.item.command.rule.AddControlerCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
+import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
 
@@ -65,6 +68,19 @@ public class GetRateChartCommand extends BaseCommand
 			aButtons.add(aLine);
 		
 		aButtons.add(Arrays.asList("Rules [" + m_oRateInfo + "]=/rules_rate:" + m_oRateInfo));
+		
+		final BigDecimal nSum = TradeUtils.getRoundedPrice(m_oRateInfo, TradeUtils.getMinTradeSum(m_oRateInfo).multiply(new BigDecimal(2)));
+		if (nSum.compareTo(BigDecimal.ZERO) > 0)
+			aButtons.add(Arrays.asList("Create controler [" + m_oRateInfo + "][" + nSum + "]=" + 
+					CommandFactory.makeCommandLine(AddControlerCommand.class, AddControlerCommand.RATE_PARAMETER, m_oRateInfo,
+					AddControlerCommand.SUM_PARAMETER, nSum)));
+	
+		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
+		final BigDecimal nReverseSum = TradeUtils.getRoundedPrice(oReverseRateInfo, TradeUtils.getMinTradeSum(oReverseRateInfo).multiply(new BigDecimal(2)));
+		if (nReverseSum.compareTo(BigDecimal.ZERO) > 0)
+			aButtons.add(Arrays.asList("Create controler [" + oReverseRateInfo + "][" + nReverseSum + "]=" + 
+					CommandFactory.makeCommandLine(AddControlerCommand.class, AddControlerCommand.RATE_PARAMETER, oReverseRateInfo,
+					AddControlerCommand.SUM_PARAMETER, nReverseSum)));
 		
 		WorkerFactory.getTransport().sendPhoto(new File(strFileName), strMessage + 
     			"BUTTONS\r\n" + TelegramTransport.getButtons(aButtons));

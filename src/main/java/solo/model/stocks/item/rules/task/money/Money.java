@@ -92,11 +92,11 @@ public class Money implements Serializable
 			}
 			
 			final Currency oSumCurency = oRateInfo.getCurrencyTo();
-			final BigDecimal nHaveSum = m_oMoney.get(oSumCurency);
+			final BigDecimal nHaveSum = (null != m_oMoney.get(oSumCurency) ? m_oMoney.get(oSumCurency) : BigDecimal.ZERO);
 			m_oMoney.put(oSumCurency, nHaveSum.add(oTradeMoney.getSum()));
 			
 			final Currency oVolumeCurency = oRateInfo.getCurrencyFrom();
-			final BigDecimal nHaveVolume = m_oMoney.get(oVolumeCurency);
+			final BigDecimal nHaveVolume = (null != m_oMoney.get(oVolumeCurency) ? m_oMoney.get(oVolumeCurency) : BigDecimal.ZERO);
 			m_oMoney.put(oVolumeCurency, nHaveVolume.add(oTradeMoney.getVolume()));
 			
 			getReserveMoney().remove(oTradeMoney);

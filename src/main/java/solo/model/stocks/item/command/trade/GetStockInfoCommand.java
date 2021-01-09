@@ -174,7 +174,7 @@ public class GetStockInfoCommand extends BaseCommand
 			strMessage += "Total BTC = " + MathUtils.toCurrencyStringEx3(oTotalBtcSum) + "\r\n";
 			
 			final BigDecimal oBtcBidPrice = getRateBestBidPrice(oStockExchange, Currency.UAH, oRateHash, oAllRateState);
-			if (null != oBtcBidPrice)
+			if (null != oBtcBidPrice && oBtcBidPrice.doubleValue() > 0.0)
 			{
 				final BigDecimal oTotalUahSum = MathUtils.getBigDecimal(oTotalBtcSum.doubleValue() / oBtcBidPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION);
 				strMessage += "Total UAH = " + MathUtils.toCurrencyStringEx3(oTotalUahSum) + "\r\n";

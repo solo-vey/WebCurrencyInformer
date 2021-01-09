@@ -330,7 +330,7 @@ public class RequestUtils
 				final SSLContext oSSLContext = SSLContexts.custom().useTLS().build();
 				final SSLConnectionSocketFactory oSSLConnectionSocketFactory = new SSLConnectionSocketFactory(
 						oSSLContext,
-						new String[]{"TLSv1", "TLSv1.1", "TLSv1.2"},   
+						new String[]{"TLSv1.2"},   
 						null,
 						SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
 			
