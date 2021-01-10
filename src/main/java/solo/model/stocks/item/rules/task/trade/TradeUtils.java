@@ -157,7 +157,7 @@ public class TradeUtils
 		}
 		
 		if (!oOriginalRateInfo.getIsReverse())
-			return TradeUtils.getRoundedPrice(oOriginalRateInfo, nMinTradeVolume);
+			return TradeUtils.getRoundedVolume(oOriginalRateInfo, nMinTradeVolume);
 		
 		final StateAnalysisResult oStateAnalysisResult = WorkerFactory.getMainWorker().getStockExchange().getLastAnalysisResult();
 		final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(oRateInfo);

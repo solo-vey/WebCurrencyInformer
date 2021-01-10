@@ -67,7 +67,7 @@ public class StockManager implements IStockManager
 	
 	public void manage(final StateAnalysisResult oStateAnalysisResult) 
 	{		
-		//startTestControlers();
+		startTestControlers();
 		
 		if (!getIsOperationAvalible(OPERATIONS_ALL))
 			return;
