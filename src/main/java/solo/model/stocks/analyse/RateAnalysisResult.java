@@ -14,11 +14,11 @@ import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 
 public class RateAnalysisResult extends BaseObject
 {
-	final protected RateInfo m_oRateInfo;
+	protected final RateInfo m_oRateInfo;
 
-	final protected List<Order> m_oAsksOrders;
-	final protected List<Order> m_oBidsOrders;
-	final protected List<Order> m_oTrades;
+	protected final List<Order> m_oAsksOrders;
+	protected final List<Order> m_oBidsOrders;
+	protected final List<Order> m_oTrades;
 	
 	public RateAnalysisResult(final StockRateStates oStockRateStates, final RateInfo oRateInfo, final IStockExchange oStockExchange) throws Exception
 	{
@@ -32,8 +32,8 @@ public class RateAnalysisResult extends BaseObject
 		m_oBidsOrders = oRateState.getBidsOrders();
 		m_oTrades = oRateState.getTrades();
     	
-    	filterOrders(m_oBidsOrders, m_oAsksOrders.get(0).getPrice().divide(new BigDecimal(2)), m_oAsksOrders.get(0).getPrice());
-    	filterOrders(m_oAsksOrders, m_oBidsOrders.get(0).getPrice(), m_oBidsOrders.get(0).getPrice().multiply(new BigDecimal(2)));
+    	filterOrders(m_oBidsOrders, m_oAsksOrders.get(0).getPrice().divide(BigDecimal.valueOf(2)), m_oAsksOrders.get(0).getPrice());
+    	filterOrders(m_oAsksOrders, m_oBidsOrders.get(0).getPrice(), m_oBidsOrders.get(0).getPrice().multiply(BigDecimal.valueOf(2)));
 	}
 
 	private void filterOrders(final List<Order> oOrders, BigDecimal nMinPrice, BigDecimal nMaxPrice)

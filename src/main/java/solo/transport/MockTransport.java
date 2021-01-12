@@ -3,6 +3,7 @@ package solo.transport;
 import java.io.File;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessages;
+import solo.utils.TraceUtils;
 
 public class MockTransport implements ITransport
 {
@@ -13,12 +14,13 @@ public class MockTransport implements ITransport
 
 	@Override public Object sendMessage(final String strText)
 	{
-		System.out.println(strText);
+		TraceUtils.writeTrace(strText);
 		return strText;
 	}
     
 	@Override public void sendPhoto(final File oPhoto, String strCaption) throws Exception
     { 
+		/***/
 	} 
 
 	@Override
@@ -35,5 +37,6 @@ public class MockTransport implements ITransport
 	@Override
 	public void deleteMessage(String strMessageID) throws Exception
 	{
+		/***/
 	}
 }

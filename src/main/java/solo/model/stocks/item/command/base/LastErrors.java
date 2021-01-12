@@ -6,7 +6,7 @@ import java.util.List;
 
 public class LastErrors
 {
-	final protected List<String> m_oErrors =  Collections.synchronizedList(new LinkedList<String>()); 
+	protected final List<String> m_oErrors =  Collections.synchronizedList(new LinkedList<String>()); 
 	
 	public void addError(final String strError)
 	{

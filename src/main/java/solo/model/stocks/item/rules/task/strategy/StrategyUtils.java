@@ -29,7 +29,7 @@ public class StrategyUtils
 
 	public static List<Order> removeFakeOrders(List<Order> oOrders, BigDecimal nMinSum, final RateInfo oRateInfo)
 	{
-		nMinSum = (null == nMinSum ? new BigDecimal(TradeUtils.getFakeMinPrice(oRateInfo)) : nMinSum);		
+		nMinSum = (null == nMinSum ? BigDecimal.valueOf(TradeUtils.getFakeMinPrice(oRateInfo)) : nMinSum);		
 		final List<Order> oResult = new LinkedList<Order>();
 		for(final Order oOrder : oOrders)
 		{

@@ -11,7 +11,7 @@ public class NowBuyStrategy extends BaseStrategy implements IBuyStrategy
 {
 	private static final long serialVersionUID = -4917816147504424168L;
 	
-	public final static String NAME = "NowBuy";
+	public static final String NAME = "NowBuy";
 	
 	public String getName()
 	{

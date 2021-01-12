@@ -11,7 +11,7 @@ import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 
 public class StockRateWorker extends BaseWorker
 {
-	final protected RateInfo m_oRateInfo;
+	protected final RateInfo m_oRateInfo;
 	final MainWorker m_oMainWorker; 
 	
 	public StockRateWorker(final MainWorker oMainWorker, final RateInfo oRateInfo, final int nTimeOut)
@@ -26,7 +26,7 @@ public class StockRateWorker extends BaseWorker
 		return m_oRateInfo;
 	}
 
-	public void startWorker()
+	@Override public void startWorker()
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
@@ -58,5 +58,5 @@ public class StockRateWorker extends BaseWorker
 		
 		final StockRateWorker oStockRateWorker = (StockRateWorker)oObject;
 		return m_oRateInfo.equals(oStockRateWorker.m_oRateInfo) && m_oMainWorker.equals(oStockRateWorker.m_oMainWorker);
-	};
+	}
 }

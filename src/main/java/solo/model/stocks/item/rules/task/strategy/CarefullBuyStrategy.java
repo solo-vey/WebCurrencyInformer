@@ -14,7 +14,7 @@ public class CarefullBuyStrategy extends BaseStrategy implements IBuyStrategy
 {
 	private static final long serialVersionUID = -4917916147504424168L;
 	
-	public final static String NAME = "CarefullBuy";
+	public static final String NAME = "CarefullBuy";
 	
 	public String getName()
 	{

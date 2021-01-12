@@ -183,10 +183,12 @@ public class TradesInfo extends BaseObject implements Serializable
 	
 	public void tradeStart(final TaskTrade oTaskTrade)
 	{
+		/***/
 	}
 	
 	public void buyDone(final TaskTrade oTaskTrade)
 	{
+		/***/
 	}
 	
 	public void tradeDone(final TaskTrade oTaskTrade)

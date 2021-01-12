@@ -14,9 +14,9 @@ import solo.transport.telegram.TelegramTransport;
 
 public class SetCurrentStockCommand extends BaseCommand
 {
-	final static public String NAME = "setCurrentStock";
+	public static final String NAME = "setCurrentStock";
 
-	final static public String STOCK_PARAMETER = "#stock#";
+	public static final String STOCK_PARAMETER = "#stock#";
 
 	public SetCurrentStockCommand(final String strСommandLine)
 	{

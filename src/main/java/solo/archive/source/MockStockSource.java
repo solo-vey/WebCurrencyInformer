@@ -4,6 +4,7 @@ import java.io.File;
 import java.nio.file.Files;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+
 import org.apache.commons.lang.time.DateUtils;
 
 import com.google.gson.Gson;
@@ -19,7 +20,7 @@ import solo.utils.ResourceUtils;
 
 public class MockStockSource extends BaseStockSource
 {
-	final protected String m_strDataRoot;
+	protected final String m_strDataRoot;
 	protected Date m_oLastDate = new Date();
 	protected Date m_oMaxDate = new Date();
 	
@@ -29,7 +30,7 @@ public class MockStockSource extends BaseStockSource
 		m_strDataRoot = ResourceUtils.getResource("mock.data.root", getStockExchange().getStockProperties());
 	}
 	
-	protected void initRates()
+	@Override protected void initRates()
 	{
 		super.initRates();
 		
@@ -59,8 +60,6 @@ public class MockStockSource extends BaseStockSource
 
 				final Gson oGson = oGsonBuilder.create();
 				return oGson.fromJson(strJson, StockRateStates.class);
-				
-//				return JsonUtils.fromJson(strJson, StockRateStates.class);
 			}
 		}
 		

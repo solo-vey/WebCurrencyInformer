@@ -26,7 +26,7 @@ public class CalmRateTradeStrategy extends BaseTradeStrategy
 		return NAME;
 	}	
 	
-	public boolean checkTrade(final ITradeTask oTaskTrade, final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
+	@Override public boolean checkTrade(final ITradeTask oTaskTrade, final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
 	{
 		setBuyCriticalPrice(oTaskTrade, oTradeControler);
 		return false;

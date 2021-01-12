@@ -1,6 +1,7 @@
 package solo.utils;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.List;
 
 import org.apache.commons.lang.StringUtils;
@@ -13,7 +14,12 @@ import solo.model.stocks.item.analyse.JapanCandle;
 
 public class CandlestickUtils
 {
-    public void makeImage(final List<JapanCandle> aCandles, final String strTitle, final String strFile) throws Exception
+	CandlestickUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
+	
+    public void makeImage(final List<JapanCandle> aCandles, final String strTitle, final String strFile) throws IOException
     {
     	
 		final DefaultHighLowDataset dataset = createHighLowDataset(aCandles);
@@ -23,8 +29,6 @@ public class CandlestickUtils
 
 	private DefaultHighLowDataset createHighLowDataset(List<JapanCandle> aCandles)
 	{
-		// TODO Auto-generated method stub
 		return null;
 	}
-
 }

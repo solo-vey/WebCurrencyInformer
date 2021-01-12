@@ -1,11 +1,16 @@
 package solo.model.stocks.exchange;
 
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 
 public class StockExchangeFactory
 {
-	final static Map<Stocks, IStockExchange> s_oStockExchanges = new HashMap<Stocks, IStockExchange>();
+	static final Map<Stocks, IStockExchange> s_oStockExchanges = new EnumMap<>(Stocks.class);
+	
+	StockExchangeFactory() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
 	
 	static
 	{

@@ -25,12 +25,12 @@ public class Candlestick implements Serializable
 {
 	private static final long serialVersionUID = 6106531883802992172L;
 
-	final static public int CANDLE_HISTORY_SIZE = 300;
+	public static final int CANDLE_HISTORY_SIZE = 300;
 	
-	final protected List<JapanCandle> m_oHistory = new LinkedList<JapanCandle>();
-	final protected Integer m_nCandleDurationMinutes;
-	final protected RateInfo m_oRateInfo;
-	final protected String m_strStockExchangeName;
+	protected final List<JapanCandle> m_oHistory = new LinkedList<>();
+	protected final Integer m_nCandleDurationMinutes;
+	protected final RateInfo m_oRateInfo;
+	protected final String m_strStockExchangeName;
 	
 	protected Date m_oLastOrderDate = null;
 	
@@ -48,7 +48,7 @@ public class Candlestick implements Serializable
 	
 	public void addRateInfo(RateAnalysisResult oRateAnalysisResult)
 	{
-		if (m_oHistory.size() == 0)
+		if (m_oHistory.isEmpty())
 			m_oHistory.add(new JapanCandle());
 		
 		JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - 1);
@@ -130,8 +130,7 @@ public class Candlestick implements Serializable
         		nMinPrice = oCandle.getMin();
         }
         
-        final BigDecimal nDelta = nMaxPrice.add(nMinPrice.negate());
-        return nDelta;
+        return nMaxPrice.add(nMinPrice.negate());
 	}
 	
 	public BigDecimal getMax(int nStepCount)
@@ -150,7 +149,7 @@ public class Candlestick implements Serializable
 
 	public BigDecimal getMin(int nStepCount)
 	{
-		BigDecimal nMinPrice = new BigDecimal(Integer.MAX_VALUE);
+		BigDecimal nMinPrice = BigDecimal.valueOf(Integer.MAX_VALUE);
 		nStepCount = getStepCount(nStepCount);
         for(int nPos = 0; nPos < m_oHistory.size() && nPos < nStepCount; nPos++)
         {
@@ -181,7 +180,7 @@ public class Candlestick implements Serializable
 	
 	public List<String> getHistoryInfo()
 	{
-		final List<String> aResult = new LinkedList<String>();
+		final List<String> aResult = new LinkedList<>();
         for(int nPos = 0; nPos < m_oHistory.size() - 3; nPos++)
         {
         	final JapanCandle oCandle = m_oHistory.get(m_oHistory.size() - nPos - 1);
@@ -204,7 +203,7 @@ public class Candlestick implements Serializable
 	public boolean isLongFall()
 	{
 		final BigDecimal nMinMaxDeltaPercent = getMinMaxDeltaPercent(6);
-		if (nMinMaxDeltaPercent.compareTo(new BigDecimal(2)) < 0)
+		if (nMinMaxDeltaPercent.compareTo(BigDecimal.valueOf(2)) < 0)
 			return false;
 		
 		return getType().equals(CandlestickType.THREE_BLACK) || 
@@ -215,7 +214,7 @@ public class Candlestick implements Serializable
 	public boolean isLongGrowth()
 	{
 		final BigDecimal nMinMaxDeltaPercent = getMinMaxDeltaPercent(6);
-		if (nMinMaxDeltaPercent.compareTo(new BigDecimal(2)) < 0)
+		if (nMinMaxDeltaPercent.compareTo(BigDecimal.valueOf(2)) < 0)
 			return false;
 		
 		return getType().equals(CandlestickType.THREE_WHITE) || 

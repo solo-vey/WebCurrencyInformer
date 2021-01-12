@@ -7,7 +7,7 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class StartStockCommand extends BaseCommand
 {
-	final static public String NAME = "start";
+	public static final String NAME = "start";
 	
 	public StartStockCommand(final String strСommandLine)
 	{

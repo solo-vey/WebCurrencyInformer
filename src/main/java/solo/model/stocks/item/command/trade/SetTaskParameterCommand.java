@@ -14,14 +14,14 @@ import solo.utils.CommonUtils;
  */
 public class SetTaskParameterCommand extends BaseCommand
 {
-	final static public String NAME = "taskParam";
-	final static public String RULE_ID_PARAMETER = "#ruleID#";
-	final static public String NAME_PARAMETER = "#name#";
-	final static public String VALUE_PARAMETER = "#value#";
+	public static final String NAME = "taskParam";
+	public static final String RULE_ID_PARAMETER = "#ruleID#";
+	public static final String NAME_PARAMETER = "#name#";
+	public static final String VALUE_PARAMETER = "#value#";
 	
-	final protected Integer m_nRuleID;  
-	final protected String m_strName;  
-	final protected String m_strValue;  
+	protected final Integer m_nRuleID;  
+	protected final String m_strName;  
+	protected final String m_strValue;  
 	
 	public SetTaskParameterCommand(final String strСommandLine)
 	{

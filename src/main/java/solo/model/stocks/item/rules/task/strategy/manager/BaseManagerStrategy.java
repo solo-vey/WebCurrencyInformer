@@ -15,9 +15,9 @@ public class BaseManagerStrategy implements IManagerStrategy
 {
 	private static final long serialVersionUID = -1074235543708296492L;
 	
-	final protected BigDecimal m_nMinAverageUnprofitabilityPercent;
-	final protected BigDecimal m_nMinHourUnprofitabilityPercent;
-	final protected BigDecimal m_nMinAverageProfitabilityPercent;
+	protected final BigDecimal m_nMinAverageUnprofitabilityPercent;
+	protected final BigDecimal m_nMinHourUnprofitabilityPercent;
+	protected final BigDecimal m_nMinAverageProfitabilityPercent;
 	
 	public BaseManagerStrategy(final IStockExchange oStockExchange)
 	{

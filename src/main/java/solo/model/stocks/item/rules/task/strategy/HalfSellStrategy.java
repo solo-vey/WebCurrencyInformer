@@ -11,7 +11,7 @@ public class HalfSellStrategy extends QuickSellStrategy
 {
 	private static final long serialVersionUID = -4917817147554424168L;
 	
-	public final static String NAME = "HalfSell";
+	public static final String NAME = "HalfSell";
 	
 	public String getName()
 	{

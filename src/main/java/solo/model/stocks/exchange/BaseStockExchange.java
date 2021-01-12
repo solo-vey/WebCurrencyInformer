@@ -17,11 +17,11 @@ public class BaseStockExchange implements IStockExchange
 	
 	protected MessageLevel m_oMessageLevel = MessageLevel.TRADERESULT;
 	
-	final protected String m_strStockName;
-	final protected String m_strStockProperies;
+	protected final String m_strStockName;
+	protected final String m_strStockProperies;
 	protected IStockSource m_oStockSource;
 	protected IStockSource m_oStockTestSource;
-	final protected Rules m_oRules;
+	protected final Rules m_oRules;
 	final StateAnalysisResult m_oLastAnalysisResult;
 	final IStockManager m_oStockManager;
 	final StockCandlestick m_oStockCandlestick;

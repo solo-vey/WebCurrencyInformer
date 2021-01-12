@@ -2,6 +2,7 @@ package solo.model.stocks.item.command.trade;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -34,15 +35,15 @@ import solo.utils.MathUtils;
  */
 public class GetStockInfoCommand extends BaseCommand
 {
-	final static public String NAME = "info";
-	final static public String RATE_PARAMETER = "#rate#";
+	public static final String NAME = "info";
+	public static final String RATE_PARAMETER = "#rate#";
 	
 	public GetStockInfoCommand(final String strСommandLine)
 	{
 		super(strСommandLine, "#type#");
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		
@@ -76,7 +77,7 @@ public class GetStockInfoCommand extends BaseCommand
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oMoney.entrySet())
 			{
 				final BigDecimal nFreeVolum = oCurrencyInfo.getValue().getBalance();
-				if (nFreeVolum.compareTo(new BigDecimal(0.000001)) < 0)
+				if (nFreeVolum.compareTo(BigDecimal.valueOf(0.000001)) < 0)
 					continue;
 
 				strMessage += oCurrencyInfo.getKey() + "/" + MathUtils.toCurrencyStringEx3(nFreeVolum) + 
@@ -105,10 +106,10 @@ public class GetStockInfoCommand extends BaseCommand
 			}
 			strMessage += "\r\n";
 			
-			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<RateInfo, RateAnalysisResult>();	
+			final Map<RateInfo, RateAnalysisResult> oRateHash = new HashMap<>();	
 			BigDecimal oTotalBtcSum = BigDecimal.ZERO;
 			final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
-			final Map<Currency, BigDecimal> aLocked = new HashMap<Currency, BigDecimal>();
+			final Map<Currency, BigDecimal> aLocked = new EnumMap<>(Currency.class);
 			for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 			{
 				aLocked.put(oCurrencyInfo.getKey(), oCurrencyInfo.getValue().getLocked());

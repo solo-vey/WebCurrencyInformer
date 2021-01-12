@@ -21,11 +21,11 @@ import solo.utils.MathUtils;
 
 abstract public class HasParameters extends BaseObject
 {
-	final static public String TAIL_PARAMETER = "...";
+	public static final String TAIL_PARAMETER = "...";
 
-	final protected Map<String, String> m_oParameters;
-	final protected String m_strTemplate;
-	final protected String m_strCommandInfo;
+	protected final Map<String, String> m_oParameters;
+	protected final String m_strTemplate;
+	protected final String m_strCommandInfo;
 
 	public HasParameters()
 	{
@@ -147,7 +147,7 @@ abstract public class HasParameters extends BaseObject
 			final DateFormat oFormat = new SimpleDateFormat("dd.MM.yyyy", Locale.ENGLISH);
 			return oFormat.parse(strValue);
 		}
-		catch (ParseException e) {}
+		catch (ParseException e) {/***/}
 		return null;
 	}
 	
@@ -163,7 +163,7 @@ abstract public class HasParameters extends BaseObject
 					return oEnumValue;
 			}
 		}
-		catch (final Exception e) {}
+		catch (final Exception e) {/***/}
 		
 		return null;
 	}

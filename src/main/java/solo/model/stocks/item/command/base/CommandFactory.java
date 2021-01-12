@@ -85,17 +85,17 @@ public class CommandFactory
 		s_oCommandInGroup.get(oCommandGroup).add(strCommand.toLowerCase());
 	}
 
-	static public Map<String, Class<?>> getAllCommands()
+	public static Map<String, Class<?>> getAllCommands()
 	{
 		return s_oCommandClassByType;
 	}
 
-	static public Map<CommandGroup, List<String>> getAllCommandsGroup()
+	public static Map<CommandGroup, List<String>> getAllCommandsGroup()
 	{
 		return s_oCommandInGroup;
 	}
 	
-	static public ICommand getCommand(final String strCommandLine)
+	public static ICommand getCommand(final String strCommandLine)
 	{
 		final String strCommand = CommonUtils.splitFirst(strCommandLine).toLowerCase().replace("command:///", StringUtils.EMPTY).replace("/", StringUtils.EMPTY);
 		final Class<?> oClass = (Class<?>) s_oCommandClassByType.get(strCommand);

@@ -24,7 +24,12 @@ public final class ResourceUtils
 	private static Logger s_oLogger = Logger.getLogger(ResourceUtils.class);
 	
 	/** Список уже зарегистрированных файлов с параметрами */
-	private static Map<String, PropertyFileInfo> s_oRegisterProperyFiles = new HashMap<String, PropertyFileInfo>();
+	private static Map<String, PropertyFileInfo> s_oRegisterProperyFiles = new HashMap<>();
+	
+	ResourceUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
 
 	/** Вычитываем в настройки проекта настройки из указанного файла 
 	 * @return */
@@ -161,7 +166,7 @@ public final class ResourceUtils
 	public static BigDecimal getBigDecimalFromResource(final String strKey, final String strProperyFile, final BigDecimal nDefault)
 	{
 		final double nValue = getDoubleFromResource(strKey, strProperyFile, nDefault.doubleValue());
-		return new BigDecimal(nValue);
+		return BigDecimal.valueOf(nValue);
 	}
 	
 	/** Получение числового значения из property файла 
@@ -203,7 +208,7 @@ class PropertyFileInfo
 	/** Сами настройки */
 	final public Properties Properties;
 	/** Изменения в настроках - перекрывающие настройки */
-	Map<String, String> m_oOverlapping = new HashMap<String, String>();
+	Map<String, String> m_oOverlapping = new HashMap<>();
 	/** Имя файла настроек */
 	final public String Name;
 	
@@ -250,7 +255,7 @@ class PropertyFileInfo
 		} 
 		catch (final Exception e) 
 		{
-			WorkerFactory.onException("Can't load properties overlapping [" + strFileName + "]", e);
+			TraceUtils.writeError("Can't load properties overlapping [" + strFileName + "]", e);
 	    }
 		
 		save();
@@ -272,9 +277,9 @@ class PropertyFileInfo
 		} 
 		catch (IOException e) 
 		{
-			WorkerFactory.onException("Can't save properties overlapping [" + strFileName + "]", e);
+			TraceUtils.writeError("Can't save properties overlapping [" + strFileName + "]", e);
 		}	
-		}
+	}
 
 	protected String getFileName(final String strPropertyFileName)
 	{

@@ -25,7 +25,7 @@ import solo.utils.ResourceUtils;
 
 public class KunaStockSource extends BaseStockSource
 {
-	final protected String m_strMyTradesUrl;
+	protected final String m_strMyTradesUrl;
 	
 	protected Long m_nTimeDelta;
 	
@@ -35,7 +35,7 @@ public class KunaStockSource extends BaseStockSource
 		m_strMyTradesUrl = ResourceUtils.getResource("my_trades.url", getStockExchange().getStockProperties());
 	}
 	
-	protected void initRates()
+	@Override protected void initRates()
 	{
 		super.initRates();
 		
@@ -188,9 +188,9 @@ public class KunaStockSource extends BaseStockSource
 		}
 	}
 
-	public List<Order> getTrades(final RateInfo oRateInfo, final int nPage, final int nCount)
+	@Override public List<Order> getTrades(final RateInfo oRateInfo, final int nPage, final int nCount)
 	{
-		final List<Order> aTrades = new LinkedList<Order>();
+		final List<Order> aTrades = new LinkedList<>();
 		try
 		{
 			final String strMarket = getRateIdentifier(oRateInfo);
@@ -231,7 +231,7 @@ public class KunaStockSource extends BaseStockSource
 		{
 			checkOrderParameters(oSide, oRateInfo, nPrice);
 			
-			final Map<String, String> aParameters = new HashMap<String, String>();
+			final Map<String, String> aParameters = new HashMap<>();
 			aParameters.put("side", oSide.toString().toLowerCase());
 			aParameters.put("volume", nVolume.toString());
 			aParameters.put("market", getRateIdentifier(oRateInfo));
@@ -255,7 +255,7 @@ public class KunaStockSource extends BaseStockSource
 	{
 		super.removeOrder(strOrderId, oOriginalRateInfo);
 		
-		final Map<String, String> aParameters = new HashMap<String, String>();
+		final Map<String, String> aParameters = new HashMap<>();
 		aParameters.put("id", strOrderId);
 		try
 		{

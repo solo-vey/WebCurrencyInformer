@@ -32,6 +32,7 @@ import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class TestStockSource extends BaseStockSource implements ITest
 {
@@ -55,11 +56,8 @@ public class TestStockSource extends BaseStockSource implements ITest
 	private void checkOrders(final RateInfo oRateInfo, final RateState oRateState)
 	{
 		final List<Order> oRateOrders = m_oStockSourceData.getRateOrders(oRateInfo);
-		if (null == oRateOrders || oRateOrders.size() == 0 || oRateState.getTrades().size() == 0)
+		if (null == oRateOrders || oRateOrders.isEmpty() || oRateState.getTrades().isEmpty())
 			return;
-		
-		//final DateFormat oDateFormat = new SimpleDateFormat("HH:mm:ss");
-		//final String strDate = oDateFormat.format(new Date()) + "\t"; 
 		
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
 		final String strChance = ResourceUtils.getResource("stock.test.chance", oStockExchange.getStockProperties(), "1");
@@ -67,7 +65,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 		
 		final Random oRandom = new Random();
 		final Date oLastTradeOrder = m_oStockSourceData.getLastTradeOrder().get(oRateInfo);
-		final List<Order> aDoneOrders = new LinkedList<Order>();
+		final List<Order> aDoneOrders = new LinkedList<>();
 		for(final Order oTradeOrder : oRateState.getTrades())
 		{
 			if (null != oTradeOrder.getCreated() && null != oLastTradeOrder &&
@@ -86,23 +84,17 @@ public class TestStockSource extends BaseStockSource implements ITest
 				if (!Order.WAIT.equals(oOrder.getState()))
 					continue;
 				
-				//System.err.println(strDate + oRateInfo + "\tTRADE " + oTradeOrder.getInfoShort());
-				//System.err.println(strDate + "\t" + "Order " + oOrder.getInfoShort() + " - " + oOrder.getId());
 				if (OrderSide.BUY.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) >= 0)
 				{
 					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
-						//System.err.println(strDate + oRateInfo + " Done order [" + oOrder.getId() + "] buy [" + oOrder.getVolume() + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setState(Order.DONE);
 						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
 					}
 					else
-					{
-						//System.err.println(strDate + oRateInfo + " Order [" + oOrder.getId() + "] buy [" + nTradeOrderVolume + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setVolume(nOrderVolumeDelta);
-					}
 				}
 				
 				if (OrderSide.SELL.equals(oOrder.getSide()) && oOrder.getPrice().compareTo(oTradeOrder.getPrice()) <= 0)
@@ -110,16 +102,12 @@ public class TestStockSource extends BaseStockSource implements ITest
 					final BigDecimal nOrderVolumeDelta = oOrder.getVolume().add(nTradeOrderVolume.negate());
 					if (nOrderVolumeDelta.compareTo(BigDecimal.ZERO) < 0)
 					{
-						//System.err.println(strDate + oRateInfo + " Done order [" + oOrder.getId() + "] sell [" + oOrder.getVolume() + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setState(Order.DONE);
 						oOrder.setVolume(BigDecimal.ZERO);
 						aDoneOrders.add(oOrder);
 					}
 					else
-					{
-						//System.err.println(strDate + oRateInfo + " Order [" + oOrder.getId() + "] sell [" + nTradeOrderVolume + "] price [" + oOrder.getPrice() + "]");
 						oOrder.setVolume(nOrderVolumeDelta);
-					}
 				}
 			}
 		}
@@ -139,7 +127,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 	{
 		final StockUserInfo oUserInfo = super.getUserInfo(oRateInfo);
 		for(final Currency oCurrency : Currency.values())
-			oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(new BigDecimal(10000), BigDecimal.ZERO));
+			oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(BigDecimal.valueOf(10000), BigDecimal.ZERO));
 		
 		oUserInfo.getOrders().putAll(m_oStockSourceData.getRateOrders());
 		
@@ -192,8 +180,6 @@ public class TestStockSource extends BaseStockSource implements ITest
 		final OrderSide oSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalSide);
 		final BigDecimal nVolume = (oOriginalRateInfo.getIsReverse() ? nOriginalVolume.multiply(nOriginalPrice) : nOriginalVolume);
 		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION) : nOriginalPrice);
-        //if (oOriginalRateInfo.getIsReverse())
-        //	System.out.println("Add reverse order: " + oSide + " " + oOriginalRateInfo + " " + nVolume + " " + nPrice);
         
         synchronized (this)
 		{			
@@ -211,8 +197,6 @@ public class TestStockSource extends BaseStockSource implements ITest
 	
 				m_oStockSourceData.getRateOrders(oRateInfo).add(oOrder);
 				m_oStockSourceData.save();
-				
-				//System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
 				
 				if (!oOriginalRateInfo.getIsReverse())
 					return oOrder;
@@ -245,8 +229,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 					
 					m_oStockSourceData.addRemoveOrder(oOrder);
 					m_oStockSourceData.save();
-						
-			        //System.out.println("Remove order complete. " + strOrderId);
+		
 					if (null == oOriginalRateInfo || !oOriginalRateInfo.getIsReverse())
 						return oOrder;
 					
@@ -263,14 +246,15 @@ class TestStockSourceData implements Serializable
 {
 	private static final long serialVersionUID = -4224697724800230874L;
 	
-	final Map<RateInfo, List<Order>> m_oRateOrders = new HashMap<RateInfo, List<Order>>();
-	final List<Order> m_oRemoveOrders = new LinkedList<Order>();
-	final List<Order> m_oDoneOrders = new LinkedList<Order>();
-	final Map<RateInfo, Date> m_aLastTradeOrder = new HashMap<RateInfo, Date>();
+	final Map<RateInfo, List<Order>> m_oRateOrders = new HashMap<>();
+	final List<Order> m_oRemoveOrders = new LinkedList<>();
+	final List<Order> m_oDoneOrders = new LinkedList<>();
+	final Map<RateInfo, Date> m_aLastTradeOrder = new HashMap<>();
 	Integer m_nLastOrderID = 0;
 	
 	public TestStockSourceData()
 	{
+		/***/
 	}
 	
 	public Integer getLastOrderID()
@@ -335,7 +319,7 @@ class TestStockSourceData implements Serializable
 		} 
 		catch (IOException e) 
 		{
-			WorkerFactory.onException("Save test source info exception", e);
+			TraceUtils.writeError("Save test source info exception", e);
 		}			
 	}
 
@@ -353,7 +337,7 @@ class TestStockSourceData implements Serializable
 		} 
 		catch (final Exception e) 
 		{
-			WorkerFactory.onException("Load test source info exception", e);
+			TraceUtils.writeError("Load test source info exception", e);
 			final TestStockSourceData oTestStockSourceData = new TestStockSourceData();
 			oTestStockSourceData.save();
 			return oTestStockSourceData;

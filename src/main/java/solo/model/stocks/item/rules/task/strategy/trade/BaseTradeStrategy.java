@@ -41,6 +41,7 @@ public class BaseTradeStrategy implements ITradeStrategy
 	
 	public void startNewTrade(final ITradeTask oTaskTrade, final TradeControler oTradeControler)
 	{
+		/***/
 	}
 	
 	protected void removeBuyOrder(final ITradeTask oTaskTrade, final Order oGetOrder, final String strMessagePrefix)

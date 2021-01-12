@@ -13,7 +13,7 @@ import solo.transport.ITransportMessages;
  */
 public class GetTransportMessagesCommand extends BaseCommand implements ISystemCommand
 {
-	final static public String NAME = "getMessages";
+	public static final String NAME = "getMessages";
 
 	public GetTransportMessagesCommand()
 	{

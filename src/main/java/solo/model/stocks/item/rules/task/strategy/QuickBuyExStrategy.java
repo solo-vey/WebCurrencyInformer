@@ -16,7 +16,7 @@ public class QuickBuyExStrategy extends QuickBuyStrategy
 {
 	private static final long serialVersionUID = -4917817147504424168L;
 	
-	public final static String NAME = "QuickBuyEx";
+	public static final String NAME = "QuickBuyEx";
 	
 	public String getName()
 	{

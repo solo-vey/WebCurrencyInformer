@@ -15,10 +15,10 @@ import solo.utils.CommonUtils;
  */
 public class HelpCommand extends BaseCommand
 {
-	final static public String NAME = "help";
-	final static public String COMMAND_PARAMETER = "#command#";
+	public static final String NAME = "help";
+	public static final String COMMAND_PARAMETER = "#command#";
 	
-	final protected String m_strHelpCommand;
+	protected final String m_strHelpCommand;
 
 	public HelpCommand(final String strCommandLine)
 	{
@@ -26,7 +26,7 @@ public class HelpCommand extends BaseCommand
 		m_strHelpCommand = getParameter(COMMAND_PARAMETER);
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		

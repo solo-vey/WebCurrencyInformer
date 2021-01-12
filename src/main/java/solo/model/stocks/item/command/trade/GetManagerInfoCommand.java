@@ -2,7 +2,7 @@ package solo.model.stocks.item.command.trade;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.Map;
 import java.util.Map.Entry;
 
@@ -24,16 +24,15 @@ import solo.transport.telegram.TelegramTransport;
  */
 public class GetManagerInfoCommand extends BaseCommand
 {
-	final static public String NAME = "manager";
-	final static public String TYPE_PARAMETER = "#type#";
+	public static final String NAME = "manager";
+	public static final String TYPE_PARAMETER = "#type#";
 	
 	public GetManagerInfoCommand(final String strСommandLine)
 	{
 		super(strСommandLine, TYPE_PARAMETER);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		
@@ -86,7 +85,7 @@ public class GetManagerInfoCommand extends BaseCommand
 		strMessage += "\r\n\r\n";
 		
 		strMessage += "<code>Controlers</code>\r\n";
-		final Map<ControlerState, Integer> oControlers = new HashMap<ControlerState, Integer>();
+		final Map<ControlerState, Integer> oControlers = new EnumMap<>(ControlerState.class);
 		for(final Entry<Integer, IRule> oRule : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
 			final ITradeControler oControler = TradeUtils.getRuleAsTradeControler(oRule.getValue());

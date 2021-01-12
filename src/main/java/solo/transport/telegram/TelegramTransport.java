@@ -32,14 +32,14 @@ public class TelegramTransport implements ITransport
 
 	private static final String MANAGER_MESSGE = "MANAGER";
 
-	protected final static String API_URL = "https://api.telegram.org/bot#ACCESS_TOKEN#/METHOD_NAME";
+	protected static final String API_URL = "https://api.telegram.org/bot#ACCESS_TOKEN#/METHOD_NAME";
 	
-	final protected String m_strBotName;
-	final protected String m_strBotAccessToken;
-	final protected String m_strProperies;
-	final protected String m_strUserID;
-	final protected String m_strSystemUserID;
-	final protected Integer m_nGetUpdatesTimeout;
+	protected final String m_strBotName;
+	protected final String m_strBotAccessToken;
+	protected final String m_strProperies;
+	protected final String m_strUserID;
+	protected final String m_strSystemUserID;
+	protected final Integer m_nGetUpdatesTimeout;
 	protected Integer m_nNextMessageID = null; 
 	protected String m_strSystemMessageID = null; 
 	
@@ -100,7 +100,7 @@ public class TelegramTransport implements ITransport
 			final boolean bIsSystem = SYSTEM_MESSGE.equalsIgnoreCase(strType);
 			deleteLastSystemMessage(bIsSystem);
 			
-			final Map<String, String> aParameters = new HashMap<String, String>();
+			final Map<String, String> aParameters = new HashMap<>();
 			aParameters.put("chat_id", (StringUtils.isNotBlank(strType) ? m_strSystemUserID : m_strUserID));
 			aParameters.put("text", getMessageText(strText));
 			
@@ -194,7 +194,6 @@ public class TelegramTransport implements ITransport
 		return strStockPrefix + "..." + (aTextParts.length > 1 ? aTextParts[1] : aTextParts[0]);
 	}
 	
-	@SuppressWarnings("unchecked")
 	protected String getMessageButtons(final String strMessage)
 	{
 		if (!SYSTEM_MESSGE.equalsIgnoreCase(getMessageType(strMessage)))
@@ -207,7 +206,7 @@ public class TelegramTransport implements ITransport
 						(StringUtils.isNotBlank(strButtons) ? "," + strButtons : StringUtils.EMPTY) + "]}";
 	}
 	
-	static public String getButtons(final List<List<String>> aButtons)
+	public static String getButtons(final List<List<String>> aButtons)
 	{
 		String strButtons = StringUtils.EMPTY;
 		boolean bIsFirstLine = true;
@@ -239,12 +238,12 @@ public class TelegramTransport implements ITransport
 		
 		try
 		{
-			final Map<String, String> aParameters = new HashMap<String, String>();
+			final Map<String, String> aParameters = new HashMap<>();
 			aParameters.put("chat_id", m_strSystemUserID);
 			aParameters.put("message_id", strMessageID);
 			RequestUtils.sendPostAndReturnJson(getDeleteMessageUrl(), aParameters, true, RequestUtils.DEFAULT_TEMEOUT);
 		}
-		catch(final Exception e) {}
+		catch(final Exception e) {/***/}
 	}	
 
 	void deleteLastSystemMessage(final boolean bIsSystem) throws Exception
@@ -290,14 +289,14 @@ public class TelegramTransport implements ITransport
 	@Override
 	public ITransportMessages getMessages() throws Exception
 	{
-		final Map<String, String> aParameters = new HashMap<String, String>();
+		final Map<String, String> aParameters = new HashMap<>();
 		aParameters.put("timeout", m_nGetUpdatesTimeout.toString());
 		aParameters.put("offset", m_nNextMessageID.toString());
 		aParameters.put("limit", "1");
 		final Map<String, Object> oResult = RequestUtils.sendPostAndReturnJson(getUpdatesUrl(), aParameters, true, m_nGetUpdatesTimeout + 1);
 		final TelegramMessages oMessages = new TelegramMessages(oResult);
 		
-		if (oMessages.getMessages().size() == 0)
+		if (oMessages.getMessages().isEmpty())
 			return null;
 		
 		final String strLastMessageID = oMessages.getMessages().get(oMessages.getMessages().size() - 1).getUpdateID();

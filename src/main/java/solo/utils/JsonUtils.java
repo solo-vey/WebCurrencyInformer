@@ -17,14 +17,18 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonPrimitive;
 import com.google.gson.reflect.TypeToken;
 
-/** */
 public class JsonUtils
 {
+	JsonUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
+	
 	/** По исходному json формируем карту с данными из json   
 	* @param strJson Исходный json
 	* @return Карта данных 
 	* @throws Exception */
-	public final static Map<String, Object> json2Map(final String strJson) throws Exception
+	public static final Map<String, Object> json2Map(final String strJson)
 	{
 		final GsonBuilder oGsonBuilder = new GsonBuilder();
 		oGsonBuilder.registerTypeAdapter(Map.class, new NaturalDeserializer());
@@ -39,7 +43,7 @@ public class JsonUtils
 	* @param strJson Исходный json
 	* @return Карта данных 
 	* @throws Exception */
-	public final static List<Object> json2List(final String strJson) throws Exception
+	public static final List<Object> json2List(final String strJson)
 	{
 		final GsonBuilder oGsonBuilder = new GsonBuilder();
 		oGsonBuilder.registerTypeAdapter(Map.class, new NaturalDeserializer());
@@ -55,7 +59,7 @@ public class JsonUtils
 	* @param strJson Исходный json
 	* @return Карта данных 
 	* @throws Exception */
-	public final static <T extends Object> T fromJson(final String strJson, final Class<T> oClass)
+	public static final <T extends Object> T fromJson(final String strJson, final Class<T> oClass)
 	{
 		final GsonBuilder oGsonBuilder = new GsonBuilder();
 		oGsonBuilder.registerTypeAdapter(Map.class, new NaturalDeserializer());
@@ -70,7 +74,7 @@ public class JsonUtils
 	* @param strJson Исходный json
 	* @return Карта данных 
 	* @throws Exception */
-	public final static String toJson(final Object oValue)
+	public static final String toJson(final Object oValue)
 	{
 		final GsonBuilder oGsonBuilder = new GsonBuilder();
 		final Gson oGson = oGsonBuilder.create();
@@ -81,7 +85,7 @@ public class JsonUtils
 	* @param strJson Исходный json
 	* @return Карта данных 
 	* @throws Exception */
-	public final static String formatJson(final String strJson)
+	public static final String formatJson(final String strJson)
 	{
 		return strJson.replace("\\r", "\r").replace("\\n", "\n").replace("\\t", "\t").replace("{", "\r{").replace(",\"", ",\r\t\"");
 	}
@@ -124,7 +128,7 @@ class NaturalDeserializer implements JsonDeserializer<Object>
 			 { 
 				 return bigDec.intValueExact();
 			 }
-			 catch(ArithmeticException e) {}
+			 catch(ArithmeticException e) { /***/ }
 
 			 return bigDec.longValue();
 		 } 
@@ -135,18 +139,18 @@ class NaturalDeserializer implements JsonDeserializer<Object>
 	 
 	 private Object handleArray(JsonArray json, JsonDeserializationContext context) 
 	 {
-		 final List<Object> array = new LinkedList<Object>();
+		 final List<Object> array = new LinkedList<>();
 		 for(int i = 0; i < json.size(); i++)
-		 array.add(context.deserialize(json.get(i), Value.class));
+			 array.add(context.deserialize(json.get(i), Value.class));
 		   
 		 return array;
 	 }
 	 
 	 private Object handleObject(JsonObject json, JsonDeserializationContext context) 
 	 {
-		 final Map<String, Object> map = new HashMap<String, Object>();
+		 final Map<String, Object> map = new HashMap<>();
 		 for(Map.Entry<String, JsonElement> entry : json.entrySet())
-		 map.put(entry.getKey(), context.deserialize(entry.getValue(), Value.class));
+			 map.put(entry.getKey(), context.deserialize(entry.getValue(), Value.class));
 		   
 		 return map;
 	 }

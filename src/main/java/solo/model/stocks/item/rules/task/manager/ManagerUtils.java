@@ -3,6 +3,7 @@ package solo.model.stocks.item.rules.task.manager;
 import java.math.BigDecimal;
 import java.util.AbstractMap;
 import java.util.Calendar;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
@@ -32,9 +33,15 @@ import solo.model.stocks.item.rules.task.trade.TradesInfo;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class ManagerUtils
 {
+	ManagerUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
+	
 	public static boolean isTestObject(final Object oObject)
 	{
 		return oObject instanceof ITest;
@@ -109,13 +116,13 @@ public class ManagerUtils
 		
 		try
 		{
-			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
-			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice().multiply(new BigDecimal(2.2));
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(BigDecimal.valueOf(2.2));	
+			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice().multiply(BigDecimal.valueOf(2.2));
 			final String strRuleInfo = TTradeControler.NAME + "_" + oRateInfo + "_" + (nSum.compareTo(BigDecimal.ZERO) > 0 ? nSum : nMinChangePrice);
 			final IRule oRule = RulesFactory.getRule(strRuleInfo);
 			WorkerFactory.getStockExchange().getRules().addRule(oRule);
 			
-			System.out.printf("Create test trade controler [" + oRateInfo + "]\r\n");
+			TraceUtils.writeTrace("Create test trade controler [" + oRateInfo + "]\r\n");
 		}
 		catch(final Exception e)
 		{
@@ -154,7 +161,7 @@ public class ManagerUtils
 			oTradeMoney.setTradeID(oRule.getID());
 			oMoney.save();
 			
-			System.out.printf("Create trade controler [" + oRateInfo + "]\r\n");
+			TraceUtils.writeTrace("Create trade controler [" + oRateInfo + "]\r\n");
 			return StringUtils.EMPTY;
 		}
 		catch(final Exception e)
@@ -176,7 +183,7 @@ public class ManagerUtils
 	
 	public static List<RateInfo> getProspectiveRates(final Map<RateInfo, RateStateShort> oAllRateState, final BigDecimal nMinExtraPercent)
 	{
-		final List<RateInfo> aProspectiveRates = new LinkedList<RateInfo>();
+		final List<RateInfo> aProspectiveRates = new LinkedList<>();
 		final List<RateInfo> aRates = WorkerFactory.getStockSource().getRates();
 		
 		final BigDecimal nMinDayRateVolume = ManagerUtils.getMinDayRateVolume();
@@ -247,13 +254,13 @@ public class ManagerUtils
 		final Map<Integer, RateTradesBlock> oRatePriodTrades = oStockManagesInfo.getRateLast24Hours().getPeriods();
 		
 		final int nStartHour = Calendar.getInstance().get(Calendar.HOUR_OF_DAY);
-		final List<Entry<Integer, RateTradesBlock>> aResult = new LinkedList<Entry<Integer, RateTradesBlock>>();
+		final List<Entry<Integer, RateTradesBlock>> aResult = new LinkedList<>();
 		for(int nPos = 0; nPos < nHoursCount; nPos++)
 		{
 			final int nHour = (nStartHour - nPos >= 0 ? nStartHour - nPos : (nStartHour - nPos) + 24);
 			final RateTradesBlock oHourRateTradesBlock = oRatePriodTrades.get(nHour);
 			if (null != oHourRateTradesBlock)
-				aResult.add(new AbstractMap.SimpleEntry<Integer, RateTradesBlock>(nHour, oHourRateTradesBlock));
+				aResult.add(new AbstractMap.SimpleEntry<>(nHour, oHourRateTradesBlock));
 		}
 		
 		return aResult;
@@ -261,7 +268,7 @@ public class ManagerUtils
 	
 	public static Map<RateInfo, List<Entry<Integer, TradesBlock>>> convertFromHoursTradesToRateTrades(final List<Entry<Integer, RateTradesBlock>> aHoursTrades)
 	{
-		final Map<RateInfo, List<Entry<Integer, TradesBlock>>> aRates = new HashMap<RateInfo, List<Entry<Integer, TradesBlock>>>();
+		final Map<RateInfo, List<Entry<Integer, TradesBlock>>> aRates = new HashMap<>();
 		for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
 		{
 			final RateTradesBlock oHourRateTradesBlock = oTradeInfo.getValue();
@@ -269,7 +276,7 @@ public class ManagerUtils
 			{	
 				if (null == aRates.get(oRateTradeBlock.getKey()))
 					aRates.put(oRateTradeBlock.getKey(), new LinkedList<Entry<Integer, TradesBlock>>());
-				aRates.get(oRateTradeBlock.getKey()).add(new AbstractMap.SimpleEntry<Integer, TradesBlock>(oTradeInfo.getKey(), oRateTradeBlock.getValue()));
+				aRates.get(oRateTradeBlock.getKey()).add(new AbstractMap.SimpleEntry<>(oTradeInfo.getKey(), oRateTradeBlock.getValue()));
 			}
 		}
 		
@@ -310,7 +317,7 @@ public class ManagerUtils
 	
 	public static BigDecimal getMinRateHourProfitabilityPercent(final RateInfo oRateInfo, final int nHoursCount)
 	{
-		BigDecimal nMinPercent = new BigDecimal(Integer.MAX_VALUE);
+		BigDecimal nMinPercent = BigDecimal.valueOf(Integer.MAX_VALUE);
 		final List<Entry<Integer, RateTradesBlock>> aHoursTrades = getHoursTrades(nHoursCount);
 		for(final Entry<Integer, RateTradesBlock> oTradeInfo : aHoursTrades)
 		{
@@ -324,12 +331,12 @@ public class ManagerUtils
 				nMinPercent = nPercent;
 		}
 		
-		return (nMinPercent.equals(new BigDecimal(Integer.MAX_VALUE)) ? BigDecimal.ZERO : nMinPercent);
+		return (nMinPercent.equals(BigDecimal.valueOf(Integer.MAX_VALUE)) ? BigDecimal.ZERO : nMinPercent);
 	}
 	
 	public static Map<Currency, CurrencyAmount> calculateStockMoney(final StockUserInfo oUserInfo, final Rules oRules)
 	{
-		final Map<Currency, BigDecimal> aLocked = new HashMap<Currency, BigDecimal>();
+		final Map<Currency, BigDecimal> aLocked = new EnumMap<>(Currency.class);
 		
 		for(final IRule oRule : oRules.getRules().values())
 		{
@@ -349,7 +356,7 @@ public class ManagerUtils
 			aLocked.put(oRateInfo.getCurrencyFrom(), nLockedVolumeCurrencyFrom.add(nControlerFreeVolume));	
 		}
 	
-		final Map<Currency, CurrencyAmount> oMoney = new HashMap<Currency, CurrencyAmount>();
+		final Map<Currency, CurrencyAmount> oMoney = new EnumMap<>(Currency.class);
 		for(final Entry<Currency, CurrencyAmount> oCurrencyInfo : oUserInfo.getMoney().entrySet())
 		{
 			final BigDecimal nLocked = (aLocked.containsKey(oCurrencyInfo.getKey()) ? aLocked.get(oCurrencyInfo.getKey()) : BigDecimal.ZERO);

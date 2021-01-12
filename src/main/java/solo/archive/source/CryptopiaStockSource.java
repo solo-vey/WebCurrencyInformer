@@ -26,6 +26,7 @@ import solo.model.stocks.source.utils.Exmo;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.RequestUtils;
+import solo.utils.TraceUtils;
 import solo.utils.JsonUtils;
 
 public class CryptopiaStockSource extends BaseStockSource
@@ -36,7 +37,7 @@ public class CryptopiaStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	protected void initRates()
+	@Override protected void initRates()
 	{
 		super.initRates();
 		
@@ -49,7 +50,7 @@ public class CryptopiaStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			WorkerFactory.onException("Can't init rates in stock source [" + getClass().getSimpleName() + "]", e);
+			TraceUtils.writeError("Can't init rates in stock source [" + getClass().getSimpleName() + "]", e);
 		}
 	}
 
@@ -73,7 +74,7 @@ public class CryptopiaStockSource extends BaseStockSource
 		}
 		catch(final Exception e)
 		{
-			//WorkerFactory.onException("Can't add rate in stock source [" + getClass().getSimpleName() + "]", e);
+			//TraceUtils.writeError("Can't add rate in stock source [" + getClass().getSimpleName() + "]", e);
 		}
 	}
 	
@@ -99,7 +100,7 @@ public class CryptopiaStockSource extends BaseStockSource
 	}
 	
 	@SuppressWarnings("unchecked")
-	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
+	@Override public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
 	{
 		final Map<RateInfo, RateStateShort> oAllRateState = super.getAllRateState();
 		final Map<String, Object> oAllTickersData = RequestUtils.sendGetAndReturnMap(m_strTickerUrl, true, RequestUtils.DEFAULT_TEMEOUT);
@@ -187,7 +188,7 @@ public class CryptopiaStockSource extends BaseStockSource
 		for(final Entry<String, Object> oCurrencyBalance : oUserBalances.entrySet())
 		{
 			final BigDecimal nBalance = MathUtils.fromString(oCurrencyBalance.getValue().toString());
-			final String strCurrency = oCurrencyBalance.getKey().toString();
+			final String strCurrency = oCurrencyBalance.getKey();
 			final BigDecimal nReserved = (oUserReserved.containsKey(strCurrency) ? MathUtils.fromString(oUserReserved.get(strCurrency).toString()) : BigDecimal.ZERO);
 			if (nBalance.compareTo(BigDecimal.ZERO) == 0 && nReserved.compareTo(BigDecimal.ZERO) == 0)
 				continue;
@@ -243,7 +244,7 @@ public class CryptopiaStockSource extends BaseStockSource
 			try { Thread.sleep(250); }
 			catch (InterruptedException e) { break; }
 			nTryCount -= (oGetOrder.isException() ? 1 : 5);
-			System.out.println("Get order repeat : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getInfoShort());
+			TraceUtils.writeTrace("Get order repeat : " + strOrderId + " " + oOriginalRateInfo + " " + oGetOrder.getInfoShort());
 		}
 		
 		return oGetOrder;
@@ -316,14 +317,14 @@ public class CryptopiaStockSource extends BaseStockSource
 
 	@Override public Order addOrder(final OrderSide oOriginalSide, final RateInfo oOriginalRateInfo, BigDecimal nOriginalVolume, BigDecimal nOriginalPrice)
 	{
-        System.out.println("Add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice);
+        TraceUtils.writeTrace("Add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice);
 
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		final OrderSide oSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalSide);
 		final BigDecimal nVolume = (oOriginalRateInfo.getIsReverse() ? nOriginalVolume.multiply(nOriginalPrice) : nOriginalVolume);
 		final BigDecimal nPrice = (oOriginalRateInfo.getIsReverse() ? MathUtils.getBigDecimal(1.0 / nOriginalPrice.doubleValue(), TradeUtils.DEFAULT_PRICE_PRECISION) : nOriginalPrice);
         if (oOriginalRateInfo.getIsReverse())
-        	System.out.println("Add reverse order: " + oSide + " " + oOriginalRateInfo + " " + nVolume + " " + nPrice);
+        	TraceUtils.writeTrace("Add reverse order: " + oSide + " " + oOriginalRateInfo + " " + nVolume + " " + nPrice);
 
 		try
 		{
@@ -331,7 +332,7 @@ public class CryptopiaStockSource extends BaseStockSource
 			
 			super.addOrder(oSide, oRateInfo, nVolume, nPrice);
 			
-			final Map<String, String> aParameters = new HashMap<String, String>();
+			final Map<String, String> aParameters = new HashMap<>();
 			aParameters.put("type", oSide.toString().toLowerCase());
 			aParameters.put("quantity", nVolume.toString());
 			aParameters.put("price", nPrice.toString());
@@ -346,17 +347,17 @@ public class CryptopiaStockSource extends BaseStockSource
 				final Order oOrder = getOrder(strOrderId, oOriginalRateInfo);
 				oOrder.setVolume(nVolume);
 
-				System.out.println("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
+				TraceUtils.writeTrace("Add order complete: " + oOrder.getId() + " " + oOrder.getInfoShort());
 				return oOrder;
 			}
 			
 			final String strError = (oOrderData.containsKey("error") ? oOrderData.get("error").toString() : "Unknown");
-	        System.err.println("Can't add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice + "\r\n Error : " + strError);
+	        TraceUtils.writeError("Can't add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice + "\r\n Error : " + strError);
 			return new Order(Order.ERROR, strError);
 		}
 		catch(final Exception e)
 		{
-	        System.err.println("Can't add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice + "\r\n Exception : " + e.getMessage());
+	        TraceUtils.writeError("Can't add order: " + oOriginalSide + " " + oOriginalRateInfo + " " + nOriginalVolume + " " + nOriginalPrice + "\r\n Exception : " + e.getMessage());
 			return new Order(Order.EXCEPTION, e.getMessage());
 		}
 	}
@@ -366,7 +367,7 @@ public class CryptopiaStockSource extends BaseStockSource
 	{
 		super.removeOrder(strOrderId, oRateInfo);
 		
-        System.out.println("Remove order: " + strOrderId);
+        TraceUtils.writeTrace("Remove order: " + strOrderId);
         final Date oDateStartRemove = new Date();
 		
 		try
@@ -382,7 +383,7 @@ public class CryptopiaStockSource extends BaseStockSource
 				final Order oOrderTrades = getOrderTrades(strOrderId);
 				if (oOrderTrades.isError())
 				{
-			        System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + ". No trades");
+			        TraceUtils.writeTrace("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + ". No trades");
 					return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
 				}
 				
@@ -392,24 +393,24 @@ public class CryptopiaStockSource extends BaseStockSource
 					final Order oCanceledOrder = findOrderInCanceled(strOrderId);
 					if (oCanceledOrder.isCanceled())
 					{
-				        System.out.println("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + " " + oCanceledOrder.getInfoShort());
+				        TraceUtils.writeTrace("Remove order complete [" + ((new Date()).getTime() - oDateStartRemove.getTime()) + "]." + strOrderId + " " + oCanceledOrder.getInfoShort());
 						return oCanceledOrder;
 					}
 					Thread.sleep(200);
 					nTryCount--;
 				}
 				
-		        System.out.println("Remove order complete. " + strOrderId + ". Can't read order after remove");
+		        TraceUtils.writeTrace("Remove order complete. " + strOrderId + ". Can't read order after remove");
 				return new Order(strOrderId, Order.CANCEL, StringUtils.EMPTY);
 			}
 
 			final String strError = (oOrderData.containsKey("error") ? oOrderData.get("error").toString() : "Unknown");
-	        System.err.println("Can't remove order: " + strOrderId + "\r\n Error : " + strError);
+	        TraceUtils.writeError("Can't remove order: " + strOrderId + "\r\n Error : " + strError);
 			return new Order(Order.ERROR, strError);
 		}
 		catch(final Exception e)
 		{
-	        System.err.println("Can't remove order: " + strOrderId);
+	        TraceUtils.writeError("Can't remove order: " + strOrderId);
 			return new Order(Order.EXCEPTION, e.getMessage() + "\r\n Exception : " + e.getMessage());
 		}
 	}

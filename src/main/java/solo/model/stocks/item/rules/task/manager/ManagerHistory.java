@@ -17,11 +17,12 @@ import org.apache.commons.lang.StringUtils;
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class ManagerHistory
 {
-	final protected IStockExchange m_oStockExchange;
-	final protected List<String> m_oHistory =  Collections.synchronizedList(new LinkedList<String>()); 
+	protected final IStockExchange m_oStockExchange;
+	protected final List<String> m_oHistory =  Collections.synchronizedList(new LinkedList<String>()); 
 	
 	public ManagerHistory(final IStockExchange oStockExchange)
 	{
@@ -64,7 +65,7 @@ public class ManagerHistory
 		} 
 		catch (IOException e) 
 		{
-			System.err.printf("Save history exception : " + e.getMessage());
+			TraceUtils.writeError("Save history exception : " + e.getMessage());
 		}			
 	}
 
@@ -84,7 +85,7 @@ public class ManagerHistory
 		} 
 		catch (final Exception e) 
 		{
-			System.err.printf("Load history exception : " + e.getMessage() + "\r\n");
+			TraceUtils.writeError("Load history exception : " + e.getMessage() + "\r\n");
 	    }			
 	}
 

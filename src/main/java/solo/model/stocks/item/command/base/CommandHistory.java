@@ -14,11 +14,12 @@ import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.command.system.IHistoryCommand;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class CommandHistory
 {
-	final protected IStockExchange m_oStockExchange;
-	final protected List<String> m_oHistory =  Collections.synchronizedList(new LinkedList<String>()); 
+	protected final IStockExchange m_oStockExchange;
+	protected final List<String> m_oHistory =  Collections.synchronizedList(new LinkedList<String>()); 
 	
 	public CommandHistory(final IStockExchange oStockExchange)
 	{
@@ -61,7 +62,7 @@ public class CommandHistory
 		} 
 		catch (IOException e) 
 		{
-			System.err.printf("Save history exception : " + e.getMessage());
+			TraceUtils.writeError("Save history exception : " + e.getMessage());
 		}			
 	}
 
@@ -81,7 +82,7 @@ public class CommandHistory
 		} 
 		catch (final Exception e) 
 		{
-			System.err.printf("Load history exception : " + e.getMessage() + "\r\n");
+			TraceUtils.writeError("Load history exception : " + e.getMessage() + "\r\n");
 			save();
 	    }			
 	}

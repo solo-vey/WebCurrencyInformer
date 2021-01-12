@@ -6,7 +6,7 @@ import org.apache.commons.lang.time.DateUtils;
 
 public class PeriodTracker
 {
-	final protected int m_nMinutCount;
+	protected final int m_nMinutCount;
 	protected Date m_oDateNextTriggering = new Date();
 	
 	public PeriodTracker(final int nMinutCount)

@@ -11,8 +11,8 @@ import solo.transport.telegram.TelegramTransport;
 
 public class TransportFactory
 {
-	final static Map<Stocks, Class<?>> s_oTransportsClassByStock = new HashMap<Stocks, Class<?>>();
-	final static Map<Class<?>, ITransport> s_oTransportsByClass = new HashMap<Class<?>, ITransport>();
+	static final Map<Stocks, Class<?>> s_oTransportsClassByStock = new HashMap<Stocks, Class<?>>();
+	static final Map<Class<?>, ITransport> s_oTransportsByClass = new HashMap<Class<?>, ITransport>();
 	
 	static
 	{

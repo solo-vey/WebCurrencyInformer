@@ -17,29 +17,35 @@ import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.RateParamters;
 import solo.model.stocks.item.Rules;
 import solo.model.stocks.item.StockUserInfo;
-import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
-import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.QuickSellStrategy;
 import solo.model.stocks.item.rules.task.strategy.StrategyFactory;
+import solo.model.stocks.item.rules.task.strategy.trade.DropSellTradeStrategy;
+import solo.model.stocks.item.rules.task.strategy.trade.ITradeStrategy;
 import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class TradeUtils
 {
 	public static final int DEFAULT_VOLUME_PRECISION = 8;
 	public static final int DEFAULT_PRICE_PRECISION = 8;
+	
+	TradeUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
 
 	public static BigDecimal getStockCommision()
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
-		final BigDecimal nStockCommision = new BigDecimal(ResourceUtils.getIntFromResource("stock.commision", oStockExchange.getStockProperties(), 25));
-		return nStockCommision.divide(new BigDecimal(10000));
+		final BigDecimal nStockCommision = BigDecimal.valueOf(ResourceUtils.getIntFromResource("stock.commision", oStockExchange.getStockProperties(), 25));
+		return nStockCommision.divide(BigDecimal.valueOf(10000));
 	}
 
 	public static BigDecimal getCommisionValue(final BigDecimal nValue)
@@ -69,15 +75,15 @@ public class TradeUtils
 	{
 		final IStockExchange oStockExchange = WorkerFactory.getMainWorker().getStockExchange();
 		final String strMarket = getMarket(oRateInfo); 
-		final BigDecimal nStockMarketMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock." + strMarket + ".margin", oStockExchange.getStockProperties(), Integer.MIN_VALUE));
+		final BigDecimal nStockMarketMargin = BigDecimal.valueOf(ResourceUtils.getIntFromResource("stock." + strMarket + ".margin", oStockExchange.getStockProperties(), Integer.MIN_VALUE));
 		if (nStockMarketMargin.compareTo(BigDecimal.ZERO) >= 0)
 		{
-			final BigDecimal nMarketMargin = nStockMarketMargin.divide(new BigDecimal(10000));
+			final BigDecimal nMarketMargin = nStockMarketMargin.divide(BigDecimal.valueOf(10000));
 			return nPrice.multiply(nMarketMargin);			
 		}
 		
-		final BigDecimal nStockMargin = new BigDecimal(ResourceUtils.getIntFromResource("stock.margin", oStockExchange.getStockProperties(), 20));
-		final BigDecimal nMargin = nStockMargin.divide(new BigDecimal(10000));
+		final BigDecimal nStockMargin = BigDecimal.valueOf(ResourceUtils.getIntFromResource("stock.margin", oStockExchange.getStockProperties(), 20));
+		final BigDecimal nMargin = nStockMargin.divide(BigDecimal.valueOf(10000));
 		return nPrice.multiply(nMargin);
 	}
 	
@@ -177,7 +183,7 @@ public class TradeUtils
 			return BigDecimal.ZERO;
 		
 		final BigDecimal oBuyPrice = oRateAnalysisResult.getBidsOrders().get(0).getPrice();
-		final BigDecimal nMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(new BigDecimal(1.01));
+		final BigDecimal nMinTradeSum = oMinTradeVolume.multiply(oBuyPrice).multiply(BigDecimal.valueOf(1.01));
 				
 		final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 		final BigDecimal nStockMinTradeSum = (!oOriginalRateInfo.getIsReverse() ? WorkerFactory.getStockSource().getRateParameters(oRateInfo).getMinAmount()
@@ -304,7 +310,7 @@ public class TradeUtils
 				return oFindOrder;
 			
 			WorkerFactory.onException("Find lost order. Try count [" + nTry + "]", null);
-			try { Thread.sleep(500); } catch (InterruptedException e) {}
+			try { Thread.sleep(500); } catch (InterruptedException e) {/***/}
 		}
 		
 		return Order.NULL;
@@ -317,7 +323,7 @@ public class TradeUtils
 			final RateInfo oRateInfo = (oOriginalRateInfo.getIsReverse() ? RateInfo.getReverseRate(oOriginalRateInfo) : oOriginalRateInfo);
 			final OrderSide oOrderSide = (oOriginalRateInfo.getIsReverse() ? (oOriginalOrderSide.equals(OrderSide.SELL) ? OrderSide.BUY : OrderSide.SELL) : oOriginalOrderSide);
 			
-			final List<Order> aTaskOrders = new LinkedList<Order>();
+			final List<Order> aTaskOrders = new LinkedList<>();
 			final Map<Integer, IRule> oRules = WorkerFactory.getStockExchange().getRules().getRules();
 			for(final IRule oRule : oRules.values())
 			{
@@ -330,7 +336,7 @@ public class TradeUtils
 			}
 			
 			final StockUserInfo oUserInfo = oStockSource.getUserInfo(oRateInfo);
-			final List<Order> oAbsentOrders = new LinkedList<Order>();
+			final List<Order> oAbsentOrders = new LinkedList<>();
 			for(final Order oOrder : oUserInfo.getOrders(oRateInfo))
 			{
 				if (!aTaskOrders.contains(oOrder))
@@ -353,7 +359,7 @@ public class TradeUtils
 			
 			if (!oBestOrder.isNull())
 			{
-				System.out.println("Find lost order [" + oRateInfo + "] [" + nOrderVolume + "] [" + oBestOrder.getInfoShort() + "]");
+				TraceUtils.writeTrace("Find lost order [" + oRateInfo + "] [" + nOrderVolume + "] [" + oBestOrder.getInfoShort() + "]");
 				return oBestOrder;
 			}
 		}

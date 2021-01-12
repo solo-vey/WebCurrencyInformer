@@ -42,11 +42,12 @@ public class TestTradesInfo extends TradesInfo implements ITest
 	@Override public String getCurrentState() 
 	{	
 		return StringUtils.EMPTY;
-	};
+	}
 	
 	@Override public void setCurrentState(String strCurrentState) 
 	{	
-	};
+		/***/
+	}
 	
 	@Override public String getInfo()
 	{

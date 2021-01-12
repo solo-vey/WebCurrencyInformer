@@ -25,7 +25,7 @@ public class SimpleTradeStrategy extends BaseTradeStrategy
 		return NAME;
 	}	
 	
-	public boolean checkTrade(final ITradeTask oTaskTrade, final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
+	@Override public boolean checkTrade(final ITradeTask oTaskTrade, final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
 	{
 		removeBuyIfSmall(oTaskTrade, oTradeControler);
 		removeSellIfSmall(oTaskTrade, oTradeControler);
@@ -91,7 +91,7 @@ public class SimpleTradeStrategy extends BaseTradeStrategy
 		removeSellOrder(oTaskTrade, oGetOrder, "SimpleTradeStrategy.removeSellIfSmall");
 	}
 	
-	public boolean isCreateNewTrade(final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
+	@Override public boolean isCreateNewTrade(final List<ITradeTask> aTaskTrades, final TradeControler oTradeControler)
 	{
 		final int nMaxTrades = oTradeControler.getMaxTrades();
 		if (aTaskTrades.size() >= nMaxTrades)

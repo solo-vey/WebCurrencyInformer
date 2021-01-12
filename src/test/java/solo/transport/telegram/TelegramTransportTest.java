@@ -10,12 +10,13 @@ import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.ITransport;
 import solo.transport.ITransportMessages;
+import solo.utils.TraceUtils;
 
 public class TelegramTransportTest
 {
     @SuppressWarnings("unchecked")
 	@Test
-    public void testSendMessage() throws Exception 
+    public void testSendMessage() 
     {
     	//	Arrange
     	final ITransport oTelegram = TransportFactory.getTransport(Stocks.Kuna);
@@ -24,7 +25,7 @@ public class TelegramTransportTest
     	final Map<String, Object> oResult = (Map<String, Object>) oTelegram.sendMessage("Привет");
 
         //	Assert
-    	System.out.printf("Send message result " + oResult + "\r\n");
+    	TraceUtils.writeTrace("Send message result " + oResult + "\r\n");
     }
 
 	@Test
@@ -38,7 +39,7 @@ public class TelegramTransportTest
 
         //	Assert
     	if (null != oMessages)
-    		System.out.printf("Get messages result " + oMessages.getMessages().get(0).getText() + "\r\n");
+    		TraceUtils.writeTrace("Get messages result " + oMessages.getMessages().get(0).getText() + "\r\n");
     }
 	
 
@@ -56,6 +57,6 @@ public class TelegramTransportTest
 		oTelegram.deleteMessage(oMessage.getID());
    	
         //	Assert
-    	System.out.printf("Delete sended messages \r\n");
+    	TraceUtils.writeTrace("Delete sended messages \r\n");
     }
 }

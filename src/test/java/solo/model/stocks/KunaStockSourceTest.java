@@ -12,6 +12,7 @@ import solo.model.stocks.item.OrderTrade;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.utils.TraceUtils;
 
 public class KunaStockSourceTest
 {
@@ -30,7 +31,7 @@ public class KunaStockSourceTest
     	//final Order oOrder = StockExchangeFactory.getStockExchange(Stocks.Exmo).getStockSource().getOrder("521665811", new RateInfo(Currency.ETH, Currency.RUB));
     	//final Order oOrder2 = StockExchangeFactory.getStockExchange(Stocks.Exmo).getStockSource().getOrder("509446393", new RateInfo(Currency.WAVES, Currency.RUB));
     	
-    	System.out.println(oOrderTrades);
+    	TraceUtils.writeTrace(oOrderTrades.toString());
     }
 
 }

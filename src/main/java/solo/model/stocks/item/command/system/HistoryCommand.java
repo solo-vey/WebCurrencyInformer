@@ -9,9 +9,9 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class HistoryCommand extends BaseCommand
 {
-	final static public String NAME = "history";
+	public static final String NAME = "history";
 	
-	final protected String m_strFind;
+	protected final String m_strFind;
 
 	public HistoryCommand(final String strCommandLine)
 	{

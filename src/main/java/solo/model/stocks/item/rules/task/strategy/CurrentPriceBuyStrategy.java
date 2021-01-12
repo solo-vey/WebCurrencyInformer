@@ -12,7 +12,7 @@ public class CurrentPriceBuyStrategy extends BaseStrategy implements IBuyStrateg
 {
 	private static final long serialVersionUID = -4917813447504424168L;
 	
-	public final static String NAME = "CurrentPriceBuy";
+	public static final String NAME = "CurrentPriceBuy";
 	
 	public String getName()
 	{

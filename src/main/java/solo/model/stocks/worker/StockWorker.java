@@ -11,7 +11,7 @@ import solo.utils.ResourceUtils;
 
 public class StockWorker extends BaseWorker
 {
-	final protected IStockExchange m_oStockExchange;
+	protected final IStockExchange m_oStockExchange;
 	final MainWorker m_oMainWorker; 
 	final List<StockRateWorker> m_aStockRateWorkers = new LinkedList<StockRateWorker>();
 	
@@ -27,7 +27,7 @@ public class StockWorker extends BaseWorker
 		return m_aStockRateWorkers;
 	}
 
-	public void startWorker()
+	@Override public void startWorker()
 	{
 		if (!m_bIsManualStopped)
 			return;
@@ -51,7 +51,7 @@ public class StockWorker extends BaseWorker
 		oStockRateWorker.startWorker();
 	}
 	
-	public void stopWorker()
+	@Override public void stopWorker()
 	{
 		if (m_bIsManualStopped)
 			return;

@@ -42,32 +42,32 @@ public class StrategyFactory
 		addTradeStrategy(new CalmRateTradeStrategy());
 	}
 	
-	static public void addBuyStrategy(final IBuyStrategy oBuyStrategy)
+	public static void addBuyStrategy(final IBuyStrategy oBuyStrategy)
 	{
 		s_oBuyStrategies.put(oBuyStrategy.getName().toLowerCase(), oBuyStrategy);
 	}
 	
-	static public void addSellStrategy(final ISellStrategy oSellStrategy)
+	public static void addSellStrategy(final ISellStrategy oSellStrategy)
 	{
 		s_oSellStrategies.put(oSellStrategy.getName().toLowerCase(), oSellStrategy);
 	}
 	
-	static public void addTradeStrategy(final ITradeStrategy oTradeStrategy)
+	public static void addTradeStrategy(final ITradeStrategy oTradeStrategy)
 	{
 		s_oTradeStrategies.put(oTradeStrategy.getName().toLowerCase(), oTradeStrategy);
 	}
 
-	static public IBuyStrategy getBuyStrategy(final String strStrategyName)
+	public static IBuyStrategy getBuyStrategy(final String strStrategyName)
 	{
 		return s_oBuyStrategies.get(strStrategyName.toLowerCase());
 	}
 
-	static public ISellStrategy getSellStrategy(final String strStrategyName)
+	public static ISellStrategy getSellStrategy(final String strStrategyName)
 	{
 		return s_oSellStrategies.get(strStrategyName.toLowerCase());
 	}
 	
-	static public ITradeStrategy getTradeStrategy(final String strStrategyName)
+	public static ITradeStrategy getTradeStrategy(final String strStrategyName)
 	{
 		return s_oTradeStrategies.get(strStrategyName.toLowerCase());
 	}

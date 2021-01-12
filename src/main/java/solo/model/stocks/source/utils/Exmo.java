@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 import solo.CurrencyInformer;
 import solo.utils.RequestUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -49,7 +50,7 @@ public class Exmo
 		}
 		catch (InterruptedException e)
 		{
-			System.err.println("Request fail [" + HTTPS_API_EXMO_ROOT + method + "]: " + e.toString());
+			TraceUtils.writeError("Request fail [" + HTTPS_API_EXMO_ROOT + method + "]: " + e.toString());
 			return null;
 		}
 		finally
@@ -65,7 +66,7 @@ public class Exmo
         String sign;
 
         if (arguments == null)   // If the user provided no arguments, just create an empty argument array.
-            arguments = new HashMap<String, String>();
+            arguments = new HashMap<>();
         
         if (null == _nonce)
         	_nonce = 0L;
@@ -99,7 +100,7 @@ public class Exmo
         	} 
         	catch (UnsupportedEncodingException uee) 
         	{
-        		System.err.println("Unsupported encoding exception: " + uee.toString());
+        		TraceUtils.writeError("Unsupported encoding exception: " + uee.toString());
         		return null;
         	}
 
@@ -110,7 +111,7 @@ public class Exmo
 	        } 
 	        catch (NoSuchAlgorithmException nsae) 
 	        {
-	            System.err.println("No such algorithm exception: " + nsae.toString());
+	            TraceUtils.writeError("No such algorithm exception: " + nsae.toString());
 	            return null;
 	        }
 	
@@ -121,7 +122,7 @@ public class Exmo
 	        } 
 	        catch (InvalidKeyException ike) 
 	        {
-	            System.err.println("Invalid key exception: " + ike.toString());
+	            TraceUtils.writeError("Invalid key exception: " + ike.toString());
 	            return null;
 	        }
 	
@@ -133,7 +134,7 @@ public class Exmo
 	        } 
 	        catch (UnsupportedEncodingException uee) 
 	        {
-	            System.err.println("Unsupported encoding exception: " + uee.toString());
+	            TraceUtils.writeError("Unsupported encoding exception: " + uee.toString());
 	            return null;
 	        }
 
@@ -161,7 +162,7 @@ public class Exmo
 	        } 
 	        catch (IOException e) 
 	        {
-	            System.err.println("Request fail [" + strURL + "]: " + e.toString());
+	            TraceUtils.writeError("Request fail [" + strURL + "]: " + e.toString());
 	            return null;  // An error occured...
 	        }
         }

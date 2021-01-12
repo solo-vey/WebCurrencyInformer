@@ -17,13 +17,13 @@ import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.trade.ITradeControler;
 import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
-import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class Rules
 {
-	final protected IStockExchange m_oStockExchange;
-	final protected Map<Integer, IRule> m_oRules = new HashMap<Integer, IRule>();
+	protected final IStockExchange m_oStockExchange;
+	protected final Map<Integer, IRule> m_oRules = new HashMap<>();
 
 	protected Integer m_nLastRuleID = 0;
 	
@@ -43,7 +43,7 @@ public class Rules
 		m_oRules.put(m_nLastRuleID, oRule);
 		oRule.setID(m_nLastRuleID);
 		if (!ManagerUtils.isTestObject(oRule))
-			System.out.printf("Add rule : " + oRule);
+			TraceUtils.writeTrace("Add rule : " + oRule);
 		
 		m_nLastRuleID++;
 		save();
@@ -118,7 +118,7 @@ public class Rules
 		} 
 		catch (IOException e) 
 		{
-			WorkerFactory.onException("Save rules exception", e);
+			TraceUtils.writeError("Save rules exception", e);
 		}			
 	}
 
@@ -142,14 +142,13 @@ public class Rules
 		} 
 		catch (final Exception e) 
 		{
-			WorkerFactory.onException("Load rules exception", e);
+			TraceUtils.writeError("Load rules exception", e);
 			save();
 	    }			
 	}
 
 	String getFileName()
 	{
-		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rules.ser";
-		return strStockEventsFileName;
+		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rules.ser";
 	}
 }

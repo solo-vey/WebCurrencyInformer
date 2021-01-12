@@ -29,34 +29,35 @@ import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class BaseStockSource implements IStockSource
 {
-	final protected List<RateInfo> m_aRates = new LinkedList<RateInfo>();
-	final protected Map<RateInfo, RateParamters> m_aAllRates = new HashMap<RateInfo, RateParamters>();
-	final protected BigDecimal m_nSumIgnore;
-	final protected IStockExchange m_oStockExchange;
+	protected final List<RateInfo> m_aRates = new LinkedList<>();
+	protected final Map<RateInfo, RateParamters> m_aAllRates = new HashMap<>();
+	protected final BigDecimal m_nSumIgnore;
+	protected final IStockExchange m_oStockExchange;
 
-	final protected String m_strMoneyUrl;
-	final protected String m_strMyOrdersUrl;
-	final protected String m_strRemoveOrderUrl;
-	final protected String m_strAddOrderUrl;
-	final protected String m_strTimeUrl;
+	protected final String m_strMoneyUrl;
+	protected final String m_strMyOrdersUrl;
+	protected final String m_strRemoveOrderUrl;
+	protected final String m_strAddOrderUrl;
+	protected final String m_strTimeUrl;
 	
-	final protected String m_strOrdersUrl;
-	final protected String m_strTradesUrl;
-	final protected String m_strTickerUrl;
-	final protected String m_strPairsUrl;
+	protected final String m_strOrdersUrl;
+	protected final String m_strTradesUrl;
+	protected final String m_strTickerUrl;
+	protected final String m_strPairsUrl;
 	
-	final protected String m_strPublicKey;
-	final protected String m_strSecretKey;
+	protected final String m_strPublicKey;
+	protected final String m_strSecretKey;
 	
-	final protected Map<RateInfo, RateState> m_oRateStateCache = new HashMap<RateInfo, RateState>();
+	protected final Map<RateInfo, RateState> m_oRateStateCache = new HashMap<>();
 
 	public BaseStockSource(final IStockExchange oStockExchange)
 	{
 		m_oStockExchange = oStockExchange;
-		m_nSumIgnore = new BigDecimal(ResourceUtils.getIntFromResource("sum.ignore", getStockExchange().getStockProperties(), 1));
+		m_nSumIgnore = BigDecimal.valueOf(ResourceUtils.getIntFromResource("sum.ignore", getStockExchange().getStockProperties(), 1));
 		
 		m_strMoneyUrl = ResourceUtils.getResource("money.url", getStockExchange().getStockProperties());
 		m_strTimeUrl = ResourceUtils.getResource("time.url", getStockExchange().getStockProperties());
@@ -83,6 +84,7 @@ public class BaseStockSource implements IStockSource
 	
 	protected void initRates()
 	{
+		/***/
 	}
 	
 	public IStockExchange getStockExchange()
@@ -105,6 +107,7 @@ public class BaseStockSource implements IStockSource
 		
 	protected void loadRate(final RateInfo oRateInfo, final RateState oRateState) throws Exception
 	{
+		/***/
 	}
 	
 	public RateState getCachedRateState(final RateInfo oRateInfo) throws Exception
@@ -114,7 +117,7 @@ public class BaseStockSource implements IStockSource
 
 	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
 	{
-		return new HashMap<RateInfo, RateStateShort>();
+		return new HashMap<>();
 	}
 	
 	@Override public StockUserInfo getUserInfo(final RateInfo oRateInfo) throws Exception
@@ -213,8 +216,7 @@ public class BaseStockSource implements IStockSource
 
 	protected Order convert2Order(final Object oInputOrder)
 	{
-		final Order oOrder = new Order();
-		return oOrder;
+		return new Order();
 	}
 	
 	
@@ -232,7 +234,7 @@ public class BaseStockSource implements IStockSource
 		} 
 		catch (IOException e) 
 		{
-			WorkerFactory.onException("Save rates exception for stock " + m_oStockExchange.getStockName(), e);
+			TraceUtils.writeError("Save rates exception for stock " + m_oStockExchange.getStockName(), e);
 		}			
 	}
 
@@ -252,14 +254,13 @@ public class BaseStockSource implements IStockSource
 		} 
 		catch (final Exception e) 
 		{
-			WorkerFactory.onException("Load rates exception for stock " + m_oStockExchange.getStockName(), e);
+			TraceUtils.writeError("Load rates exception for stock " + m_oStockExchange.getStockName(), e);
 	    }			
 	}
 
 	String getFileName()
 	{
-		final String strStockEventsFileName = ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rates.ser";
-		return strStockEventsFileName;
+		return ResourceUtils.getResource("events.root", CurrencyInformer.PROPERTIES_FILE_NAME) + "\\" + m_oStockExchange.getStockName() + "\\rates.ser";
 	}
 
 	protected OrderTrade convert2Trade(final Object oInputTrade, final RateInfo bIsReverse)

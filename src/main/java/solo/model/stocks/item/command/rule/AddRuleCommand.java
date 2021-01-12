@@ -10,10 +10,10 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class AddRuleCommand extends BaseCommand implements IHistoryCommand
 {
-	final static public String NAME = "addRule";
-	final static public String RULE_TYPE = "#type#";
+	public static final String NAME = "addRule";
+	public static final String RULE_TYPE = "#type#";
 	
-	final protected String m_strRuleInfo;
+	protected final String m_strRuleInfo;
 	
 	public AddRuleCommand(final String strRuleInfo)
 	{

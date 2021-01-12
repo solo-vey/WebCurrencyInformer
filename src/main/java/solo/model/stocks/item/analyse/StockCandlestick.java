@@ -15,14 +15,15 @@ import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.RateInfo;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class StockCandlestick implements Serializable
 {
 	private static final long serialVersionUID = -6372684938216571748L;
 	
 	final Map<RateInfo, Candlestick> m_oRateCandlestick = Collections.synchronizedMap(new HashMap<RateInfo, Candlestick>());
-	final protected IStockExchange m_oStockExchange;
-	final protected int m_nCandleDurationMinutes;
+	protected final IStockExchange m_oStockExchange;
+	protected final int m_nCandleDurationMinutes;
 	protected int m_nAddCount = 0;
 	
 	public StockCandlestick(final IStockExchange oStockExchange, final int nCandleDurationMinutes)
@@ -62,7 +63,7 @@ public class StockCandlestick implements Serializable
 		} 
 		catch (IOException e) 
 		{
-			System.err.printf("Save stock candlestick exception : " + e.getMessage());
+			TraceUtils.writeError("Save stock candlestick exception : " + e.getMessage());
 		}			
 	}
 
@@ -82,7 +83,7 @@ public class StockCandlestick implements Serializable
 		} 
 		catch (final Exception e) 
 		{
-			System.err.printf("Load stock candlestick exception : " + e.getMessage() + "\r\n");
+			TraceUtils.writeError("Load stock candlestick exception : " + e.getMessage() + "\r\n");
 	    }			
 	}
 

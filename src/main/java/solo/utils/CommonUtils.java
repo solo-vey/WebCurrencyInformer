@@ -15,31 +15,36 @@ import solo.model.stocks.item.command.base.HasParameters;
 
 public class CommonUtils
 {
-	static public String splitFirst(final String strText)
+	CommonUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
+	
+	public static String splitFirst(final String strText)
 	{
 		return splitToPos(strText, 0);
 	}
 
-	static public String splitToPos(final String strText, final int nPos)
+	public static String splitToPos(final String strText, final int nPos)
 	{
 		final String[] strParts = strText.split(" |_");
 		return (nPos < strParts.length ? strParts[nPos] : StringUtils.EMPTY);
 	}
 	
-	static public String splitTail(final String strText)
+	public static String splitTail(final String strText)
 	{
 		return splitTail(strText, 2);
 	}
 	
-	static public String splitTail(final String strText, final int nPos)
+	public static String splitTail(final String strText, final int nPos)
 	{
 		final String[] aParts = strText.split(" |_", nPos);
 		return (aParts.length > (nPos - 1) ? aParts[nPos - 1] : StringUtils.EMPTY);
 	}
 	
-	static public Map<String, String> splitParameters(final String strText, final String strTemplate)
+	public static Map<String, String> splitParameters(final String strText, final String strTemplate)
 	{
-		final Map<String, String> oParameters = new HashMap<String, String>();
+		final Map<String, String> oParameters = new HashMap<>();
 		final String[] aTemplateParts = strTemplate.split(" |_");
 		final String strLastTemplateName = aTemplateParts[aTemplateParts.length - 1]; 
 		final String[] aParts = (HasParameters.TAIL_PARAMETER.equalsIgnoreCase(strLastTemplateName) ? strText.split(" |_", aTemplateParts.length) : strText.split(" |_"));
@@ -53,7 +58,7 @@ public class CommonUtils
 		return oParameters; 
 	}
 	
-	static public String mergeParameters(final Object ... aParameters)
+	public static String mergeParameters(final Object ... aParameters)
 	{
 		return StringUtils.join(aParameters, "_");
 	}

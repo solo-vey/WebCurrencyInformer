@@ -12,7 +12,7 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class ManageStock extends BaseCommand implements ISystemCommand
 {
-	final static public String NAME = "manageStock";
+	public static final String NAME = "manageStock";
 
 	public ManageStock()
 	{
@@ -24,7 +24,7 @@ public class ManageStock extends BaseCommand implements ISystemCommand
 		super(strCommandLine, StringUtils.EMPTY);
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		

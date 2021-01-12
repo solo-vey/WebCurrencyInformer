@@ -12,19 +12,20 @@ import solo.model.stocks.BaseObject;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.trade.RemoveOrderCommand;
 import solo.utils.MathUtils;
+import solo.utils.TraceUtils;
 
 public class Order extends BaseObject implements Serializable
 {
 	private static final long serialVersionUID = -9072937437513312951L;
 	
-	public final static String CANCEL = "cancel";
-	public final static String DONE = "done";
-	public final static String ERROR = "error";
-	public final static String EXCEPTION = "exception";
-	public final static String NONE = "none";
-	public final static String WAIT = "wait";
+	public static final String CANCEL = "cancel";
+	public static final String DONE = "done";
+	public static final String ERROR = "error";
+	public static final String EXCEPTION = "exception";
+	public static final String NONE = "none";
+	public static final String WAIT = "wait";
 	
-	public final static Order NULL = new Order(StringUtils.EMPTY, NONE, "Null order"); 
+	public static final Order NULL = new Order(StringUtils.EMPTY, NONE, "Null order"); 
 	
 	protected String m_strID;
 	protected String m_strState;
@@ -186,7 +187,7 @@ public class Order extends BaseObject implements Serializable
 		}
 		catch (ParseException e) 
 		{ 
-			System.err.println("Error parsing date [" + strCreated + "]");
+			TraceUtils.writeError("Error parsing date [" + strCreated + "]");
 		}		
 	}
 	

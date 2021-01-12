@@ -2,7 +2,7 @@ package solo.model.stocks.item.command.base;
 
 import org.apache.commons.lang.StringUtils;
 
-abstract public class BaseCommand extends HasParameters implements ICommand
+public abstract class BaseCommand extends HasParameters implements ICommand
 {
 	public BaseCommand(final String strRuleInfo, final String strParametersTemplate)
 	{
@@ -37,5 +37,10 @@ abstract public class BaseCommand extends HasParameters implements ICommand
 			return false;
 		
 		return getCommandLine().equalsIgnoreCase(((ICommand)oCommand).getCommandLine());
+	}
+	
+	@Override public int hashCode() 
+	{
+		return (null != getCommandLine() ? getCommandLine().hashCode() : super.hashCode());
 	}
 }

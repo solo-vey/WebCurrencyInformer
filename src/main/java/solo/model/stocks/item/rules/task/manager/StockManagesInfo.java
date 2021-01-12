@@ -2,7 +2,6 @@ package solo.model.stocks.item.rules.task.manager;
 
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
-import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
@@ -10,8 +9,8 @@ import java.math.BigDecimal;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Map;
-import java.util.TreeMap;
 import java.util.Map.Entry;
+import java.util.TreeMap;
 
 import org.apache.commons.lang.StringUtils;
 
@@ -36,6 +35,7 @@ public class StockManagesInfo extends BaseObject implements Serializable
 
 	public StockManagesInfo()
 	{
+		/***/
 	}
 	
 	public CurrencyTradesBlock getTotal()
@@ -74,7 +74,7 @@ public class StockManagesInfo extends BaseObject implements Serializable
 	
 	public void tradeStart(final TaskTrade oTaskTrade) 
 	{
-		
+		/***/
 	}
 	
 	public void tradeDone(final TaskTrade oTaskTrade) 
@@ -97,17 +97,17 @@ public class StockManagesInfo extends BaseObject implements Serializable
 	
 	public void buyDone(final TaskTrade oTaskTrade) 
 	{
-		
+		/***/
 	}
 	
 	public void addBuy(final BigDecimal nSpendSum, final BigDecimal nBuyVolume) 
 	{
-		
+		/***/
 	}
 	
 	public void addSell(final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) 
 	{
-		
+		/***/
 	} 
 	
 	public String asString(final String strType)

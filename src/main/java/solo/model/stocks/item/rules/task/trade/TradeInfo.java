@@ -17,6 +17,7 @@ import solo.model.stocks.item.rules.task.manager.ManagerUtils;
 import solo.model.stocks.item.rules.task.strategy.IBuyStrategy;
 import solo.model.stocks.item.rules.task.strategy.ISellStrategy;
 import solo.utils.MathUtils;
+import solo.utils.TraceUtils;
 
 public class TradeInfo extends BaseObject implements Serializable
 {
@@ -74,11 +75,11 @@ public class TradeInfo extends BaseObject implements Serializable
 		{
 			if (oTrades.contains(oOrderTrade))
 			{
-				System.err.println(getRateInfo() + " trade is precent " + oOrderTrade);
+				TraceUtils.writeError(getRateInfo() + " trade is precent " + oOrderTrade);
 				continue;
 			}
 			
-			System.err.println(getRateInfo() + " add trade " + oOrderTrade);
+			TraceUtils.writeError(getRateInfo() + " add trade " + oOrderTrade);
 			oTrades.add(oOrderTrade);
 			if (OrderSide.BUY.equals(oOrderTrade.getSide()))
 			{
@@ -151,7 +152,7 @@ public class TradeInfo extends BaseObject implements Serializable
 		if (getBoughtVolume().compareTo(BigDecimal.ZERO) == 0)
 			return BigDecimal.ZERO;
 		
-		return TradeUtils.getRoundedPrice(m_oRateInfo, new BigDecimal(getSpendSum().doubleValue() / getBoughtVolume().doubleValue()));
+		return TradeUtils.getRoundedPrice(m_oRateInfo, BigDecimal.valueOf(getSpendSum().doubleValue() / getBoughtVolume().doubleValue()));
 	}
 	
 	public BigDecimal getAveragedSoldPrice()
@@ -162,7 +163,7 @@ public class TradeInfo extends BaseObject implements Serializable
 		if (getSoldVolume().compareTo(BigDecimal.ZERO) == 0)
 			return BigDecimal.ZERO;
 		
-		return TradeUtils.getRoundedPrice(m_oRateInfo, new BigDecimal(getReceivedSum().doubleValue() / getSoldVolume().doubleValue()));
+		return TradeUtils.getRoundedPrice(m_oRateInfo, BigDecimal.valueOf(getReceivedSum().doubleValue() / getSoldVolume().doubleValue()));
 	}
 	
 	public BigDecimal getNeedSpendSum()
@@ -362,7 +363,7 @@ public class TradeInfo extends BaseObject implements Serializable
 	protected void addToHistory(final String strMessage)
 	{
 		if (!ManagerUtils.isTestObject(this))
-			System.out.println((ManagerUtils.isTestObject(this) ? "Test" : StringUtils.EMPTY) + "Trade "  + m_oRateInfo + ". " + strMessage);
+			TraceUtils.writeTrace((ManagerUtils.isTestObject(this) ? "Test" : StringUtils.EMPTY) + "Trade "  + m_oRateInfo + ". " + strMessage);
 		
 		getHistory().addToHistory(strMessage);
 	}

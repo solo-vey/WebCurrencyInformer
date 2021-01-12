@@ -34,6 +34,7 @@ import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class StockManager implements IStockManager
 {
@@ -43,13 +44,13 @@ public class StockManager implements IStockManager
 	public static final String OPERATION_CHECK_RATES = ";checkRates;";
 	public static final String OPERATIONS_DEFAULT = OPERATIONS_ALL;
 	
-	final protected StockManagesInfo m_oStockManagesInfo;
-	final protected Money m_oMoney;
+	protected final StockManagesInfo m_oStockManagesInfo;
+	protected final Money m_oMoney;
 	protected String m_strOperations = OPERATIONS_NONE;
-	final protected IManagerStrategy m_oManagerStrategy;
-	final protected ManagerHistory m_oManagerHistory;
+	protected final IManagerStrategy m_oManagerStrategy;
+	protected final ManagerHistory m_oManagerHistory;
 	
-	final protected PeriodTracker m_oSynchronizePeriodTracker = new PeriodTracker(30);
+	protected final PeriodTracker m_oSynchronizePeriodTracker = new PeriodTracker(30);
 	
 	public StockManager(final IStockExchange oStockExchange)
 	{
@@ -189,13 +190,13 @@ public class StockManager implements IStockManager
 			oCreateControlers.add(oRateProfitabilityInfo);
 		}
 		
-		if (oCreateControlers.size() == 0)
+		if (oCreateControlers.isEmpty())
 			return oNoMoneyRates;
 		
 		for(final Entry<BigDecimal, RateInfo> oRateProfitabilityInfo : oCreateControlers)
 		{
 			final RateInfo oRateInfo = oRateProfitabilityInfo.getValue();
-			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2.2));	
+			final BigDecimal nSum = TradeUtils.getMinTradeSum(oRateInfo).multiply(BigDecimal.valueOf(2.2));	
 			if (ManagerUtils.createTradeControler(oRateInfo, nSum).isEmpty())
 				addToHistory("Create controler [" + oRateInfo + "]. Good profit [" + oRateProfitabilityInfo.getKey() + "%]", MessageLevel.TRADERESULTDEBUG);
 			else
@@ -214,7 +215,7 @@ public class StockManager implements IStockManager
 	
 	protected void createBuyConrolers(final Map<BigDecimal, RateInfo> oProfitabilityRates, final Map<RateInfo, BigDecimal> oNoMoneyRates)
 	{
-		if (oNoMoneyRates.size() == 0)
+		if (oNoMoneyRates.isEmpty())
 			return;
 		
 		try
@@ -248,7 +249,7 @@ public class StockManager implements IStockManager
 					
 				if (nControlerSum.compareTo(BigDecimal.ZERO) > 0)
 				{
-					System.err.println("Need create buy controler [" + oControlerRateInfo + "] [" + nControlerSum + "]");
+					TraceUtils.writeError("Need create buy controler [" + oControlerRateInfo + "] [" + nControlerSum + "]");
 					//ManagerUtils.createBuyTradeControler(oControlerRateInfo, nControlerSum);
 				}
 			}

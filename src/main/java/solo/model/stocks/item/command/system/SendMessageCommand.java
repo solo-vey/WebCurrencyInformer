@@ -7,9 +7,9 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class SendMessageCommand extends BaseCommand implements ISystemCommand
 {
-	final static public String NAME = "sendMessage";
+	public static final String NAME = "sendMessage";
 
-	final protected String m_strMessage;
+	protected final String m_strMessage;
 	
 	public SendMessageCommand(final String strMessage)
 	{

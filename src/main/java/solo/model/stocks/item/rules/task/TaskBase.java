@@ -23,7 +23,7 @@ public class TaskBase extends HasParameters implements IRule
 {
 	private static final long serialVersionUID = -6534375856366736570L;
 	
-	final static public String RATE_PARAMETER = "#rate#";
+	public static final String RATE_PARAMETER = "#rate#";
 	
 	protected RateInfo m_oRateInfo;
 	protected int m_nID = -1;

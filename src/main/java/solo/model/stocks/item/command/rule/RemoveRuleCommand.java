@@ -6,11 +6,11 @@ import solo.model.stocks.worker.WorkerFactory;
 /** Формат комманды */
 public class RemoveRuleCommand extends BaseCommand
 {
-	final static public String NAME = "removeRule";
-	final static public String ID_PARAMETER = "#id#";
+	public static final String NAME = "removeRule";
+	public static final String ID_PARAMETER = "#id#";
 
-	final protected Integer m_nRuleID;
-	final protected boolean m_bIsSilent;
+	protected final Integer m_nRuleID;
+	protected final boolean m_bIsSilent;
 	
 	public RemoveRuleCommand(final String strRuleID)
 	{
@@ -29,7 +29,7 @@ public class RemoveRuleCommand extends BaseCommand
 		m_bIsSilent = bIsSilent;
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		

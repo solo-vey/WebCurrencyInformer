@@ -34,19 +34,19 @@ import solo.utils.ResourceUtils;
  */
 public class GetRulesCommand extends BaseCommand
 {
-	final static public String NAME = "rules";
+	public static final String NAME = "rules";
 	
 	public GetRulesCommand(final String strCommandLine)
 	{
 		super(strCommandLine, "#type#");
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		final String strType = getParameter("#type#").toLowerCase();
 		
-		final Map<RateInfo, List<IRule>> aRulesByRate = new HashMap<RateInfo, List<IRule>>();
+		final Map<RateInfo, List<IRule>> aRulesByRate = new HashMap<>();
 		int nAllCount = 0;
 		for(final Entry<Integer, IRule> oRuleInfo : WorkerFactory.getStockExchange().getRules().getRules().entrySet())
 		{
@@ -70,9 +70,9 @@ public class GetRulesCommand extends BaseCommand
 		
 		RateInfo oSelectedRateInfo = null;
 		final boolean bIsShowIfHasReal = !strType.contains("onlytestrules");
-	   	final List<List<String>> aButtons = new LinkedList<List<String>>();
+	   	final List<List<String>> aButtons = new LinkedList<>();
 	   	
-	   	final List<RateInfo> oRates = new LinkedList<RateInfo>(aRulesByRate.keySet());
+	   	final List<RateInfo> oRates = new LinkedList<>(aRulesByRate.keySet());
 	   	Collections.sort(oRates, new Comparator<RateInfo>() {
 	   	    @Override
 	   	    public int compare(RateInfo oRateInfo1, RateInfo oRateInfo2) {

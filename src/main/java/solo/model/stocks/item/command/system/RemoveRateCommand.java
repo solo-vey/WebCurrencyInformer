@@ -10,11 +10,11 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class RemoveRateCommand extends BaseCommand
 {
-	final static public String NAME = "removeRate";
+	public static final String NAME = "removeRate";
 
-	final static public String RATE_PARAMETER = "#rate#";
+	public static final String RATE_PARAMETER = "#rate#";
 
-	final protected RateInfo m_oRateInfo; 
+	protected final RateInfo m_oRateInfo; 
 
 	public RemoveRateCommand(final String strСommandLine)
 	{

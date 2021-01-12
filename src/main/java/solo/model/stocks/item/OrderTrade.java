@@ -8,6 +8,8 @@ import java.util.Date;
 
 import org.apache.commons.lang.StringUtils;
 
+import solo.utils.TraceUtils;
+
 public class OrderTrade implements Serializable
 {
 	private static final long serialVersionUID = -1693366150779746746L;
@@ -22,6 +24,7 @@ public class OrderTrade implements Serializable
 
 	public OrderTrade()
 	{
+		/***/
 	}
 	
 	public String getId()
@@ -104,7 +107,7 @@ public class OrderTrade implements Serializable
 		}
 		catch (ParseException e) 
 		{ 
-			System.err.println("Error parsing date [" + strCreated + "]");
+			TraceUtils.writeError("Error parsing date [" + strCreated + "]");
 		}		
 	}
 	

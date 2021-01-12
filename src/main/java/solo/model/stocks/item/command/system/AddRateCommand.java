@@ -6,11 +6,11 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class AddRateCommand extends BaseCommand
 {
-	final static public String NAME = "addRate";
+	public static final String NAME = "addRate";
 
-	final static public String RATE_PARAMETER = "#rate#";
+	public static final String RATE_PARAMETER = "#rate#";
 
-	final protected RateInfo m_oRateInfo; 
+	protected final RateInfo m_oRateInfo; 
 
 	public AddRateCommand(final String strСommandLine)
 	{

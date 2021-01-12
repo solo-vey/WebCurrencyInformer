@@ -16,8 +16,8 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 {
 	private static final long serialVersionUID = -8250348350757548857L;
 	
-	public final static String NAME = "QuickSell";
-	public final static double MAX_PRICE_DELTA = 0.0002;
+	public static final String NAME = "QuickSell";
+	public static final double MAX_PRICE_DELTA = 0.0002;
 	
 	public String getName()
 	{
@@ -59,7 +59,7 @@ public class QuickSellStrategy extends BaseStrategy implements ISellStrategy
 		while (!oTradeInfo.isMoreCriticalPrice(nBestPrice))
 		{
 			oAsks = StrategyUtils.removeTopOrders(oAsks);
-			if (oAsks.size() == 0)
+			if (oAsks.isEmpty())
 				break;
 			nBestPrice = StrategyUtils.getBestPrice(oAsks).add(oMinChangePrice);
 		}

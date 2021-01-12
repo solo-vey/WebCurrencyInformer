@@ -18,7 +18,7 @@ public class BuyTradeControler extends TradeControler
 		return BuyTaskTrade.NAME;
 	}
 	
-	public void tradeDone(final TaskTrade oTaskTrade)
+	@Override public void tradeDone(final TaskTrade oTaskTrade)
 	{
 		super.tradeDone(oTaskTrade);
 

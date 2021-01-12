@@ -23,10 +23,10 @@ import solo.utils.MathUtils;
  */
 public class GetRateInfoCommand extends BaseCommand
 {
-	final static public String NAME = "rate";
-	final static public String RATE_PARAMETER = "#rate#";
+	public static final String NAME = "rate";
+	public static final String RATE_PARAMETER = "#rate#";
 
-	final protected RateInfo m_oRateInfo;
+	protected final RateInfo m_oRateInfo;
 	
 	public GetRateInfoCommand(final String strRateInfo)
 	{
@@ -34,7 +34,7 @@ public class GetRateInfoCommand extends BaseCommand
 		m_oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		final String strType = getParameter("#type#").toLowerCase();

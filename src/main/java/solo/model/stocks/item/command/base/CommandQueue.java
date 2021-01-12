@@ -5,7 +5,7 @@ import java.util.concurrent.LinkedBlockingQueue;
 
 public class CommandQueue
 {
-	final protected Queue<ICommand> m_oCommandQueue = new LinkedBlockingQueue<ICommand>();
+	protected final Queue<ICommand> m_oCommandQueue = new LinkedBlockingQueue<ICommand>();
 	
 	public void addCommand(final ICommand oCommand)
 	{

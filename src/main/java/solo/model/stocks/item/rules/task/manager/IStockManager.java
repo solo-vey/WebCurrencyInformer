@@ -10,7 +10,7 @@ import solo.model.stocks.item.rules.task.trade.TaskTrade;
 
 public interface IStockManager
 {
-	final static IStockManager NULL = new NullStockManager();
+	static final IStockManager NULL = new NullStockManager();
 
 	void manage(final StateAnalysisResult oStateAnalysisResult);
 	
@@ -30,18 +30,18 @@ public interface IStockManager
 
 class NullStockManager implements IStockManager
 {
-	final protected StockManagesInfo m_oStockManagesInfo = new StockManagesInfo();
+	protected final StockManagesInfo m_oStockManagesInfo = new StockManagesInfo();
 	
 	@Override public String getOperations() { return StringUtils.EMPTY; }
-	@Override public void setOperations(final String strOperations) {}
+	@Override public void setOperations(final String strOperations) {/***/}
 	
-	@Override public void manage(final StateAnalysisResult oStateAnalysisResult) {}
+	@Override public void manage(final StateAnalysisResult oStateAnalysisResult) {/***/}
 	
-	@Override public void tradeStart(final TaskTrade oTaskTrade) {}
-	@Override public void tradeDone(final TaskTrade oTaskTrade) {}
-	@Override public void buyDone(final TaskTrade oTaskTrade) {}
-	@Override public void addBuy(final TaskTrade oTaskTrade, final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {}
-	@Override public void addSell(final TaskTrade oTaskTrade, final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {}
+	@Override public void tradeStart(final TaskTrade oTaskTrade) {/***/}
+	@Override public void tradeDone(final TaskTrade oTaskTrade) {/***/}
+	@Override public void buyDone(final TaskTrade oTaskTrade) {/***/}
+	@Override public void addBuy(final TaskTrade oTaskTrade, final BigDecimal nSpendSum, final BigDecimal nBuyVolume) {/***/}
+	@Override public void addSell(final TaskTrade oTaskTrade, final BigDecimal nReceiveSum, final BigDecimal nSoldVolume) {/***/}
 	@Override public StockManagesInfo getInfo()
 	{
 		return m_oStockManagesInfo;

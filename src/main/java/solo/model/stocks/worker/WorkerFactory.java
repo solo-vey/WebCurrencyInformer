@@ -3,6 +3,7 @@ package solo.model.stocks.worker;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -16,13 +17,14 @@ import solo.transport.ITransport;
 import solo.transport.MessageLevel;
 import solo.transport.telegram.TelegramTransport;
 import solo.utils.CommonUtils;
+import solo.utils.TraceUtils;
 
 public class WorkerFactory
 {
 	protected static IWorker s_oRootWorker = new BaseWorker();
 	protected static TransportWorker s_oTransportWorker = new TransportWorker(new TelegramTransport(), s_oRootWorker); 
-	protected static Map<Long, MainWorker> s_oThreadToWorkers = new HashMap<Long, MainWorker>();
-	protected static Map<Stocks, MainWorker> s_oAllWorkers = new HashMap<Stocks, MainWorker>();
+	protected static Map<Long, MainWorker> s_oThreadToWorkers = new HashMap<>();
+	protected static Map<Stocks, MainWorker> s_oAllWorkers = new EnumMap<>(Stocks.class);
 	protected static String s_strCurentMainWorker = StringUtils.EMPTY;
 	
 	static
@@ -32,6 +34,11 @@ public class WorkerFactory
 		registerMainWorker(new MainWorker(Stocks.Exmo));
 //		registerMainWorker(new MainWorker(Stocks.Cryptopia));
 //		registerMainWorker(new MainWorker(Stocks.Poloniex));
+	}
+	
+	WorkerFactory() 
+	{
+		throw new IllegalStateException("Utility class");
 	}
 	
 	public static void registerMainWorker(final MainWorker oMainWorker)
@@ -80,12 +87,12 @@ public class WorkerFactory
 		return (oTradeObject instanceof ITest ?  getStockTestSource() : getStockSource());
 	}
 	
-	static public void registerMainWorkerThread(final Long nThreadID, final MainWorker oWorker)
+	public static void registerMainWorkerThread(final Long nThreadID, final MainWorker oWorker)
 	{
 		s_oThreadToWorkers.put(nThreadID, oWorker);
 	}
 	
-	static public void start() throws Exception
+	public static void start() throws Exception
 	{
 //		getMainWorker(Stocks.Kuna).startWorker();
 		getMainWorker(Stocks.Exmo).startWorker();
@@ -132,9 +139,9 @@ public class WorkerFactory
 		final DateFormat oDateFormat = new SimpleDateFormat("HH:mm:ss");
 		final String strDate = oDateFormat.format(new Date()); 
 		
-		System.err.printf(strDate + " " +Thread.currentThread().getName() + 
+		TraceUtils.writeError(strDate + " " +Thread.currentThread().getName() + 
 				(StringUtils.isNotBlank(strMessage) ? "\t" + strMessage : StringUtils.EMPTY) + 
-				"\tThread exception : " + CommonUtils.getExceptionMessage(e) + "\r\n");
+				"\tThread exception : " + CommonUtils.getExceptionMessage(e));
 		
 		try
 		{
@@ -151,8 +158,7 @@ public class WorkerFactory
 		}
 		catch (Exception eSend)
 		{
-			System.err.printf("Send message exception : " + eSend + "\r\n");
+			TraceUtils.writeError("Send message exception : " + eSend);
 		}
-		
 	}
 }

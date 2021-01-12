@@ -8,12 +8,12 @@ public class RateInfo implements Serializable, Comparable<RateInfo>
 {
 	private static final long serialVersionUID = -7207375688298563812L;
 	
-	public static RateInfo ETH_UAH = new RateInfo(Currency.ETH, Currency.UAH); 
-	public static RateInfo NULL = new RateInfo(Currency.UAH, Currency.UAH);
+	public static final RateInfo ETH_UAH = new RateInfo(Currency.ETH, Currency.UAH); 
+	public static final RateInfo NULL = new RateInfo(Currency.UAH, Currency.UAH);
 
-	final protected Currency m_oCurrencyFrom; 
-	final protected Currency m_oCurrencyTo;
-	final protected boolean m_bIsReverse;
+	protected final Currency m_oCurrencyFrom; 
+	protected final Currency m_oCurrencyTo;
+	protected final boolean m_bIsReverse;
 	
 	public RateInfo(final Currency oCurrencyFrom, final Currency oCurrencyTo)
 	{
@@ -57,7 +57,7 @@ public class RateInfo implements Serializable, Comparable<RateInfo>
 		
 		final RateInfo oRateInfo = (RateInfo)oObject;
 		return m_oCurrencyFrom.equals(oRateInfo.getCurrencyFrom()) && m_oCurrencyTo.equals(oRateInfo.getCurrencyTo());
-	};
+	}
 	
 	/** Строковое представление документа */
 	@Override public String toString()

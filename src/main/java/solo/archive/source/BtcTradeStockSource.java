@@ -31,10 +31,10 @@ import solo.utils.ResourceUtils;
 
 public class BtcTradeStockSource extends BaseStockSource
 {
-	final protected String m_strBuyUrl;
-	final protected String m_strSellUrl;
-	final protected String m_strAuthUrl;
-	final protected String m_strOrderStatusUrl;
+	protected final String m_strBuyUrl;
+	protected final String m_strSellUrl;
+	protected final String m_strAuthUrl;
+	protected final String m_strOrderStatusUrl;
 	
 	protected Integer m_nNonce;
 	protected Integer m_nOutOrderId;
@@ -50,7 +50,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		m_strOrderStatusUrl = ResourceUtils.getResource("order_status.url", getStockExchange().getStockProperties());
 	}
 	
-	protected void initRates()
+	@Override protected void initRates()
 	{
 		super.initRates();
 		
@@ -133,7 +133,7 @@ public class BtcTradeStockSource extends BaseStockSource
 			final Map<String, Object> oResult = sendPost(m_strAuthUrl, null);
 			m_bIsAuthorized = (null != oResult.get("status") && oResult.get("status").toString().equalsIgnoreCase("true"));
 		}
-		catch(final Exception e) {}
+		catch(final Exception e) { /***/ }
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -154,7 +154,7 @@ public class BtcTradeStockSource extends BaseStockSource
 				oUserInfo.getMoney().put(oCurrency, new CurrencyAmount(nBalance, BigDecimal.ZERO)); 
 			}
 		}
-		catch(final Exception e) {}
+		catch(final Exception e) {/***/}
 	}
 	
 	@SuppressWarnings("unchecked")
@@ -179,7 +179,7 @@ public class BtcTradeStockSource extends BaseStockSource
 				}
 			}
 		}
-		catch(final Exception e) {}
+		catch(final Exception e) {/***/}
 	}
 	
 	@Override public Order addOrder(final OrderSide oSide, final RateInfo oRateInfo, final BigDecimal nVolume, final BigDecimal nPrice)
@@ -191,7 +191,7 @@ public class BtcTradeStockSource extends BaseStockSource
 			authUser();
 			super.addOrder(oSide, oRateInfo, nVolume, nPrice);
 			
-			final Map<String, String> aParameters = new HashMap<String, String>();
+			final Map<String, String> aParameters = new HashMap<>();
 			aParameters.put("side", oSide.toString().toLowerCase());
 			aParameters.put("count", nVolume.toString());
 			aParameters.put("currency", oRateInfo.getCurrencyFrom().toString());
@@ -300,7 +300,7 @@ public class BtcTradeStockSource extends BaseStockSource
 	
 	@Override public List<Order> getTrades(RateInfo m_oRateInfo, final int nPage, final int nCount)
 	{
-		return new LinkedList<Order>();
+		return new LinkedList<>();
 	}
 	
 	public Map<String, Object> sendPost(final String strUrl, Map<String, String> aParameters) throws Exception
@@ -310,7 +310,7 @@ public class BtcTradeStockSource extends BaseStockSource
 		aParameters.put("out_order_id", m_nOutOrderId.toString());
 		aParameters.put("nonce", m_nNonce.toString());
 		
-		final Map<String, String> aHeaders = new HashMap<String, String>();
+		final Map<String, String> aHeaders = new HashMap<>();
 		aHeaders.put("public-key", m_strPublicKey);
 		aHeaders.put("api-sign", signatureUrl(aParameters));
 		return RequestUtils.sendPostAndReturnJson(strUrl, aParameters, aHeaders, true, RequestUtils.DEFAULT_TEMEOUT);
@@ -320,7 +320,7 @@ public class BtcTradeStockSource extends BaseStockSource
 	{
 		m_nNonce++;
 		
-		final ArrayList<NameValuePair> aPostParameters = new ArrayList<NameValuePair>();
+		final ArrayList<NameValuePair> aPostParameters = new ArrayList<>();
 		for(final Entry<String, String> oParameter : aParameters.entrySet())
 			aPostParameters.add(new BasicNameValuePair(oParameter.getKey(), oParameter.getValue()));
 		final UrlEncodedFormEntity oEncodedFormEntity = new UrlEncodedFormEntity(aPostParameters);

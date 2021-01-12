@@ -10,10 +10,10 @@ import solo.utils.MathUtils;
 
 public class RateStateShort extends BaseObject
 {
-	final protected RateInfo m_oRateInfo;
-	final protected BigDecimal m_nBidPrice;
-	final protected BigDecimal m_nAskPrice;
-	final protected BigDecimal m_nVolume;
+	protected final RateInfo m_oRateInfo;
+	protected final BigDecimal m_nBidPrice;
+	protected final BigDecimal m_nAskPrice;
+	protected final BigDecimal m_nVolume;
 	
 	public RateStateShort(final RateInfo oRateInfo, final BigDecimal nBidPrice, final BigDecimal nAskPrice, final BigDecimal nVolume)
 	{
@@ -44,12 +44,12 @@ public class RateStateShort extends BaseObject
 	}
 	
 	@SuppressWarnings("unchecked")
-	static public RateStateShort getFromData(final Entry<String, Object> oRateData)
+	public static RateStateShort getFromData(final Entry<String, Object> oRateData)
 	{
 		return getFromData((Map<String, Object>) oRateData.getValue(), oRateData.getKey(), "_", "buy_price", "sell_price", "vol");
 	}
 	
-	static public RateStateShort getFromData(final Map<String, Object> oInfoData, final String strRate, final String strSpliter, final String strBuyPriceKey, final String strSellPriceKey, final String strVolumeKey)
+	public static RateStateShort getFromData(final Map<String, Object> oInfoData, final String strRate, final String strSpliter, final String strBuyPriceKey, final String strSellPriceKey, final String strVolumeKey)
 	{
 		try
 		{

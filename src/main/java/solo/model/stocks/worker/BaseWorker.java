@@ -5,15 +5,15 @@ import org.apache.commons.lang.StringUtils;
 import solo.model.stocks.exchange.Stocks;
 import solo.model.stocks.item.command.base.CommandQueue;
 import solo.model.stocks.item.command.base.ICommand;
-import solo.model.stocks.item.command.rule.GetRulesCommand;
+import solo.utils.TraceUtils;
 
 public class BaseWorker extends Thread implements IWorker
 {
-	final protected CommandQueue m_oCommandQueue = new CommandQueue();
+	protected final CommandQueue m_oCommandQueue = new CommandQueue();
 	
 	protected boolean m_bIsManualStopped = true;
-	final protected int m_nTimeOut;
-	final protected Stocks m_oStock;
+	protected final int m_nTimeOut;
+	protected final Stocks m_oStock;
 	
 	public BaseWorker()
 	{
@@ -38,7 +38,7 @@ public class BaseWorker extends Thread implements IWorker
 	
 	public void run()
 	{
-		System.out.println(Thread.currentThread().getName() +  " Start");
+		TraceUtils.writeTrace(Thread.currentThread().getName() +  " Start");
 		
 		while (!m_bIsManualStopped)
 		{
@@ -53,7 +53,7 @@ public class BaseWorker extends Thread implements IWorker
 			}
 		}
 		
-		System.out.println(Thread.currentThread().getName() +  " Stoped");
+		TraceUtils.writeTrace(Thread.currentThread().getName() +  " Stoped");
 	}
 
 	int getTimeOut()
@@ -69,14 +69,7 @@ public class BaseWorker extends Thread implements IWorker
 			if (null == oCommand)
 				return;
 
-			if (oCommand instanceof GetRulesCommand)
-			{
-				int i = 0;
-				i++;
-			}
-			
 			oCommand.execute();
-//			System.err.printf(Thread.currentThread().getName() +  "[" + getStock() + "] Execute command [" + CommandFactory.getCommandName(oCommand.getClass()) + "] complete. " + (new Date()) + " Info [" + oCommand.getInfo() + "]. Queue size [" + m_oCommandQueue.size() + "]\r\n");
 		}
 	}
 	

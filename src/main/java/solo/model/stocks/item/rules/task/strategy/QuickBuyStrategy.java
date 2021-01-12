@@ -16,8 +16,8 @@ public class QuickBuyStrategy extends BaseStrategy implements IBuyStrategy
 {
 	private static final long serialVersionUID = -4917816147504424168L;
 	
-	public final static String NAME = "QuickBuy";
-	public final static double MAX_PRICE_DELTA = 0.0002;
+	public static final String NAME = "QuickBuy";
+	public static final double MAX_PRICE_DELTA = 0.0002;
 	
 	public String getName()
 	{

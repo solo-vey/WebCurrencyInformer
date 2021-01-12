@@ -16,8 +16,8 @@ public enum CandleType
 	LONG_BODY_GROWTH(TrendType.GROWTH, CandleGroupType.STANDARD),
 	LONG_BODY_FALL(TrendType.FALL, CandleGroupType.STANDARD);
 	
-	final protected TrendType m_oTrendType;
-	final protected CandleGroupType m_oGroupType;
+	protected final TrendType m_oTrendType;
+	protected final CandleGroupType m_oGroupType;
 	
 	CandleType(final TrendType oTrendType, final CandleGroupType oGroupType)
 	{

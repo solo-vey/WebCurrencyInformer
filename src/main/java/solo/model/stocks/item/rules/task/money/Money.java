@@ -7,7 +7,7 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Serializable;
 import java.math.BigDecimal;
-import java.util.HashMap;
+import java.util.EnumMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -27,21 +27,22 @@ import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.utils.MathUtils;
 import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class Money implements Serializable
 {
 	private static final long serialVersionUID = -2095455737411332587L;
 	
-	public static String SYNCHRONIZE_INFO = "info";
-	public static String SYNCHRONIZE_FULL = "synchronize";
+	public static final String SYNCHRONIZE_INFO = "info";
+	public static final String SYNCHRONIZE_FULL = "synchronize";
 	
-	protected Map<Currency, BigDecimal> m_oMoney = new HashMap<Currency, BigDecimal>();
-	protected List<TradeMoney> m_oReserveMoney = new LinkedList<TradeMoney>();
+	protected Map<Currency, BigDecimal> m_oMoney = new EnumMap<>(Currency.class);
+	protected List<TradeMoney> m_oReserveMoney = new LinkedList<>();
 	
 	protected List<TradeMoney> getReserveMoney()
 	{
 		if (null == m_oReserveMoney)
-			m_oReserveMoney = new LinkedList<TradeMoney>();
+			m_oReserveMoney = new LinkedList<>();
 		
 		return m_oReserveMoney;
 	}
@@ -87,7 +88,7 @@ public class Money implements Serializable
 		{
 			if (null == oTradeMoney)
 			{
-				System.out.println("Can't free money for [" + oRateInfo + "] [" + oTradeMoney + "]");
+				TraceUtils.writeTrace("Can't free money for [" + oRateInfo + "] [" + oTradeMoney + "]");
 				return;
 			}
 			
@@ -113,7 +114,7 @@ public class Money implements Serializable
 				return oTradeMoney;
 		}
 		
-		System.out.println("Can't find TradeControler  ID [" + oTradeControler.getTradesInfo().getRuleID() + "] [" + oTradeControler.getTradesInfo().getRateInfo() + "]");
+		TraceUtils.writeTrace("Can't find TradeControler  ID [" + oTradeControler.getTradesInfo().getRuleID() + "] [" + oTradeControler.getTradesInfo().getRateInfo() + "]");
 		return null;
 	}
 	
@@ -189,7 +190,7 @@ public class Money implements Serializable
 				}
 				strResult += "Complete";
 				
-				System.out.println(strResult);
+				TraceUtils.writeTrace(strResult);
 				save();
 			}
 			catch(final Exception e)
@@ -250,7 +251,7 @@ public class Money implements Serializable
 			} 
 			catch (IOException e) 
 			{
-				WorkerFactory.onException("Save money exception", e);
+				TraceUtils.writeError("Save money exception", e);
 			}
 		}
 	}
@@ -269,7 +270,7 @@ public class Money implements Serializable
 		} 
 		catch (final Exception e) 
 		{
-			WorkerFactory.onException("Load money exception", e);
+			TraceUtils.writeError("Load money exception", e);
 			return new Money();
 	    }			
 	}

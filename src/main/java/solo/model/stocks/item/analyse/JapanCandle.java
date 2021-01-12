@@ -57,8 +57,8 @@ public class JapanCandle extends BaseObject implements Serializable
 	
 	public CandleType getCandleType()
 	{
-		final BigDecimal nVerySmall = new BigDecimal(0.1);
-		final BigDecimal nSmall = new BigDecimal(0.35);
+		final BigDecimal nVerySmall = BigDecimal.valueOf(0.1);
+		final BigDecimal nSmall = BigDecimal.valueOf(0.35);
 		final BigDecimal nVerySmallLength = MathUtils.getBigDecimal(m_nMax.doubleValue() / 100 / 5, 8);
 		
 		final BigDecimal nLength = m_nMax.add(m_nMin.negate()); 

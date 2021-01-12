@@ -7,10 +7,10 @@ import solo.model.stocks.BaseObject;
 
 public class RateState extends BaseObject
 {
-	final protected RateInfo m_oRateInfo;
-	final protected List<Order> m_oAsksOrders = new LinkedList<Order>();
-	final protected List<Order> m_oBidsOrders = new LinkedList<Order>();
-	final protected List<Order> m_oTrades = new LinkedList<Order>();
+	protected final RateInfo m_oRateInfo;
+	protected final List<Order> m_oAsksOrders = new LinkedList<Order>();
+	protected final List<Order> m_oBidsOrders = new LinkedList<Order>();
+	protected final List<Order> m_oTrades = new LinkedList<Order>();
 	
 	public RateState(final RateInfo oRateInfo)
 	{

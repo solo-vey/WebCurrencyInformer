@@ -20,7 +20,7 @@ import solo.model.stocks.worker.WorkerFactory;
  */
 public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 {
-	final static public String NAME = "checkRateRules";
+	public static final String NAME = "checkRateRules";
 	
 	protected RateInfo m_oRateInfo;
 
@@ -40,7 +40,7 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		m_oRateInfo = oRateInfo;
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		
@@ -70,7 +70,7 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 			final Entry<Integer, IRule> oRuleInfo = oRules.get(nThreadPos);
 			final CheckRuleThread oLoadRateThread = new CheckRuleThread(oRuleInfo.getValue(), oStateAnalysisResult, oMainWorker);
 			oThreadPool.submit(oLoadRateThread);
-		};
+		}
 		oThreadPool.shutdown();
 			
 		try 

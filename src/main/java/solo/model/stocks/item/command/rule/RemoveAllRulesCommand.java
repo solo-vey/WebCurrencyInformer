@@ -12,7 +12,7 @@ import solo.model.stocks.worker.WorkerFactory;
 /** Формат комманды */
 public class RemoveAllRulesCommand extends BaseCommand
 {
-	final static public String NAME = "deleteAllRules";
+	public static final String NAME = "deleteAllRules";
 	
 	public RemoveAllRulesCommand(final String strCommandLine)
 	{

@@ -24,7 +24,7 @@ public enum CandlestickType
 	
 	CALM(TrendType.CALM);
 	
-	final protected TrendType m_oTrendType;
+	protected final TrendType m_oTrendType;
 	
 	CandlestickType(final TrendType oTrendType)
 	{

@@ -6,7 +6,7 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class StopStockCommand extends BaseCommand
 {
-	final static public String NAME = "stop";
+	public static final String NAME = "stop";
 	
 	public StopStockCommand(final String strСommandLine)
 	{

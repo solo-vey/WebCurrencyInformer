@@ -15,13 +15,13 @@ import solo.utils.CommonUtils;
  */
 public class AddControlerCommand extends BaseCommand implements IHistoryCommand
 {
-	final static public String NAME = "addControler";
+	public static final String NAME = "addControler";
 
-	final static public String RATE_PARAMETER = "#rate#";
-	final static public String SUM_PARAMETER = "#sum#";
+	public static final String RATE_PARAMETER = "#rate#";
+	public static final String SUM_PARAMETER = "#sum#";
 	
-	final protected RateInfo m_oRateInfo; 
-	final protected BigDecimal m_nSum; 
+	protected final RateInfo m_oRateInfo; 
+	protected final BigDecimal m_nSum; 
 	
 	public AddControlerCommand(final String strRuleInfo)
 	{
@@ -30,7 +30,7 @@ public class AddControlerCommand extends BaseCommand implements IHistoryCommand
 		m_nSum = getParameterAsBigDecimal(SUM_PARAMETER);
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		

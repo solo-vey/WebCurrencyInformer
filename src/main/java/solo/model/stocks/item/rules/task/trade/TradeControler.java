@@ -26,6 +26,7 @@ import solo.transport.MessageLevel;
 import solo.transport.telegram.TelegramTransport;
 import solo.utils.CommonUtils;
 import solo.utils.MathUtils;
+import solo.utils.TraceUtils;
 
 public class TradeControler extends TaskBase implements ITradeControler
 {
@@ -37,9 +38,9 @@ public class TradeControler extends TaskBase implements ITradeControler
 	public static final String TRADE_COUNT_PARAMETER = "tradeCount";
 	public static final String TRADE_STRATEGY_PARAMETER = "tradeStrategy";
 	
-	final static public String TRADE_SUM = "#sum#";
-	final static public String MAX_TARDES = "#count#";
-	final static public String STRATEGY = "#strategy#";
+	public static final String TRADE_SUM = "#sum#";
+	public static final String MAX_TARDES = "#count#";
+	public static final String STRATEGY = "#strategy#";
 	
 	protected Integer m_nMaxTrades;
 	protected Map<RateInfo, TradesInfo> m_oAllTradesInfo = new HashMap<RateInfo, TradesInfo>();
@@ -100,7 +101,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	{
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		if (m_nMaxTrades == 0)
-			return (aTaskTrades.size() == 0? ControlerState.WAIT : ControlerState.GOTO_WAIT);
+			return (aTaskTrades.isEmpty()? ControlerState.WAIT : ControlerState.GOTO_WAIT);
 		
 		if (m_nMaxTrades > 0)
 		{
@@ -172,7 +173,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 				(aButtons.size() > 0 ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
 	}
 	
-	public RateInfo getRateInfo()
+	@Override public RateInfo getRateInfo()
 	{
 		return getTradesInfo().getRateInfo();
 	}
@@ -202,7 +203,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 	
 	public Map<RateInfo, TradesInfo> getAllTradesInfo()
 	{
-		if (null == m_oAllTradesInfo || m_oAllTradesInfo.size() == 0)
+		if (null == m_oAllTradesInfo || m_oAllTradesInfo.isEmpty())
 		{
 			m_oAllTradesInfo = new HashMap<RateInfo, TradesInfo>();
 			m_oAllTradesInfo.put(getRateInfo(), new TradesInfo(getRateInfo(), m_nID));
@@ -319,7 +320,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		catch(final Exception e) 
 		{
 			getTradesInfo().setCurrentState(Thread.currentThread().getName() +  " Thread exception : " + CommonUtils.getExceptionMessage(e));
-			System.err.printf(getTradesInfo().getCurrentState() + "\r\n");
+			TraceUtils.writeError(getTradesInfo().getCurrentState() + "\r\n");
 		}
 	}
 
@@ -328,7 +329,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		return TaskTrade.NAME;
 	}
 
-	public void remove()
+	@Override public void remove()
 	{
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
@@ -415,7 +416,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 			m_nMaxTrades = Integer.decode(strValue);
 	
 		if (strParameterName.equalsIgnoreCase(TRADE_SUM_PARAMETER))
-			getTradesInfo().setSum(new BigDecimal(Integer.decode(strValue)), m_nMaxTrades);	
+			getTradesInfo().setSum(BigDecimal.valueOf(Integer.decode(strValue)), m_nMaxTrades);	
 		
 		if (strParameterName.equalsIgnoreCase(TRADE_STRATEGY_PARAMETER))
 		{
@@ -427,7 +428,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		
 		if (strParameterName.equalsIgnoreCase("addNeedSellVolume"))
 		{
-			final BigDecimal nNeedSellVolume = new BigDecimal(Double.parseDouble(strValue));
+			final BigDecimal nNeedSellVolume = BigDecimal.valueOf(Double.parseDouble(strValue));
 			getTradesInfo().addBuy(BigDecimal.ZERO, nNeedSellVolume);
 		}
 				

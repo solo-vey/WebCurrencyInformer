@@ -14,14 +14,14 @@ public class TradeInfoTest extends BaseTest
     {
     	//	Arrange
     	final TradeInfo oTradeInfo = new TradeInfo(RateInfo.ETH_UAH, 0);
-    	oTradeInfo.addBuy(null, new BigDecimal(1000), new BigDecimal(0.1));
-    	oTradeInfo.setCriticalPrice(new BigDecimal(10020));
+    	oTradeInfo.addBuy(null, BigDecimal.valueOf(1000), BigDecimal.valueOf(0.1));
+    	oTradeInfo.setCriticalPrice(BigDecimal.valueOf(10020));
     	
     	//	Act
     	final BigDecimal nMinCriticalPrice = oTradeInfo.getMinCriticalPrice();
     	
     	//	Assert
-    	Assert.assertTrue(nMinCriticalPrice.compareTo(new BigDecimal(10000)) == 0);
+    	Assert.assertTrue(nMinCriticalPrice.compareTo(BigDecimal.valueOf(10000)) == 0);
     	
     }
 	

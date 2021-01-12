@@ -89,7 +89,7 @@ public class JfreeCandlestickChart extends JPanel
 	
     public static void createHighLowDataset(OHLCSeries oOhlcSeries, List<JapanCandle> oHistory, int nDurationMinutes) 
     {
-    	if (oHistory.size() == 0)
+    	if (oHistory.isEmpty())
     		return;
     	
     	final int nScale = getScale(oHistory);
@@ -108,13 +108,13 @@ public class JfreeCandlestickChart extends JPanel
 
     public static int getScale(final List<JapanCandle> oHistory) 
     {
-    	if (oHistory.size() == 0)
+    	if (oHistory.isEmpty())
     		return 1;
     	
     	final JapanCandle oLastCandle = oHistory.get(oHistory.size() - 1);
-    	if (oLastCandle.getMin().compareTo(new BigDecimal(1)) < 0.001)
+    	if (oLastCandle.getMin().compareTo(BigDecimal.valueOf(1)) < 0.001)
     		return 1000 * 1000;
-    	else if (oLastCandle.getMin().compareTo(new BigDecimal(1)) < 1)
+    	else if (oLastCandle.getMin().compareTo(BigDecimal.valueOf(1)) < 1)
     		return 1000;
     	
     	return 1;

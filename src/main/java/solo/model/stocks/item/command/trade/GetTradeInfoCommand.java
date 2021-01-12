@@ -29,12 +29,13 @@ import solo.utils.CommonUtils;
  */
 public class GetTradeInfoCommand extends BaseCommand
 {
-	final static public String NAME = "trade";
-	final static public String RULE_ID_PARAMETER = "#ruleID#";
-	final static public String FULL_PARAMETER = "#isFull#";
+	private static final String BUTTONS = "BUTTONS\r\n";
+	public static final String NAME = "trade";
+	public static final String RULE_ID_PARAMETER = "#ruleID#";
+	public static final String FULL_PARAMETER = "#isFull#";
 	
-	final protected Integer m_nRuleID;  
-	final protected Boolean m_bIsFull;  
+	protected final Integer m_nRuleID;  
+	protected final Boolean m_bIsFull;  
 	
 	public GetTradeInfoCommand(final String strСommandLine)
 	{
@@ -43,8 +44,7 @@ public class GetTradeInfoCommand extends BaseCommand
 		m_bIsFull = getParameterAsBoolean(FULL_PARAMETER);
 	}
 	
-	@SuppressWarnings("unchecked")
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		
@@ -70,7 +70,7 @@ public class GetTradeInfoCommand extends BaseCommand
 										(!oTradeTask.getTradeInfo().getOrder().isNull() ? "DelOrder=/removeorder_" + oTradeTask.getTradeInfo().getOrder().getId() : StringUtils.EMPTY), 
 										"DelTrade=/removerule_" + m_nRuleID));
 			
-			strMessage += "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons);
+			strMessage += BUTTONS + TelegramTransport.getButtons(aButtons);
 		}
 		else
 		if (null != oTradeControler)
@@ -81,7 +81,7 @@ public class GetTradeInfoCommand extends BaseCommand
 			strMessage = oTradeControler.getTradesInfo() + "\r\n" + strTradeControlerFullInfo;
 			final String strSetParam = "taskparam_" + m_nRuleID + "_";
 			
-			List<List<String>> aButtons = new LinkedList<List<String>>();
+			List<List<String>> aButtons = new LinkedList<>();
 			aButtons.addAll(Arrays.asList(
 								Arrays.asList("Chart=chart_" + oTradeControler.getTradesInfo().getRateInfo(), 
 										(oTradeControler.getControlerState().isWork() ? "Stop=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_-1" : "Start=" + strSetParam + TradeControler.TRADE_COUNT_PARAMETER + "_1"), 
@@ -102,14 +102,14 @@ public class GetTradeInfoCommand extends BaseCommand
 			if (ManagerUtils.isTestObject(oTradeControler))
 			{
 				final RateInfo oRateInfo = oTradeControler.getTradesInfo().getRateInfo();
-				final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(new BigDecimal(2)));
+				final BigDecimal nSum = TradeUtils.getRoundedPrice(oRateInfo, TradeUtils.getMinTradeSum(oRateInfo).multiply(BigDecimal.valueOf(2)));
 				if (nSum.compareTo(BigDecimal.ZERO) > 0)
 					aButtons.add(Arrays.asList("Create controler [" + nSum + "]=" + 
 							CommandFactory.makeCommandLine(AddControlerCommand.class, AddControlerCommand.RATE_PARAMETER, oRateInfo,
 							AddControlerCommand.SUM_PARAMETER, nSum)));
 			}
 			
-			strMessage += (!strMessage.contains("BUTTONS\r\n") ? "BUTTONS\r\n" : ",") + TelegramTransport.getButtons(aButtons);
+			strMessage += (!strMessage.contains(BUTTONS) ? BUTTONS : ",") + TelegramTransport.getButtons(aButtons);
 		}
 
 		WorkerFactory.getMainWorker().sendSystemMessage(strMessage);

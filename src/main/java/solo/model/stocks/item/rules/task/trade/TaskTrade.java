@@ -17,15 +17,20 @@ import solo.model.stocks.source.IStockSource;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.MessageLevel;
 import solo.utils.MathUtils;
+import solo.utils.TraceUtils;
 
 public class TaskTrade extends TaskBase implements ITradeTask
 {
+	private static final String TRADE_INFO = " TradeInfo ";
+
+	private static final String GET_ORDER = " GetOrder ";
+
 	public static final String NAME = "TRADE";
 
 	private static final long serialVersionUID = -178132243757975169L;
 
-	final static public String TRADE_VOLUME = "#volume#";
-	final static public String CRITICAL_PRICE_PARAMETER = "criticalPrice";
+	public static final String TRADE_VOLUME = "#volume#";
+	public static final String CRITICAL_PRICE_PARAMETER = "criticalPrice";
 	
 	protected String m_strCurrentState = StringUtils.EMPTY;
 
@@ -36,7 +41,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		this(strCommandLine, TRADE_VOLUME);
 	}
 
-	public TaskTrade(final String strCommandLine, final String strTemplate) throws Exception
+	public TaskTrade(final String strCommandLine, final String strTemplate)
 	{
 		super(strCommandLine, strTemplate);
 		getTradeInfo().setTradeSum(getParameterAsBigDecimal(TRADE_VOLUME), true);
@@ -147,9 +152,9 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			final List<OrderTrade> oOrderTrades = WorkerFactory.getStockSource().getTrades(oGetOrder.getId(), getRateInfo());
 			if (oGetOrder.isDone())
 			{
-				if (oOrderTrades.size() == 0)
+				if (oOrderTrades.isEmpty())
 				{
-					System.err.println(getRateInfo() + " done order does not have trades " + oGetOrder.getInfoShort());
+					TraceUtils.writeError(getRateInfo() + " done order does not have trades " + oGetOrder.getInfoShort());
 					oGetOrder.setState(Order.EXCEPTION);
 					return;
 				}
@@ -178,13 +183,13 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			final BigDecimal nSpendSum = nNeedBuyVolume.multiply(oGetOrder.getPrice());
 			if (!ManagerUtils.isTestObject(this))
 			{
-				System.out.println(getRateInfo() + " nNeedBuyVolume " + nNeedBuyVolume);
-				System.out.println(getRateInfo() + " nBuyVolume " + nBuyVolume);
-				System.out.println(getRateInfo() + " OrderVolume " + oGetOrder.getVolume());
-				System.out.println(getRateInfo() + " DeltaVolume " + nNeedBuyVolume.add(oGetOrder.getVolume().negate()));				
+				TraceUtils.writeTrace(getRateInfo() + " nNeedBuyVolume " + nNeedBuyVolume);
+				TraceUtils.writeTrace(getRateInfo() + " nBuyVolume " + nBuyVolume);
+				TraceUtils.writeTrace(getRateInfo() + " OrderVolume " + oGetOrder.getVolume());
+				TraceUtils.writeTrace(getRateInfo() + " DeltaVolume " + nNeedBuyVolume.add(oGetOrder.getVolume().negate()));				
 				
-				System.out.println(getRateInfo() + " TradeInfo " + getTradeInfo().toString());
-				System.out.println(getRateInfo() + " GetOrder " + oGetOrder.getInfoShort());
+				TraceUtils.writeTrace(getRateInfo() + TRADE_INFO + getTradeInfo().toString());
+				TraceUtils.writeTrace(getRateInfo() + GET_ORDER + oGetOrder.getInfoShort());
 			}		
 			
 			getTradeInfo().addBuy(this, nSpendSum, nBuyVolume);
@@ -200,12 +205,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			
 			if (!ManagerUtils.isTestObject(this))
 			{
-				System.out.println(getRateInfo() + " nDeltaBoughtVolume " + nDeltaBoughtVolume);
-				System.out.println(getRateInfo() + " nBuyVolume " + nBuyVolume);
-				System.out.println(getRateInfo() + " nDeltaSpendSum " + nDeltaSpendSum);
+				TraceUtils.writeTrace(getRateInfo() + " nDeltaBoughtVolume " + nDeltaBoughtVolume);
+				TraceUtils.writeTrace(getRateInfo() + " nBuyVolume " + nBuyVolume);
+				TraceUtils.writeTrace(getRateInfo() + " nDeltaSpendSum " + nDeltaSpendSum);
 
-				System.out.println(getRateInfo() + " TradeInfo " + getTradeInfo().toString());
-				System.out.println(getRateInfo() + " GetOrder " + oGetOrder.getInfoShort());
+				TraceUtils.writeTrace(getRateInfo() + TRADE_INFO + getTradeInfo().toString());
+				TraceUtils.writeTrace(getRateInfo() + GET_ORDER + oGetOrder.getInfoShort());
 			}
 
 			getTradeInfo().addBuy(this, nDeltaSpendSum, nBuyVolume);
@@ -226,13 +231,13 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			final BigDecimal nReceiveSum = TradeUtils.getWithoutCommision(nSellSum); 
 			if (!ManagerUtils.isTestObject(this))
 			{
-				System.out.println(getRateInfo() + " nSellSum " + nSellSum);
-				System.out.println(getRateInfo() + " OrderSum " + oGetOrder.getSum());
-				System.out.println(getRateInfo() + " DeltaSum " + nSellSum.add(oGetOrder.getSum().negate()));				
-				System.out.println(getRateInfo() + " nReceiveSellSum " + nReceiveSum);
+				TraceUtils.writeTrace(getRateInfo() + " nSellSum " + nSellSum);
+				TraceUtils.writeTrace(getRateInfo() + " OrderSum " + oGetOrder.getSum());
+				TraceUtils.writeTrace(getRateInfo() + " DeltaSum " + nSellSum.add(oGetOrder.getSum().negate()));				
+				TraceUtils.writeTrace(getRateInfo() + " nReceiveSellSum " + nReceiveSum);
 				
-				System.out.println(getRateInfo() + " TradeInfo " + getTradeInfo().toString());
-				System.out.println(getRateInfo() + " GetOrder " + oGetOrder.getInfoShort());
+				TraceUtils.writeTrace(getRateInfo() + TRADE_INFO + getTradeInfo().toString());
+				TraceUtils.writeTrace(getRateInfo() + GET_ORDER + oGetOrder.getInfoShort());
 			}
 
 			getTradeInfo().addSell(this, nReceiveSum, nSellVolume);
@@ -246,8 +251,8 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			
 			if (!ManagerUtils.isTestObject(this))
 			{
-				System.out.println(getRateInfo() + " TradeInfo " + getTradeInfo().toString());
-				System.out.println(getRateInfo() + " GetOrder " + oGetOrder.getInfoShort());
+				TraceUtils.writeTrace(getRateInfo() + TRADE_INFO + getTradeInfo().toString());
+				TraceUtils.writeTrace(getRateInfo() + GET_ORDER + oGetOrder.getInfoShort());
 			}
 			
 			getTradeInfo().addSell(this, TradeUtils.getWithoutCommision(nDeltaSellSum), nDeltaSellVolume);
@@ -414,7 +419,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	
 	protected BigDecimal calculateOrderVolume(final BigDecimal nTradeVolume, final BigDecimal nPrice)
 	{
-		return TradeUtils.getRoundedVolume(m_oRateInfo, new BigDecimal(nTradeVolume.doubleValue() / nPrice.doubleValue()));
+		return TradeUtils.getRoundedVolume(m_oRateInfo, BigDecimal.valueOf(nTradeVolume.doubleValue() / nPrice.doubleValue()));
 	}
 	
 	protected void checkTaskDone(final Order oGetOrder)

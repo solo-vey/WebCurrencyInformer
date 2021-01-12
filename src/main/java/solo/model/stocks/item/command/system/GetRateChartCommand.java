@@ -22,10 +22,10 @@ import solo.transport.telegram.TelegramTransport;
  */
 public class GetRateChartCommand extends BaseCommand
 {
-	final static public String NAME = "chart";
-	final static public String RATE_PARAMETER = "#rate#";
+	public static final String NAME = "chart";
+	public static final String RATE_PARAMETER = "#rate#";
 
-	final protected RateInfo m_oRateInfo;
+	protected final RateInfo m_oRateInfo;
 	
 	public GetRateChartCommand(final String strRateInfo)
 	{
@@ -33,7 +33,7 @@ public class GetRateChartCommand extends BaseCommand
 		m_oRateInfo = getParameterAsRateInfo(RATE_PARAMETER);
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		
@@ -69,14 +69,14 @@ public class GetRateChartCommand extends BaseCommand
 		
 		aButtons.add(Arrays.asList("Rules [" + m_oRateInfo + "]=/rules_rate:" + m_oRateInfo));
 		
-		final BigDecimal nSum = TradeUtils.getRoundedPrice(m_oRateInfo, TradeUtils.getMinTradeSum(m_oRateInfo).multiply(new BigDecimal(2)));
+		final BigDecimal nSum = TradeUtils.getRoundedPrice(m_oRateInfo, TradeUtils.getMinTradeSum(m_oRateInfo).multiply(BigDecimal.valueOf(2)));
 		if (nSum.compareTo(BigDecimal.ZERO) > 0)
 			aButtons.add(Arrays.asList("Create controler [" + m_oRateInfo + "][" + nSum + "]=" + 
 					CommandFactory.makeCommandLine(AddControlerCommand.class, AddControlerCommand.RATE_PARAMETER, m_oRateInfo,
 					AddControlerCommand.SUM_PARAMETER, nSum)));
 	
 		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
-		final BigDecimal nReverseSum = TradeUtils.getRoundedPrice(oReverseRateInfo, TradeUtils.getMinTradeSum(oReverseRateInfo).multiply(new BigDecimal(2)));
+		final BigDecimal nReverseSum = TradeUtils.getRoundedPrice(oReverseRateInfo, TradeUtils.getMinTradeSum(oReverseRateInfo).multiply(BigDecimal.valueOf(2)));
 		if (nReverseSum.compareTo(BigDecimal.ZERO) > 0)
 			aButtons.add(Arrays.asList("Create controler [" + oReverseRateInfo + "][" + nReverseSum + "]=" + 
 					CommandFactory.makeCommandLine(AddControlerCommand.class, AddControlerCommand.RATE_PARAMETER, oReverseRateInfo,

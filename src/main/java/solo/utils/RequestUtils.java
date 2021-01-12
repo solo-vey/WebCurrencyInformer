@@ -3,7 +3,7 @@ package solo.utils;
 import java.io.InputStream;
 import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
-import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -31,6 +31,7 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
+
 import solo.CurrencyInformer;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.worker.WorkerFactory;
@@ -38,10 +39,15 @@ import solo.model.stocks.worker.WorkerFactory;
 /** Класс для работы с РЕЕЗ запросами к сторонним сервисам */
 public class RequestUtils
 {
-	public final static int DEFAULT_TEMEOUT = 3;
-	public final static int MAX_PARALEL_QUERY = 8;
+	public static final int DEFAULT_TEMEOUT = 3;
+	public static final int MAX_PARALEL_QUERY = 8;
 	
-	private static final Map<String, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<String, Semaphore>();
+	private static final Map<String, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<>();
+	
+	RequestUtils() 
+	{
+		throw new IllegalStateException("Utility class");
+	}
 	
 	/** Отправдяеи post запрос по указанному адресу
 	 * @param strURL URL запроса
@@ -214,10 +220,9 @@ public class RequestUtils
 	 * @param aParameters список параметров запроса 
 	 * @return HTTP запрос
 	 * @throws UnsupportedEncodingException  */
-	static HttpGet makeGetQuery(final String strURL, final Map<String, String> aParameters) throws UnsupportedEncodingException
+	static HttpGet makeGetQuery(final String strURL, final Map<String, String> aParameters)
 	{
-		final HttpGet oGet = new HttpGet(strURL);
-		return oGet;
+		return new HttpGet(strURL);
 	}
 
 	/** Формирование запроса на основании указанных параметров 
@@ -225,13 +230,13 @@ public class RequestUtils
 	 * @param aParameters список параметров запроса 
 	 * @return HTTP запрос
 	 * @throws UnsupportedEncodingException  */
-	static HttpPost makePostQuery(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders) throws UnsupportedEncodingException
+	static HttpPost makePostQuery(final String strURL, final Map<String, String> aParameters, final Map<String, String> aHeaders)
 	{
 		final HttpPost oPost = new HttpPost(strURL);
-		final ArrayList<NameValuePair> aPostParameters = new ArrayList<NameValuePair>();
+		final ArrayList<NameValuePair> aPostParameters = new ArrayList<>();
 		for(final Entry<String, String> oParameter : aParameters.entrySet())
 			aPostParameters.add(new BasicNameValuePair(oParameter.getKey(), oParameter.getValue()));
-		oPost.setEntity(new UrlEncodedFormEntity(aPostParameters, Charset.forName("UTF-8")));
+		oPost.setEntity(new UrlEncodedFormEntity(aPostParameters, StandardCharsets.UTF_8));
 
 		if (null != aHeaders)
 		{
@@ -333,6 +338,8 @@ public class RequestUtils
 						new String[]{"TLSv1.2"},   
 						null,
 						SSLConnectionSocketFactory.BROWSER_COMPATIBLE_HOSTNAME_VERIFIER);
+				
+				oHttpUriRequest.addHeader("accept-encoding", "gzip, deflate");
 			
 				final RequestConfig oConfig = getConfig(nTimeOut, bIsUseProxy);
 				final CloseableHttpClient oClient = HttpClientBuilder.create()
@@ -343,7 +350,7 @@ public class RequestUtils
 				if (null == oResponse)
 					return null;
 			
-				final InputStream oSource = (InputStream) oResponse.getEntity().getContent();
+				final InputStream oSource = oResponse.getEntity().getContent();
 				final StringWriter oWriter = new StringWriter();
 				IOUtils.copy(oSource, oWriter, "UTF-8");
 				final String strContent = oWriter.toString();
@@ -355,7 +362,7 @@ public class RequestUtils
 					if (nTryCount > 0)
 						continue;
 					
-					final String strMessage = oResponse.getStatusLine().toString(); //\r\nCause : " + strContent);
+					final String strMessage = oResponse.getStatusLine().toString();
 					throw new Exception(strMessage);
 				}
 				return strContent;
@@ -410,7 +417,7 @@ public class RequestUtils
 		return s_oAllSemaphores.get(strHost);
 	}
 	
-	public static RequestConfig getConfig(final int nTimeOut, final Boolean bIsUseProxy)
+	public static RequestConfig getConfig(final int nTimeOut, final boolean bIsUseProxy)
 	{
 		Builder oConfigBuilder = RequestConfig.custom()
 			.setConnectTimeout(nTimeOut * 1000)

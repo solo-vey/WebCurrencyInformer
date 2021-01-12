@@ -14,12 +14,12 @@ import solo.utils.ResourceUtils;
  */
 public class SetStockParameterCommand extends BaseCommand
 {
-	final static public String NAME = "setStockParameter";
-	final static public String NAME_PARAMETER = "#name#";
-	final static public String VALUE_PARAMETER = "#value#";
+	public static final String NAME = "setStockParameter";
+	public static final String NAME_PARAMETER = "#name#";
+	public static final String VALUE_PARAMETER = "#value#";
 	
-	final protected String m_strName;  
-	final protected String m_strValue;  
+	protected final String m_strName;  
+	protected final String m_strValue;  
 	
 	public SetStockParameterCommand(final String strСommandLine)
 	{

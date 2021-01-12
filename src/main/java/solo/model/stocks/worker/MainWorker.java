@@ -13,9 +13,9 @@ import solo.transport.MessageLevel;
 
 public class MainWorker extends BaseWorker implements IMainWorker
 {
-	final protected StockWorker m_oStockWorker; 
-	final protected CommandHistory m_oHistory; 
-	final protected LastErrors m_oLastErrors = new LastErrors();
+	protected final StockWorker m_oStockWorker; 
+	protected final CommandHistory m_oHistory; 
+	protected final LastErrors m_oLastErrors = new LastErrors();
 
 	public MainWorker(final Stocks oStock)
 	{
@@ -24,7 +24,7 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		m_oHistory = new CommandHistory(StockExchangeFactory.getStockExchange(m_oStock));
 	}
 	
-	public void startWorker()
+	@Override public void startWorker()
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), this);
@@ -33,7 +33,7 @@ public class MainWorker extends BaseWorker implements IMainWorker
 		m_oStockWorker.startWorker();
 	}
 	
-	public void stopWorker()
+	@Override public void stopWorker()
 	{
 		m_oStockWorker.stopWorker();
 		super.stopWorker();

@@ -13,16 +13,16 @@ import solo.utils.CommonUtils;
  */
 public class AddOrderCommand extends BaseCommand
 {
-	final static public String NAME = "addOrder";
-	final static public String SIDE_PARAMETER = "#side#";
-	final static public String RATE_PARAMETER = "#rate#";
-	final static public String PRICE_PARAMETER = "#price#";
-	final static public String VOLUME_PARAMETER = "#volume#";
+	public static final String NAME = "addOrder";
+	public static final String SIDE_PARAMETER = "#side#";
+	public static final String RATE_PARAMETER = "#rate#";
+	public static final String PRICE_PARAMETER = "#price#";
+	public static final String VOLUME_PARAMETER = "#volume#";
 	
-	final protected OrderSide m_oSide;
-	final protected RateInfo m_oRateInfo; 
-	final protected BigDecimal m_nPrice; 
-	final protected BigDecimal m_nVolume; 
+	protected final OrderSide m_oSide;
+	protected final RateInfo m_oRateInfo; 
+	protected final BigDecimal m_nPrice; 
+	protected final BigDecimal m_nVolume; 
 	
 	public AddOrderCommand(final String strOrderInfo)
 	{
@@ -33,7 +33,7 @@ public class AddOrderCommand extends BaseCommand
 		m_nVolume = getParameterAsBigDecimal(VOLUME_PARAMETER);
 	}
 	
-	public void execute() throws Exception
+	@Override public void execute() throws Exception
 	{
 		super.execute();
 		final Order oOrder = WorkerFactory.getStockSource().addOrder(m_oSide, m_oRateInfo, m_nVolume, m_nPrice);

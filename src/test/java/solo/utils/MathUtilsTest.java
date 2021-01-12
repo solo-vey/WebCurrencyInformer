@@ -12,7 +12,7 @@ public class MathUtilsTest
     	//	Arrange
     	
     	//	Act
-    	final String strResult = MathUtils.toCurrencyStringEx2(new BigDecimal(0));
+    	final String strResult = MathUtils.toCurrencyStringEx2(BigDecimal.valueOf(0));
     	
         //	Assert
     	Assert.assertEquals("0", strResult);
@@ -22,7 +22,7 @@ public class MathUtilsTest
     public void testToCurrencyStringEx2More10() throws Exception 
     {
     	//	Arrange
- 		final BigDecimal nValue = new BigDecimal(123456789.34507);
+ 		final BigDecimal nValue = BigDecimal.valueOf(123456789.34507);
     	
     	//	Act
     	final String strResult = MathUtils.toCurrencyStringEx2(nValue);
@@ -35,7 +35,7 @@ public class MathUtilsTest
     public void testToCurrencyStringEx2Less0() throws Exception 
     {
     	//	Arrange
- 		final BigDecimal nValue = new BigDecimal(-123456789.345007);
+ 		final BigDecimal nValue = BigDecimal.valueOf(-123456789.345007);
     	
     	//	Act
     	final String strResult = MathUtils.toCurrencyStringEx2(nValue);
@@ -48,7 +48,7 @@ public class MathUtilsTest
     public void testToCurrencyStringEx2Less10More0() throws Exception 
     {
     	//	Arrange
- 		final BigDecimal nValue = new BigDecimal(3.345007);
+ 		final BigDecimal nValue = BigDecimal.valueOf(3.345007);
     	
     	//	Act
     	final String strResult = MathUtils.toCurrencyStringEx2(nValue);
@@ -61,7 +61,7 @@ public class MathUtilsTest
     public void testToCurrencyStringEx3Less10More0() throws Exception 
     {
     	//	Arrange
- 		final BigDecimal nValue = new BigDecimal(3.345007);
+ 		final BigDecimal nValue = BigDecimal.valueOf(3.345007);
     	
     	//	Act
     	final String strResult = MathUtils.toCurrencyStringEx3(nValue);
@@ -74,7 +74,7 @@ public class MathUtilsTest
     public void testToCurrencyStringEx3More10() throws Exception 
     {
     	//	Arrange
- 		final BigDecimal nValue = new BigDecimal(12343.345007);
+ 		final BigDecimal nValue = BigDecimal.valueOf(12343.345007);
     	
     	//	Act
     	final String strResult = MathUtils.toCurrencyStringEx3(nValue);

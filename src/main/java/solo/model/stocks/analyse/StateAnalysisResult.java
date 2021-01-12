@@ -19,7 +19,7 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class StateAnalysisResult extends BaseObject
 {
-	final protected Map<RateInfo, RateAnalysisResult> m_oRatesAnalysisResult = Collections.synchronizedMap(new HashMap<RateInfo, RateAnalysisResult>());
+	protected final Map<RateInfo, RateAnalysisResult> m_oRatesAnalysisResult = Collections.synchronizedMap(new HashMap<RateInfo, RateAnalysisResult>());
 	
 	public StateAnalysisResult()
 	{
@@ -47,7 +47,7 @@ public class StateAnalysisResult extends BaseObject
 			final RateInfo oRateInfo = oStockExchange.getStockSource().getRates().get(nThreadPos);
 			final AnalyseRateThread oAnalyseRateThread = new AnalyseRateThread(oRateInfo, m_oRatesAnalysisResult, oStockRateStates, oMainWorker);
 			oThreadPool.submit(oAnalyseRateThread);
-		};
+		}
 		oThreadPool.shutdown();
 			
 		try 
