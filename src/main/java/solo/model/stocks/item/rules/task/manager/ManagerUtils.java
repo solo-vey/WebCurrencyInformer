@@ -235,12 +235,6 @@ public class ManagerUtils
 		final BigDecimal nCommissionAnMargin = nCommission.add(nMargin);
 		return nDelta.add(nCommissionAnMargin.negate());
 	}
-
-	public static BigDecimal get24HoursRateProfitabilityPercent(final RateInfo oRateInfo)
-	{
-		final int nBackViewProfitabilityHours = ResourceUtils.getIntFromResource("stock.back_view.profitability.hours", WorkerFactory.getStockExchange().getStockProperties(), 3);
-		return getAverageRateProfitabilityPercent(oRateInfo, nBackViewProfitabilityHours);
-	}
 	
 	public static BigDecimal getAverageRateProfitabilityPercent(final RateInfo oRateInfo)
 	{

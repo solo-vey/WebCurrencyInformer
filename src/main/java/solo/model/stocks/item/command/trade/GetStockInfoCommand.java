@@ -186,7 +186,7 @@ public class GetStockInfoCommand extends BaseCommand
 			if (!bIsSellFreeVolume)
 				aButtons.add(Arrays.asList("### SELL FREE VOLUME ###=" + CommandFactory.makeCommandLine(GetStockInfoCommand.class, "type", "sellfreevolume")));
 			
-			strMessage += (aButtons.size() > 0 ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
+			strMessage += (!aButtons.isEmpty() ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
 		}
 		catch(final Exception e)
 		{

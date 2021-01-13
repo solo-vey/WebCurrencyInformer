@@ -158,7 +158,7 @@ public class TradeControler extends TaskBase implements ITradeControler
 		String strInfo = StringUtils.EMPTY;
 		
 		final List<ITradeTask> aTaskTrades = getTaskTrades();
-		final List<List<String>> aButtons = new LinkedList<List<String>>();
+		final List<List<String>> aButtons = new LinkedList<>();
 		for(final ITradeTask oTaskTrade : aTaskTrades)
 		{
 			final List<String> aTradeButtons = Arrays.asList(oTaskTrade.getInfo() + "=trade_" + oTaskTrade.getID());
@@ -170,7 +170,7 @@ public class TradeControler extends TaskBase implements ITradeControler
     	strInfo += GetRateInfoCommand.getRateData(m_oRateInfo, oAnalysisResult);
  		
 		return getTradesInfo().getInfo() + "[" + getTradeStrategy().getName() + "][" + m_nMaxTrades + "]\r\n\r\n" + strInfo +
-				(aButtons.size() > 0 ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
+				(!aButtons.isEmpty() ? "BUTTONS\r\n" + TelegramTransport.getButtons(aButtons) : StringUtils.EMPTY);
 	}
 	
 	@Override public RateInfo getRateInfo()

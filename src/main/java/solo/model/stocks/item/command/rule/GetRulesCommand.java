@@ -125,7 +125,7 @@ public class GetRulesCommand extends BaseCommand
 		if (!bIsShowIfHasReal && aButtons.size() < nAllCount)
 			aButtons.add(Arrays.asList("#### SHOW REAL RULES ####=" + CommandFactory.makeCommandLine(GetRulesCommand.class, "type", StringUtils.EMPTY)));
 			
-		String strMessage = "Rules [" + (aButtons.size() > 0 ? aButtons.size() - 1 : 0) + "].";
+		String strMessage = "Rules [" + (!aButtons.isEmpty() ? aButtons.size() - 1 : 0) + "].";
 		if (null != oSelectedRateInfo)
 		{
 			final BigDecimal nAverageRateProfitabilityPercent = ManagerUtils.getAverageRateProfitabilityPercent(oSelectedRateInfo); 
