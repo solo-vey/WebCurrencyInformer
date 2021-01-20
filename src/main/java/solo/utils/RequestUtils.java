@@ -5,6 +5,7 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +40,8 @@ import solo.model.stocks.worker.WorkerFactory;
 /** Класс для работы с РЕЕЗ запросами к сторонним сервисам */
 public class RequestUtils
 {
-	public static final int DEFAULT_TEMEOUT = 3;
-	public static final int MAX_PARALEL_QUERY = 8;
+	public static final int DEFAULT_TEMEOUT = 5;
+	public static final int MAX_PARALEL_QUERY = 4;
 	
 	private static final Map<String, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<>();
 	
@@ -327,11 +328,13 @@ public class RequestUtils
 	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
 		int nTryCount = getTryCount();
+		Date oDateStart = new Date();
 		
 		try
 		{	
 			while (true)
 			{
+				oDateStart = new Date();
 				final SSLContext oSSLContext = SSLContexts.custom().useTLS().build();
 				final SSLConnectionSocketFactory oSSLConnectionSocketFactory = new SSLConnectionSocketFactory(
 						oSSLContext,
@@ -370,7 +373,7 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-            throw new Exception("Error executing query [" + oHttpUriRequest + "] [" + CommonUtils.getExceptionMessage(e) + "]"); 
+            throw new Exception("Error executing query [" + oHttpUriRequest + "] [" + ((new Date()).getTime() - oDateStart.getTime()) + " mc] [" + CommonUtils.getExceptionMessage(e) + "]"); 
 		}
 	}
 

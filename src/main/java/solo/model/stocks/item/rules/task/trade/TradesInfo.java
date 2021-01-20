@@ -2,6 +2,7 @@ package solo.model.stocks.item.rules.task.trade;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -238,7 +239,9 @@ public class TradesInfo extends BaseObject implements Serializable
 		strResult += "Money: " + MathUtils.toCurrencyStringEx3(getSum()) + "/" + MathUtils.toCurrencyStringEx3(getLockedSum()) + "/" + MathUtils.toCurrencyStringEx3(getFreeSum()) + "/" + MathUtils.toCurrencyStringEx3(getSumToSell()) + "\r\n"; 
 		if (getVolume().compareTo(BigDecimal.ZERO) != 0 || getLockedVolume().compareTo(BigDecimal.ZERO) != 0)		
 			strResult += "Volume:" + MathUtils.toCurrencyStringEx2(getVolume()) + "/" + MathUtils.toCurrencyStringEx2(getLockedVolume()) +  "/" + MathUtils.toCurrencyStringEx2(getFreeVolume()) + "\r\n";
-		strResult += MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + "\r\n";
+		strResult += MathUtils.toCurrencyStringEx3(nReceiveAndSellSum) + "-" + MathUtils.toCurrencyStringEx3(getSpendSum()) + "=" + MathUtils.toCurrencyStringEx3(nDelta) + 
+				(nReceiveAndSellSum.compareTo(BigDecimal.ZERO) > 0 ? " (" + MathUtils.toPercentString(nDelta.multiply(BigDecimal.valueOf(100)).divide(nReceiveAndSellSum, RoundingMode.UP)) + "%)" : StringUtils.EMPTY) +
+				"\r\n";
 		strResult += getCurrentState();
 		return strResult;
 	}

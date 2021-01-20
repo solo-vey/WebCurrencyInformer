@@ -64,8 +64,7 @@ public class TradesBlock implements Serializable
 		if (getSpendSum().compareTo(BigDecimal.ZERO) == 0 || getReceivedSum().compareTo(BigDecimal.ZERO) == 0)
 			return BigDecimal.ZERO;
 		
-		final double nAveregeTradeSum = getSpendSum().doubleValue() / m_nCount;
-		return MathUtils.getBigDecimal(getDelta().doubleValue() / nAveregeTradeSum * 100, 2);
+		return MathUtils.getBigDecimal(getDelta().doubleValue() / getSpendSum().doubleValue() * 100, 2);
 	}
 	
 	public void addTrade(final TradesBlock oTradesBlock)
@@ -85,7 +84,7 @@ public class TradesBlock implements Serializable
 						(!strType.equalsIgnoreCase("only_percent") ? m_nCount : StringUtils.EMPTY) + 
 						(strType.equalsIgnoreCase(TYPE_FULL) ? " / " + MathUtils.toCurrencyStringEx3(getReceivedSum().add(getSpendSum())) : StringUtils.EMPTY) + 
 						(strType.equalsIgnoreCase(TYPE_FULL) ? " / " + MathUtils.toCurrencyStringEx3(getDelta()) : StringUtils.EMPTY) + 
-						"[" + MathUtils.toCurrencyStringEx3(getPercent()) + "%]" + strCloseStyle;
+						"[" + MathUtils.toPercentString(getPercent()) + "%]" + strCloseStyle;
 	}
 	
 	@Override public String toString()

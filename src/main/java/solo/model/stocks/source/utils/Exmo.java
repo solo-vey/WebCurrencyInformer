@@ -1,28 +1,32 @@
 package solo.model.stocks.source.utils;
 
-import okhttp3.*;
-import okhttp3.OkHttpClient.Builder;
-
-import org.apache.commons.codec.binary.Hex;
-import org.apache.commons.lang.StringUtils;
-import solo.CurrencyInformer;
-import solo.utils.RequestUtils;
-import solo.utils.ResourceUtils;
-import solo.utils.TraceUtils;
-
-import javax.crypto.Mac;
-import javax.crypto.spec.SecretKeySpec;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.net.SocketAddress;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.concurrent.Semaphore;
+
+import javax.crypto.Mac;
+import javax.crypto.spec.SecretKeySpec;
+
+import org.apache.commons.codec.binary.Hex;
+import org.apache.commons.lang.StringUtils;
+
+import okhttp3.MediaType;
+import okhttp3.OkHttpClient;
+import okhttp3.OkHttpClient.Builder;
+import okhttp3.Request;
+import okhttp3.RequestBody;
+import okhttp3.Response;
+import solo.CurrencyInformer;
+import solo.utils.RequestUtils;
+import solo.utils.ResourceUtils;
+import solo.utils.TraceUtils;
 
 public class Exmo 
 {
@@ -33,6 +37,12 @@ public class Exmo
     private static Long _nonceNext = 0L;
     private String _key;
     private String _secret;
+    
+    static int allRequest = 0;
+    static int waitRequest = 0;
+    static int inProcRequest = 0;
+    static Long waitDuration = 0L;
+    static Long totalDuration = 0L;
 
     public Exmo(String key, String secret) 
     {
@@ -45,8 +55,11 @@ public class Exmo
     	final Semaphore oSemaphore = RequestUtils.getSemaphore(EXMO_HOST);
 		try
 		{
+			final RequestInfo oRequestInfo = new RequestInfo(method);
 			oSemaphore.acquire();
-			return execute(method, arguments);
+			oRequestInfo.startExecute();
+			final String strResult = execute(oRequestInfo, arguments);
+			return finishRequst(oRequestInfo, strResult);
 		}
 		catch (InterruptedException e)
 		{
@@ -59,75 +72,46 @@ public class Exmo
 		}
     }
 
-    public final String execute(String method, Map<String, String> arguments) 
+    public final String execute(final RequestInfo oRequestInfo, Map<String, String> arguments) 
     {
-        Mac mac;
-        SecretKeySpec key;
-        String sign;
-
-        if (arguments == null)   // If the user provided no arguments, just create an empty argument array.
+        if (arguments == null)
             arguments = new HashMap<>();
+    	
+    	Mac mac;
+        try 
+        {
+        	final SecretKeySpec key = new SecretKeySpec(_secret.getBytes("UTF-8"), "HmacSHA512");
+            mac = Mac.getInstance("HmacSHA512");
+            mac.init(key);
+        } 
+        catch (Exception e) 
+        {
+            TraceUtils.writeError("No such algorithm or Invalid key exception: " + e.toString());
+            return null;
+        }
         
-        if (null == _nonce)
-        	_nonce = 0L;
+        final MediaType form = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
+        final Proxy oProxy = getProxy();
         
-        if (null == _nonceNext)
-        	_nonceNext = 0L;
-
-        //synchronized (_nonce) 
+        String strResult = null;
+        while(oRequestInfo.tryMore()) 
         {
         	_nonce = System.nanoTime();
         	_nonce = _nonce++;
         	if (_nonce < _nonceNext)
         		_nonce = _nonceNext;
         	_nonceNext = _nonce + 1;
-        	arguments.put("nonce", "" + _nonce);  // Add the dummy nonce.
-
+        	arguments.put("nonce", "" + _nonce);
+	
         	String postData = StringUtils.EMPTY;
-
         	for (Map.Entry<String, String> stringStringEntry : arguments.entrySet()) 
         	{
         		if (postData.length() > 0) 
         			postData += "&";
-
         		postData += stringStringEntry.getKey() + "=" + stringStringEntry.getValue();
         	}
-
-        	// Create a new secret key
-        	try 
-        	{
-        		key = new SecretKeySpec(_secret.getBytes("UTF-8"), "HmacSHA512");
-        	} 
-        	catch (UnsupportedEncodingException uee) 
-        	{
-        		TraceUtils.writeError("Unsupported encoding exception: " + uee.toString());
-        		return null;
-        	}
-
-	        // Create a new mac
-	        try 
-	        {
-	            mac = Mac.getInstance("HmacSHA512");
-	        } 
-	        catch (NoSuchAlgorithmException nsae) 
-	        {
-	            TraceUtils.writeError("No such algorithm exception: " + nsae.toString());
-	            return null;
-	        }
-	
-	        // Init mac with key.
-	        try 
-	        {
-	            mac.init(key);
-	        } 
-	        catch (InvalidKeyException ike) 
-	        {
-	            TraceUtils.writeError("Invalid key exception: " + ike.toString());
-	            return null;
-	        }
-	
-	
-	        // Encode the post data by the secret and encode the result as base64.
+        	
+        	String sign;
 	        try 
 	        {
 	            sign = Hex.encodeHexString(mac.doFinal(postData.getBytes("UTF-8")));
@@ -137,16 +121,12 @@ public class Exmo
 	            TraceUtils.writeError("Unsupported encoding exception: " + uee.toString());
 	            return null;
 	        }
-
-	        // Now do the actual request
-	        MediaType form = MediaType.parse("application/x-www-form-urlencoded; charset=utf-8");
 	
-	        final Proxy oProxy = getProxy();
 	        final Builder oBuilder = new OkHttpClient.Builder();
 	        if (null != oProxy)
 	        	oBuilder.proxy(oProxy);
 	        OkHttpClient client = oBuilder.build();
-	        final String strURL = HTTPS_API_EXMO_ROOT + method;
+	        final String strURL = HTTPS_API_EXMO_ROOT + oRequestInfo.method;
 	        try 
 	        {
 	            RequestBody body = RequestBody.create(form, postData);
@@ -158,14 +138,27 @@ public class Exmo
 	                    .build();
 	            
 	            Response response = client.newCall(request).execute();
-	            return response.body().string();
+	            strResult = response.body().string();
+	            if (!strResult.contains("The nonce parameter is less or equal than what was used before"))
+	            	return strResult;
 	        } 
 	        catch (IOException e) 
 	        {
 	            TraceUtils.writeError("Request fail [" + strURL + "]: " + e.toString());
-	            return null;  // An error occured...
+	            return null;
 	        }
         }
+        
+        return strResult;
+    }
+    
+    static String finishRequst(final RequestInfo oRequestInfo, final String strResult)
+    {
+    	oRequestInfo.finish();
+    	final Long avgDuration = totalDuration / allRequest;
+    	final Long avgWaitDuration = waitDuration / allRequest;
+    	TraceUtils.writeTrace(oRequestInfo + ". Total[" + allRequest + "]/InProc[" + inProcRequest + "]/Wait[" + waitRequest + "]. Duration [" + avgDuration + "]/Wait[" + avgWaitDuration + "]");
+    	return strResult;
     }
 	
 	/** Устанавливаем прокси если нужно 
@@ -180,5 +173,55 @@ public class Exmo
 		
 		final SocketAddress oSocketAddress = new InetSocketAddress(strProxyHost, nProxyPort);
 		return new Proxy(Type.HTTP, oSocketAddress);
+	}
+}
+
+class RequestInfo
+{
+	int tryCount = 0;
+	final Long start = (new Date()).getTime();
+	Long startExecute;
+	final String method;
+	
+	public RequestInfo(final String strMethod)
+	{
+		method = strMethod;
+		Exmo.allRequest++;
+		Exmo.waitRequest++;
+	}
+	
+	public void startExecute() 
+	{
+		Exmo.waitRequest--;
+		Exmo.inProcRequest++;
+		startExecute = (new Date()).getTime();
+	}
+
+	public boolean tryMore()
+	{
+		tryCount++;
+		return (tryCount <= 5);
+	}
+	
+	public void finish()
+	{
+		Exmo.inProcRequest--;
+		Exmo.totalDuration += getDuration();
+		Exmo.waitDuration += getWaitDuration();
+	}
+	
+	public Long getDuration()
+	{
+		return ((new Date()).getTime() - startExecute);
+	}
+	
+	public Long getWaitDuration()
+	{
+		return (startExecute - start);
+	}
+	
+	@Override public String toString() 
+	{
+		return "[" + method + "] wait [" + getWaitDuration() + "] exec [" + getDuration() + "] Try [" + tryCount + "]";
 	}
 }

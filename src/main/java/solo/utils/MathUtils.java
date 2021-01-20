@@ -46,6 +46,15 @@ public class MathUtils
 		return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, ',').trim();
 	}
 	
+	public static String toPercentString(final BigDecimal oValue)
+	{
+		if (null == oValue)
+			return "NaN";
+
+		final DecimalFormat oDecimalFormat = new DecimalFormat("#,###.##");
+		return oDecimalFormat.format(oValue).replace(",", ".").replace((char)0xA0, ',').trim();
+	}
+	
 	public static String toCurrencyStringEx3(final BigDecimal oValue)
 	{
 		if (null == oValue)

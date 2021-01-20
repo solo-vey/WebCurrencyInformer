@@ -1,5 +1,7 @@
 package solo;
 
+import solo.model.stocks.worker.WorkerFactory;
+
 /** Константы приложения */
 public final class CurrencyInformer
 {
@@ -10,4 +12,9 @@ public final class CurrencyInformer
 	{
 		throw new IllegalStateException("Utility class");
 	}
+	
+	public static void main(String[] args) throws Exception
+    {
+		WorkerFactory.start();
+    }
 }

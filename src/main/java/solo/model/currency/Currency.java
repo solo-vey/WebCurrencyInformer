@@ -10,7 +10,8 @@ public enum Currency
 	/** Ethereum Classic */
 	ETC("EthereumClassic"),
 	/** Electroneum */
-	//ETN("Electroneum"), 
+	//ETN("Electroneum"),
+	ADA("ADA"),
 	/** Waves */
 	WAVES("Waves"),
 	/** Xrp */

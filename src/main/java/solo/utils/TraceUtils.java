@@ -15,12 +15,12 @@ public class TraceUtils
 	  
 	public static void writeTrace(final String strText)
 	{
-		System.out.println(strText);
+		System.out.println(getPrefix() + strText);
 	}
 	  
 	public static void writeError(final String strText)
 	{
-		System.err.println(strText);
+		System.err.println(getPrefix() + strText);
 	}
 	
 	public static void writeError(final String strText, final Exception e)
@@ -31,5 +31,11 @@ public class TraceUtils
 		TraceUtils.writeError(strDate + " " +Thread.currentThread().getName() + 
 				(StringUtils.isNotBlank(strText) ? "\t" + strText : StringUtils.EMPTY) + 
 				"\tThread exception : " + CommonUtils.getExceptionMessage(e));
+	}
+	
+	public static String getPrefix()
+	{
+		final DateFormat dateFormat = new SimpleDateFormat("hh:mm:ss");  
+		return dateFormat.format(new Date()) + "  Thread-" + Thread.currentThread().getId() + "\t";
 	}
 }

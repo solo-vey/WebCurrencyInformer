@@ -453,7 +453,7 @@ public class ExmoStockSource extends BaseStockSource
 				put("limit", "25");
 			}});
 			
-			if (strUserCenceledOrdersJson.equalsIgnoreCase("{}"))
+			if (!strUserCenceledOrdersJson.startsWith("["))
 				return Order.NULL;
 			
 			final List<Object> oUserCenceledOrders = JsonUtils.json2List(strUserCenceledOrdersJson);

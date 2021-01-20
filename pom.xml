@@ -6,7 +6,7 @@
   <version>1.0.0.0</version>
   <name>Currency Informer</name>
   <properties>
-    <skipTests>false</skipTests>
+    <skipTests>true</skipTests>
   </properties>
 
   <dependencies>

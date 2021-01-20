@@ -4,6 +4,7 @@ import java.util.List;
 
 import org.junit.Test;
 
+import solo.CurrencyInformer;
 import solo.model.currency.Currency;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.exchange.StockExchangeFactory;
@@ -18,7 +19,7 @@ public class KunaStockSourceTest
 {
     @Test public void testKunaStockSource() throws Exception
     {
-    	WorkerFactory.start();
+    	CurrencyInformer.main(null);
     }
  
     @Test public void test() throws Exception

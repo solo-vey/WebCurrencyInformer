@@ -185,7 +185,7 @@ public class TestStockSource extends BaseStockSource implements ITest
 		{			
 			try
 			{
-		        checkOrderParameters(oSide, oRateInfo, nPrice);
+		        //checkOrderParameters(oSide, oRateInfo, nPrice);
 		       
 		        final Order oOrder = new Order();
 				oOrder.setId(oOriginalRateInfo + "_" + m_oStockSourceData.getLastOrderID() + "_" + (new Date().getTime()));
