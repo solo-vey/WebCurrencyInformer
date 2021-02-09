@@ -114,6 +114,11 @@ public class BaseStockSource implements IStockSource
 	{
 		return m_oRateStateCache.get(oRateInfo);
 	}
+	
+	public void setCachedRateState(final RateInfo oRateInfo, final RateState oRateState) throws Exception
+	{
+		m_oRateStateCache.put(oRateInfo, oRateState);
+	}
 
 	public Map<RateInfo, RateStateShort> getAllRateState() throws Exception
 	{

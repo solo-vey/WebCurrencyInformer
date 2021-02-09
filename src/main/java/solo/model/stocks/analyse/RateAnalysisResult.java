@@ -14,6 +14,8 @@ import solo.model.stocks.item.rules.task.strategy.StrategyUtils;
 
 public class RateAnalysisResult extends BaseObject
 {
+	public static int MIN_POS_FOR_CHANGE_PRICE = 5;
+	
 	protected final RateInfo m_oRateInfo;
 
 	protected final List<Order> m_oAsksOrders;
@@ -83,5 +85,29 @@ public class RateAnalysisResult extends BaseObject
 	public List<Order> getTrades()
 	{
 		return m_oTrades;
+	}
+	
+	public int findBuyPricePosition(final BigDecimal oBuyPrice)
+	{
+		int nPos = 0;
+		for(final Order oOrder : getBidsOrders())
+		{
+			if (oBuyPrice.compareTo(oOrder.getPrice()) >= 0)
+				return nPos;
+			nPos++;
+		}
+		return nPos;
+	}
+	
+	public int findSellPricePosition(final BigDecimal oSellPrice)
+	{
+		int nPos = 0;
+		for(final Order oOrder : getAsksOrders())
+		{
+			if (oSellPrice.compareTo(oOrder.getPrice()) <= 0)
+				return nPos;
+			nPos++;
+		}
+		return nPos;
 	}
 }

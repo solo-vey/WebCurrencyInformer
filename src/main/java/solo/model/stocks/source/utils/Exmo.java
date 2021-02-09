@@ -6,10 +6,8 @@ import java.net.InetSocketAddress;
 import java.net.Proxy;
 import java.net.Proxy.Type;
 import java.net.SocketAddress;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
-import java.util.concurrent.Semaphore;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
@@ -24,7 +22,8 @@ import okhttp3.Request;
 import okhttp3.RequestBody;
 import okhttp3.Response;
 import solo.CurrencyInformer;
-import solo.utils.RequestUtils;
+import solo.model.request.RequestBlock;
+import solo.model.request.RequestInfo;
 import solo.utils.ResourceUtils;
 import solo.utils.TraceUtils;
 
@@ -32,17 +31,14 @@ public class Exmo
 {
     private static final String EXMO_HOST = "api.exmo.com";
     private static final String HTTPS_API_EXMO_ROOT = "https://" + EXMO_HOST + "/v1/";
+    private final int MAX_TRY_COUNT = 5;
     
 	private static Long _nonce = 0L;
     private static Long _nonceNext = 0L;
     private String _key;
     private String _secret;
     
-    static int allRequest = 0;
-    static int waitRequest = 0;
-    static int inProcRequest = 0;
-    static Long waitDuration = 0L;
-    static Long totalDuration = 0L;
+    static RequestBlock requests = new RequestBlock();
 
     public Exmo(String key, String secret) 
     {
@@ -52,23 +48,23 @@ public class Exmo
     
     public final String Request(String method, Map<String, String> arguments) 
     {
-    	final Semaphore oSemaphore = RequestUtils.getSemaphore(EXMO_HOST);
+    	//final Semaphore oSemaphore = RequestUtils.getSemaphore(EXMO_HOST);
+    	final RequestInfo oRequestInfo = requests.addRequest(method, MAX_TRY_COUNT);
 		try
 		{
-			final RequestInfo oRequestInfo = new RequestInfo(method);
-			oSemaphore.acquire();
+			//oSemaphore.acquire();
 			oRequestInfo.startExecute();
 			final String strResult = execute(oRequestInfo, arguments);
 			return finishRequst(oRequestInfo, strResult);
 		}
-		catch (InterruptedException e)
+		/*catch (InterruptedException e)
 		{
 			TraceUtils.writeError("Request fail [" + HTTPS_API_EXMO_ROOT + method + "]: " + e.toString());
-			return null;
-		}
+			return finishRequst(oRequestInfo, null);
+		}*/
 		finally
 		{
-			oSemaphore.release();
+			//oSemaphore.release();
 		}
     }
 
@@ -126,7 +122,7 @@ public class Exmo
 	        if (null != oProxy)
 	        	oBuilder.proxy(oProxy);
 	        OkHttpClient client = oBuilder.build();
-	        final String strURL = HTTPS_API_EXMO_ROOT + oRequestInfo.method;
+	        final String strURL = HTTPS_API_EXMO_ROOT + oRequestInfo.getMethod();
 	        try 
 	        {
 	            RequestBody body = RequestBody.create(form, postData);
@@ -155,9 +151,8 @@ public class Exmo
     static String finishRequst(final RequestInfo oRequestInfo, final String strResult)
     {
     	oRequestInfo.finish();
-    	final Long avgDuration = totalDuration / allRequest;
-    	final Long avgWaitDuration = waitDuration / allRequest;
-    	TraceUtils.writeTrace(oRequestInfo + ". Total[" + allRequest + "]/InProc[" + inProcRequest + "]/Wait[" + waitRequest + "]. Duration [" + avgDuration + "]/Wait[" + avgWaitDuration + "]");
+    	if (oRequestInfo.getDuration() > 1000)
+    		TraceUtils.writeTrace(oRequestInfo + ". " + requests);
     	return strResult;
     }
 	
@@ -173,55 +168,5 @@ public class Exmo
 		
 		final SocketAddress oSocketAddress = new InetSocketAddress(strProxyHost, nProxyPort);
 		return new Proxy(Type.HTTP, oSocketAddress);
-	}
-}
-
-class RequestInfo
-{
-	int tryCount = 0;
-	final Long start = (new Date()).getTime();
-	Long startExecute;
-	final String method;
-	
-	public RequestInfo(final String strMethod)
-	{
-		method = strMethod;
-		Exmo.allRequest++;
-		Exmo.waitRequest++;
-	}
-	
-	public void startExecute() 
-	{
-		Exmo.waitRequest--;
-		Exmo.inProcRequest++;
-		startExecute = (new Date()).getTime();
-	}
-
-	public boolean tryMore()
-	{
-		tryCount++;
-		return (tryCount <= 5);
-	}
-	
-	public void finish()
-	{
-		Exmo.inProcRequest--;
-		Exmo.totalDuration += getDuration();
-		Exmo.waitDuration += getWaitDuration();
-	}
-	
-	public Long getDuration()
-	{
-		return ((new Date()).getTime() - startExecute);
-	}
-	
-	public Long getWaitDuration()
-	{
-		return (startExecute - start);
-	}
-	
-	@Override public String toString() 
-	{
-		return "[" + method + "] wait [" + getWaitDuration() + "] exec [" + getDuration() + "] Try [" + tryCount + "]";
 	}
 }

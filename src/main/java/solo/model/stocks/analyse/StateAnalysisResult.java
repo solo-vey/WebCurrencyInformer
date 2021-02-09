@@ -1,6 +1,8 @@
 package solo.model.stocks.analyse;
 
+import java.util.Calendar;
 import java.util.Collections;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -19,7 +21,10 @@ import solo.model.stocks.worker.WorkerFactory;
 
 public class StateAnalysisResult extends BaseObject
 {
+	private static final int EXPIRED_MINUTES = 1;
+	
 	protected final Map<RateInfo, RateAnalysisResult> m_oRatesAnalysisResult = Collections.synchronizedMap(new HashMap<RateInfo, RateAnalysisResult>());
+	protected Date lastAnalyse = new Date();
 	
 	public StateAnalysisResult()
 	{
@@ -31,10 +36,11 @@ public class StateAnalysisResult extends BaseObject
 		m_oRatesAnalysisResult.put(oRateInfo, oRateAnalysisResult);
 		oStockExchange.getStockCandlestick().addRateInfo(oRateInfo, oRateAnalysisResult);
 		
-		/*final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
+		/**final RateInfo oReverseRateInfo = RateInfo.getReverseRate(oRateInfo);
 		final RateAnalysisResult oReverseRateAnalysisResult = new RateAnalysisResult(oRateState, oReverseRateInfo, oStockExchange);
 		m_oRatesAnalysisResult.put(oReverseRateInfo, oReverseRateAnalysisResult);
 		oStockExchange.getStockCandlestick().addRateInfo(oReverseRateInfo, oReverseRateAnalysisResult);*/
+		lastAnalyse = new Date();
 	}
 	
 	public StateAnalysisResult(final StockRateStates oStockRateStates, final IStockExchange oStockExchange) throws Exception
@@ -68,6 +74,19 @@ public class StateAnalysisResult extends BaseObject
 	public RateAnalysisResult getRateAnalysisResult(final RateInfo oRateInfo)
 	{
 		return m_oRatesAnalysisResult.get(oRateInfo);
+	}
+	
+	public Date getLastAnalyse()
+	{
+		return lastAnalyse;
+	}
+	
+	public boolean isExpired()
+	{
+		final Calendar oCalendar = Calendar.getInstance();
+		oCalendar.setTime(new Date());
+		oCalendar.add(Calendar.MINUTE, -EXPIRED_MINUTES);
+		return lastAnalyse.before(oCalendar.getTime());
 	}
 }
 

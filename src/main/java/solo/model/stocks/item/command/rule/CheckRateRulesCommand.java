@@ -2,6 +2,10 @@ package solo.model.stocks.item.command.rule;
 
 import java.util.List;
 import java.util.Map.Entry;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.TimeUnit;
+
 import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.StateAnalysisResult;
@@ -15,6 +19,7 @@ import solo.model.stocks.item.command.system.ISystemCommand;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.MainWorker;
 import solo.model.stocks.worker.WorkerFactory;
+import solo.utils.TraceUtils;
 
 /** Формат комманды 
  */
@@ -45,25 +50,40 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		super.execute();
 		
 		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
+		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
+		final List<Entry<Integer, IRule>> oRules = oStockExchange.getRules().getRules(m_oRateInfo);
 		
-		final RateState oRateState = WorkerFactory.getStockSource().getRateState(m_oRateInfo);
+/** !!!		final RateState oRateState = WorkerFactory.getStockSource().getRateState(m_oRateInfo);
 		WorkerFactory.getStockTestSource().getRateState(m_oRateInfo);
 		oStockExchange.getLastAnalysisResult().analyse(oRateState, oStockExchange, m_oRateInfo);
 		
-		final RateInfo oReverseRateInfo = RateInfo.getReverseRate(m_oRateInfo);
 		final RateState oReverseRateState = makeReverseRateState(oRateState);
-		oStockExchange.getLastAnalysisResult().analyse(oReverseRateState, oStockExchange, oReverseRateInfo);
+		oStockExchange.getLastAnalysisResult().analyse(oReverseRateState, oStockExchange, oReverseRateInfo); */
 		
 		final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
-		final List<Entry<Integer, IRule>> oRules = oStockExchange.getRules().getRules(m_oRateInfo);
+		if (oStateAnalysisResult.isExpired())
+			TraceUtils.writeError("Data in [" + m_oRateInfo + "] is expied. Last update [" + oStateAnalysisResult.getLastAnalyse() + "]");
+		
+		if (oRules.size() > 1)
+			checkRulesInThreads(oRules, oStateAnalysisResult);
+		else
+			checkSingleRule(oRules, oStateAnalysisResult, oReverseRateInfo);
+	}
+	
+	public void checkSingleRule(final List<Entry<Integer, IRule>> oRules, final StateAnalysisResult oStateAnalysisResult, final RateInfo oReverseRateInfo)
+	{
+		final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
 		for(final Entry<Integer, IRule> oRuleInfo : oRules)
 			oRuleInfo.getValue().check(oStateAnalysisResult);
 		
 		final List<Entry<Integer, IRule>> oReverseRules = oStockExchange.getRules().getRules(oReverseRateInfo);
 		for(final Entry<Integer, IRule> oReverseRuleInfo : oReverseRules)
 			oReverseRuleInfo.getValue().check(oStateAnalysisResult);
-		
-		/*final MainWorker oMainWorker = WorkerFactory.getMainWorker();
+	}
+	
+	public void checkRulesInThreads(final List<Entry<Integer, IRule>> oRules, final StateAnalysisResult oStateAnalysisResult)
+	{
+		final MainWorker oMainWorker = WorkerFactory.getMainWorker();
 		final ExecutorService oThreadPool = Executors.newFixedThreadPool(oRules.size());
 		for (int nThreadPos = 0; nThreadPos < oRules.size(); nThreadPos++) 
 		{
@@ -80,7 +100,7 @@ public class CheckRateRulesCommand extends BaseCommand implements ISystemCommand
 		catch (InterruptedException e) 
 		{
 			WorkerFactory.onException("CheckRateRulesCommand.execute()", e);
-		}*/
+		}
 	}
 	
 	public static RateState makeReverseRateState(final RateState oRateState)

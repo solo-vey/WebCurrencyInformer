@@ -2,6 +2,7 @@ package solo.model.stocks.source;
 
 import java.math.BigDecimal;
 import java.util.Arrays;
+import java.util.Calendar;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.LinkedList;
@@ -32,6 +33,8 @@ import solo.utils.JsonUtils;
 
 public class ExmoStockSource extends BaseStockSource
 {	
+	static final CacheItem openOrderCache = new CacheItem();
+	
 	public ExmoStockSource(final IStockExchange oStockExchange)
 	{
 		super(oStockExchange);
@@ -293,9 +296,17 @@ public class ExmoStockSource extends BaseStockSource
 			if (RateInfo.NULL.equals(oRequestRateInfo))
 				return;
 			
-			final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
-			final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
-			final Map<String, Object> oAllOrdersData = JsonUtils.json2Map(oUserInfoJson);
+			synchronized (openOrderCache) 
+			{
+				if (openOrderCache.isExpired())
+				{
+					final Exmo oUserInfoRequest = new Exmo(m_strPublicKey, m_strSecretKey);
+					final String oUserInfoJson = oUserInfoRequest.Request("user_open_orders", null);
+					final Map<String, Object> oValue = JsonUtils.json2Map(oUserInfoJson);
+					openOrderCache.setValue(oValue);
+				}
+			}
+			final Map<String, Object> oAllOrdersData = (Map<String, Object>)openOrderCache.getValue();
 			
 			final List<RateInfo> aRates = (null == oRequestRateInfo ? getRates() : Arrays.asList(oRequestRateInfo));
 			for(final RateInfo oRateInfo : aRates)
@@ -594,5 +605,32 @@ public class ExmoStockSource extends BaseStockSource
 	        TraceUtils.writeError("Can't remove order: " + strOrderId);
 			return new Order(Order.EXCEPTION, e.getMessage() + "\r\n Exception : " + e.getMessage());
 		}
+	}
+}
+
+class CacheItem
+{
+	Date created = new Date();
+	Object value = null;
+	
+	public void setValue(final Object oValue)
+	{
+		created = new Date();
+		value = oValue;
+	}
+	
+	public Object getValue()
+	{
+		return value;
+	}
+	
+	public boolean isExpired()
+	{
+		if (null == value)
+			return true;
+		
+		final Calendar calendar = Calendar.getInstance();
+		calendar.add(Calendar.SECOND, -1);
+		return (created.before(calendar.getTime()));
 	}
 }

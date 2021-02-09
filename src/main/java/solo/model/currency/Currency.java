@@ -3,18 +3,12 @@ package solo.model.currency;
 /** Список валют */
 public enum Currency
 {
-	/** Биткоин */
 	BTC("Bitcoin"),
-	/** Ethereum */
 	ETH("Ethereum"), 
-	/** Ethereum Classic */
 	ETC("EthereumClassic"),
-	/** Electroneum */
-	//ETN("Electroneum"),
+	BCH("BCH"),
 	ADA("ADA"),
-	/** Waves */
 	WAVES("Waves"),
-	/** Xrp */
 	XRP("Xpr"),
 	/** Dash */
 	//DASH("Dash"),
@@ -34,8 +28,7 @@ public enum Currency
 	//KICK("Kick"),
 	/** Bch */
 	//BCH("Bch"),
-	/** OrmeusCoin */
-	//ORME("Orme"),	
+	OMG("OMG"),	
 	EXM("EXM"),
 	
 	/** доллары */

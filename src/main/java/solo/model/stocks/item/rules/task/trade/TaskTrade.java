@@ -8,6 +8,7 @@ import org.apache.commons.lang.StringUtils;
 
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.analyse.StateAnalysisResult;
+import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.OrderTrade;
@@ -22,10 +23,10 @@ import solo.utils.TraceUtils;
 public class TaskTrade extends TaskBase implements ITradeTask
 {
 	private static final String TRADE_INFO = " TradeInfo ";
-
 	private static final String GET_ORDER = " GetOrder ";
-
 	public static final String NAME = "TRADE";
+	
+	public static int MIN_POS_FOR_CHANGE_PRICE = 5;
 
 	private static final long serialVersionUID = -178132243757975169L;
 
@@ -82,7 +83,12 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	@Override public void check(final StateAnalysisResult oStateAnalysisResult)
 	{
 		m_strCurrentState = StringUtils.EMPTY;
-
+		
+		if (Thread.currentThread().getId() == 37)
+		{
+			int i = 0;
+		}
+			
 		final Order oGetOrder = updateTradeInfo(getTradeInfo().getOrder());
 		checkTaskDone(oGetOrder);
 
@@ -112,6 +118,14 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (OrderSide.BUY.equals(oGetOrder.getSide()))
 		{
 			final BigDecimal oBuyPrice = getTradeInfo().getBuyStrategy().getBuyPrice(oRateAnalysisResult, getTradeInfo());
+			final int nNewOrderPos = oRateAnalysisResult.findBuyPricePosition(oBuyPrice);		
+			if (nNewOrderPos > RateAnalysisResult.MIN_POS_FOR_CHANGE_PRICE)
+				return;
+			
+			final int nOrderPos = oRateAnalysisResult.findBuyPricePosition(oGetOrder.getPrice());	
+			if (nNewOrderPos == nOrderPos)
+				return;
+			
 			setNewOrderPrice(oBuyPrice, oGetOrder);
 			return;
 		}
@@ -119,6 +133,14 @@ public class TaskTrade extends TaskBase implements ITradeTask
 		if (OrderSide.SELL.equals(oGetOrder.getSide()))
 		{
 			BigDecimal oSellPrice = getTradeInfo().getSellStrategy().getSellPrice(oRateAnalysisResult, getTradeInfo());
+			final int nNewOrderPos = oRateAnalysisResult.findSellPricePosition(oSellPrice);
+			if (nNewOrderPos > RateAnalysisResult.MIN_POS_FOR_CHANGE_PRICE)
+				return;
+			
+			final int nOrderPos = oRateAnalysisResult.findSellPricePosition(oGetOrder.getPrice());	
+			if (nNewOrderPos == nOrderPos)
+				return;
+			
 			oSellPrice = getTradeInfo().trimSellPrice(oSellPrice);
 			setNewOrderPrice(oSellPrice, oGetOrder);
 			return;
@@ -149,6 +171,17 @@ public class TaskTrade extends TaskBase implements ITradeTask
 	{
 		if (!ManagerUtils.isTestObject(this))
 		{
+			if (!oGetOrder.isDone())
+			{
+				final IStockExchange oStockExchange = WorkerFactory.getStockExchange();
+				final StateAnalysisResult oStateAnalysisResult = oStockExchange.getLastAnalysisResult();
+				final RateAnalysisResult oRateAnalysisResult = oStateAnalysisResult.getRateAnalysisResult(m_oRateInfo);
+				final int nOrderPos = (OrderSide.BUY.equals(oGetOrder.getSide()) ? oRateAnalysisResult.findBuyPricePosition(oGetOrder.getPrice())
+											: oRateAnalysisResult.findSellPricePosition(oGetOrder.getPrice()));		
+				if (nOrderPos > RateAnalysisResult.MIN_POS_FOR_CHANGE_PRICE)
+					return;
+			}
+			
 			final List<OrderTrade> oOrderTrades = WorkerFactory.getStockSource().getTrades(oGetOrder.getId(), getRateInfo());
 			if (oGetOrder.isDone())
 			{
@@ -306,7 +339,7 @@ public class TaskTrade extends TaskBase implements ITradeTask
 			final BigDecimal nDeltaOrderPrice = (nRoundedNewPrice.compareTo(nRoundedOrderPrice) > 0 ? nRoundedNewPrice.add(nRoundedOrderPrice.negate()) 
 																			: nRoundedOrderPrice.add(nRoundedNewPrice.negate()));
 			final BigDecimal nMinChangePrice = TradeUtils.getMinChangePrice();
-			if (nDeltaOrderPrice.compareTo(BigDecimal.ZERO) >= 0 && nDeltaOrderPrice.compareTo(nMinChangePrice) < 0)
+			if (nDeltaOrderPrice.compareTo(BigDecimal.ZERO) >= 0 && nDeltaOrderPrice.compareTo(nMinChangePrice) <= 0)
 				return;
 			
 			if (oGetOrder.isCanceled() || oGetOrder.isDone())

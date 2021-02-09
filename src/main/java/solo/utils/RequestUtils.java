@@ -5,7 +5,6 @@ import java.io.StringWriter;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -34,6 +33,8 @@ import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.message.BasicNameValuePair;
 
 import solo.CurrencyInformer;
+import solo.model.request.RequestBlock;
+import solo.model.request.RequestInfo;
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.worker.WorkerFactory;
 
@@ -43,6 +44,7 @@ public class RequestUtils
 	public static final int DEFAULT_TEMEOUT = 5;
 	public static final int MAX_PARALEL_QUERY = 4;
 	
+    static RequestBlock requests = new RequestBlock();
 	private static final Map<String, Semaphore> s_oAllSemaphores = new ConcurrentHashMap<>();
 	
 	RequestUtils() 
@@ -327,14 +329,13 @@ public class RequestUtils
 	 * @throws Exception */
 	public static String sendRequestAndReturnText(final HttpUriRequest oHttpUriRequest, final Boolean bIsUseProxy, final int nTimeOut) throws Exception
 	{
-		int nTryCount = getTryCount();
-		Date oDateStart = new Date();
+		final RequestInfo oRequestInfo = requests.addRequest(oHttpUriRequest.getURI().getPath(), getTryCount());
+		oRequestInfo.startExecute();
 		
 		try
 		{	
 			while (true)
 			{
-				oDateStart = new Date();
 				final SSLContext oSSLContext = SSLContexts.custom().useTLS().build();
 				final SSLConnectionSocketFactory oSSLConnectionSocketFactory = new SSLConnectionSocketFactory(
 						oSSLContext,
@@ -360,9 +361,8 @@ public class RequestUtils
 
 				if (oResponse.getStatusLine().getStatusCode() != 200 && oResponse.getStatusLine().getStatusCode() != 201 && oResponse.getStatusLine().getStatusCode() != 202)
 				{
-					nTryCount--;
 					Thread.sleep(50);
-					if (nTryCount > 0)
+					if (oRequestInfo.tryMore())
 						continue;
 					
 					final String strMessage = oResponse.getStatusLine().toString();
@@ -373,7 +373,12 @@ public class RequestUtils
 		}
 		catch (final Exception e)
 		{
-            throw new Exception("Error executing query [" + oHttpUriRequest + "] [" + ((new Date()).getTime() - oDateStart.getTime()) + " mc] [" + CommonUtils.getExceptionMessage(e) + "]"); 
+            throw new Exception("Error executing query [" + oHttpUriRequest + "] " + oRequestInfo); 
+		}
+		finally
+		{
+			oRequestInfo.finish();
+	    	TraceUtils.writeTrace(oRequestInfo + ". " + requests);
 		}
 	}
 

@@ -20,6 +20,7 @@ public interface IStockSource
 	void init();
 	RateState getRateState(final RateInfo oRateInfo) throws Exception;
 	RateState getCachedRateState(final RateInfo oRateInfo) throws Exception;
+	void setCachedRateState(final RateInfo oRateInfo, final RateState oRateState) throws Exception;
 	Map<RateInfo, RateStateShort> getAllRateState() throws Exception;
 	IStockExchange getStockExchange();
 	List<RateInfo> getRates();

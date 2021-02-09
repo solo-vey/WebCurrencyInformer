@@ -32,5 +32,4 @@ public class NowBuyStrategy extends BaseStrategy implements IBuyStrategy
 		}
 		return nFullSumPrice;
 	}
-
 }

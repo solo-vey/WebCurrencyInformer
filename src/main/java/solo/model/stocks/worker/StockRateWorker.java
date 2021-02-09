@@ -3,16 +3,20 @@ package solo.model.stocks.worker;
 import java.util.List;
 import java.util.Map.Entry;
 
+import org.java_websocket.client.WebSocketClient;
+
 import solo.model.stocks.exchange.IStockExchange;
 import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.RateInfo;
 import solo.model.stocks.item.command.rule.CheckRateRulesCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
+import solo.transport.websocket.WebSocketClientTransport;
 
 public class StockRateWorker extends BaseWorker
 {
 	protected final RateInfo m_oRateInfo;
 	final MainWorker m_oMainWorker; 
+	WebSocketClient publicWs;
 	
 	public StockRateWorker(final MainWorker oMainWorker, final RateInfo oRateInfo, final int nTimeOut)
 	{
@@ -30,6 +34,7 @@ public class StockRateWorker extends BaseWorker
 	{
 		super.startWorker();
 		WorkerFactory.registerMainWorkerThread(getId(), m_oMainWorker);
+		publicWs = WebSocketClientTransport.createPublicWs(getRateInfo());
 	}
 	
 	@Override protected void doWork() throws Exception
@@ -37,6 +42,9 @@ public class StockRateWorker extends BaseWorker
 		Thread.currentThread().setName(m_oMainWorker.getStockExchange().getStockName() + " - " + m_oRateInfo);
 		addCommand(new CheckRateRulesCommand(m_oRateInfo));
 		super.doWork();
+		
+		if (null != publicWs && publicWs.isClosed())
+			publicWs = WebSocketClientTransport.createPublicWs(getRateInfo());
 	}
 	
 	@Override int getTimeOut()

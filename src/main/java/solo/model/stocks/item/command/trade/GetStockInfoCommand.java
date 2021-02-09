@@ -15,6 +15,7 @@ import solo.model.currency.Currency;
 import solo.model.currency.CurrencyAmount;
 import solo.model.stocks.analyse.RateAnalysisResult;
 import solo.model.stocks.exchange.IStockExchange;
+import solo.model.stocks.item.IRule;
 import solo.model.stocks.item.Order;
 import solo.model.stocks.item.OrderSide;
 import solo.model.stocks.item.RateInfo;
@@ -25,7 +26,10 @@ import solo.model.stocks.item.command.base.BaseCommand;
 import solo.model.stocks.item.command.base.CommandFactory;
 import solo.model.stocks.item.command.rule.AddRuleCommand;
 import solo.model.stocks.item.rules.task.manager.ManagerUtils;
+import solo.model.stocks.item.rules.task.trade.ITradeControler;
+import solo.model.stocks.item.rules.task.trade.ITradeTask;
 import solo.model.stocks.item.rules.task.trade.SellTaskTrade;
+import solo.model.stocks.item.rules.task.trade.TTaskTrade;
 import solo.model.stocks.item.rules.task.trade.TradeUtils;
 import solo.model.stocks.worker.WorkerFactory;
 import solo.transport.telegram.TelegramTransport;
@@ -62,12 +66,33 @@ public class GetStockInfoCommand extends BaseCommand
 		   	final List<List<String>> aButtons = new LinkedList<List<String>>();
 		   	if (bIsShowOrders)
 		   	{
+				final List<ITradeTask> aTaskTrades = new LinkedList<ITradeTask>();
+				for(final IRule oRule : oRules.getRules().values())
+				{
+					final ITradeTask oTradeTask = TradeUtils.getRuleAsTradeTask(oRule);
+					if (null == oTradeTask || oTradeTask instanceof TTaskTrade)
+						continue;
+					
+					aTaskTrades.add(oTradeTask);	
+				}
+				
 				for(final Entry<RateInfo, List<Order>> oOrdersInfo : oUserInfo.getOrders().entrySet())
 				{
 					for(final Order oOrder : oOrdersInfo.getValue())
 					{
-						final String strOrderInfo = oOrdersInfo.getKey() + "/" + oOrder.getSide() + "/" + MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + 
-														"/" + MathUtils.toCurrencyStringEx3(oOrder.getSum());
+						boolean bIsTaskOrder = false;
+						for(final ITradeTask oTradeTask : aTaskTrades)
+						{
+							if (!oOrdersInfo.getKey().equals(oTradeTask.getRateInfo()) && !oOrdersInfo.getKey().equals(RateInfo.getReverseRate(oTradeTask.getRateInfo())))
+								continue;
+							
+							final Order oTaskOrder = oTradeTask.getTradeInfo().getOrder();
+							bIsTaskOrder |= (oOrder.getId().equals(oTaskOrder.getId()));
+						}
+						
+						final String strOrderInfo = (!bIsTaskOrder ? "LOST - " : StringUtils.EMPTY) + 
+								oOrdersInfo.getKey() + "/" + oOrder.getSide() + "/" + MathUtils.toCurrencyStringEx3(oOrder.getPrice()) + 
+								"/" + MathUtils.toCurrencyStringEx3(oOrder.getSum());
 						aButtons.add(Arrays.asList(strOrderInfo + " [X]=" + CommandFactory.makeCommandLine(RemoveOrderCommand.class, RemoveOrderCommand.ID_PARAMETER, oOrder.getId())));
 					}
 				}
